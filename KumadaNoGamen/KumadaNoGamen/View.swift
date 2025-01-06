@@ -47,6 +47,10 @@ struct ContentView: View {
             }
         } detail: {
             Text("Select an item")
+            .onAppear() {
+              let thing = Controller.tailscaleStatus()
+              NSLog("\(thing)")
+            }
         }
     }
 

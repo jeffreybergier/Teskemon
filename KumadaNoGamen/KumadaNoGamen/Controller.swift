@@ -19,3 +19,38 @@
 //
 
 import Foundation
+
+public struct Controller {
+  public static func tailscaleStatus() -> TailscaleStatus? {
+    // Create a Process instance
+    let process = Process()
+    process.executableURL = URL(fileURLWithPath: "/usr/bin/env") // Use `/usr/bin/env` to locate the command
+    process.arguments = ["/usr/local/bin/tailscale", "status", "--json"]
+    
+    // Pipe to capture output
+    let pipe = Pipe()
+    process.standardOutput = pipe
+    
+    do {
+      // Launch the process
+      try process.run()
+      process.waitUntilExit() // Wait for the command to finish executing
+      
+      // Check the process exit status
+      guard process.terminationStatus == 0 else {
+        NSLog("Process failed with exit code: \(process.terminationStatus)")
+        return nil
+      }
+      
+      // Decode the JSON
+      let data = pipe.fileHandleForReading.readDataToEndOfFile()
+      let decoder = JSONDecoder()
+      let output = try decoder.decode(TailscaleStatus.self, from: data)
+      
+      return output
+    } catch {
+      print("Failed to execute process: \(error)")
+      return nil
+    }
+  }
+}
