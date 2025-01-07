@@ -88,8 +88,8 @@ public struct Node: Codable {
   public let exitNodeOption: Bool
   public let active: Bool
   public let peerAPIURL: [String]
-  public let capabilities: [String]
-  public let capMap: [String: String?]
+  public let capabilities: [String]?
+  public let capMap: [String: String?]?
   public let inNetworkMap: Bool
   public let inMagicSock: Bool
   public let inEngine: Bool
