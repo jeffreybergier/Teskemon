@@ -21,7 +21,7 @@
 import Foundation
 
 public struct Controller {
-  public static func tailscaleStatus() -> TailscaleStatus? {
+  internal static func tailscaleStatus() -> Tailscale.Raw.Status? {
     // Create a Process instance
     let process = Process()
     process.executableURL = URL(fileURLWithPath: "/usr/bin/env") // Use `/usr/bin/env` to locate the command
@@ -45,7 +45,7 @@ public struct Controller {
       // Decode the JSON
       let data = pipe.fileHandleForReading.readDataToEndOfFile()
       let decoder = JSONDecoder()
-      let output = try decoder.decode(TailscaleStatus.self, from: data)
+      let output = try decoder.decode(Tailscale.Raw.Status.self, from: data)
       
       return output
     } catch {
