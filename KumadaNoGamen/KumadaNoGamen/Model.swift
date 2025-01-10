@@ -21,7 +21,11 @@
 import Foundation
 import SwiftData
 
-nonisolated(unsafe) internal let dateFormatter = ISO8601DateFormatter()
+nonisolated(unsafe) internal let df: ISO8601DateFormatter = {
+  let formatter = ISO8601DateFormatter()
+  formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+  return formatter
+}()
 
 @Model
 final class Item {
@@ -35,100 +39,93 @@ final class Item {
 public enum Tailscale {
   internal enum Raw {
     internal struct Status: Codable {
-      internal let version: String
-      internal let tun: Bool
-      internal let backendState: String
-      internal let haveNodeKey: Bool
-      internal let authURL: String?
-      internal let tailscaleIPs: [String]?
-      internal let selfNode: Node
-      internal let health: [String]
-      internal let magicDNSSuffix: String
-      internal let currentTailnet: Tailnet?
-      internal let certDomains: [String]?
-      internal let peer: [String: Node]?
-      internal let user: [String: User]?
-      internal let clientVersion: ClientVersion?
+      internal let Version: String
+      internal let TUN: Bool
+      internal let BackendState: String
+      internal let HaveNodeKey: Bool
+      internal let AuthURL: String?
+      internal let TailscaleIPs: [String]?
+      internal let `Self`: Node
+      internal let Health: [String]
+      internal let MagicDNSSuffix: String
+      internal let CurrentTailnet: Tailnet?
+      internal let CertDomains: [String]?
+      internal let Peer: [String: Node]?
+      internal let User: [String: User]?
+      internal let ClientVersion: ClientVersion?
       
-      internal enum CodingKeys: String, CodingKey {
-        case version = "Version"
-        case tun = "TUN"
-        case backendState = "BackendState"
-        case haveNodeKey = "HaveNodeKey"
-        case authURL = "AuthURL"
-        case tailscaleIPs = "TailscaleIPs"
-        case selfNode = "Self"
-        case health = "Health"
-        case magicDNSSuffix = "MagicDNSSuffix"
-        case currentTailnet = "CurrentTailnet"
-        case certDomains = "CertDomains"
-        case peer = "Peer"
-        case user = "User"
-        case clientVersion = "ClientVersion"
+      internal func clean() -> Tailscale.Status {
+        let peers: [Tailscale.Node] = self.Peer?.values.map { $0.clean() } ?? []
+        let users: [String: Tailscale.User] = self.User ?? [:]
+        return .init(version: self.Version,
+                     versionUpToDate: self.ClientVersion?.runningLatest ?? false,
+                     tunnelingEnabled: self.TUN,
+                     backendState: self.BackendState,
+                     haveNodeKey: self.HaveNodeKey,
+                     health: self.Health,
+                     magicDNSSuffix: self.MagicDNSSuffix,
+                     currentTailnet: self.CurrentTailnet,
+                     selfNode: self.Self.clean(),
+                     peerNodes: peers,
+                     users: users)
       }
+  
     }
     
     internal struct Node: Codable {
-      internal let id: String
-      internal let publicKey: String
-      internal let hostName: String
-      internal let dnsName: String
-      internal let os: String
-      internal let userID: Int
-      internal let tailscaleIPs: [String]
-      internal let allowedIPs: [String]
-      internal let primaryRoutes: [String]?
-      internal let addrs: [String]?
-      internal let curAddr: String
-      internal let relay: String
-      internal let rxBytes: Int
-      internal let txBytes: Int
-      internal let created: String
-      internal let lastWrite: String?
-      internal let lastSeen: String?
-      internal let lastHandshake: String?
-      internal let online: Bool
-      internal let exitNode: Bool
-      internal let exitNodeOption: Bool
-      internal let active: Bool
-      internal let peerAPIURL: [String]?
-      internal let capabilities: [String]?
-      internal let capMap: [String: String?]?
-      internal let inNetworkMap: Bool
-      internal let inMagicSock: Bool
-      internal let inEngine: Bool
-      internal let keyExpiry: String?
+      internal let ID: String
+      internal let PublicKey: String
+      internal let HostName: String
+      internal let DNSName: String
+      internal let OS: String
+      internal let UserID: Int
+      internal let TailscaleIPs: [String]
+      internal let AllowedIPs: [String]
+      internal let PrimaryRoutes: [String]?
+      internal let Addrs: [String]?
+      internal let CurAddr: String
+      internal let Relay: String
+      internal let RxBytes: Int
+      internal let TxBytes: Int
+      internal let Created: String
+      internal let LastWrite: String?
+      internal let LastSeen: String?
+      internal let LastHandshake: String?
+      internal let Online: Bool
+      internal let ExitNode: Bool
+      internal let ExitNodeOption: Bool
+      internal let Active: Bool
+      internal let PeerAPIURL: [String]?
+      internal let Capabilities: [String]?
+      internal let CapMap: [String: String?]?
+      internal let InNetworkMap: Bool
+      internal let InMagicSock: Bool
+      internal let InEngine: Bool
+      internal let KeyExpiry: String?
       
-      internal enum CodingKeys: String, CodingKey {
-        case id = "ID"
-        case publicKey = "PublicKey"
-        case hostName = "HostName"
-        case dnsName = "DNSName"
-        case os = "OS"
-        case userID = "UserID"
-        case tailscaleIPs = "TailscaleIPs"
-        case allowedIPs = "AllowedIPs"
-        case primaryRoutes = "PrimaryRoutes"
-        case addrs = "Addrs"
-        case curAddr = "CurAddr"
-        case relay = "Relay"
-        case rxBytes = "RxBytes"
-        case txBytes = "TxBytes"
-        case created = "Created"
-        case lastWrite = "LastWrite"
-        case lastSeen = "LastSeen"
-        case lastHandshake = "LastHandshake"
-        case online = "Online"
-        case exitNode = "ExitNode"
-        case exitNodeOption = "ExitNodeOption"
-        case active = "Active"
-        case peerAPIURL = "PeerAPIURL"
-        case capabilities = "Capabilities"
-        case capMap = "CapMap"
-        case inNetworkMap = "InNetworkMap"
-        case inMagicSock = "InMagicSock"
-        case inEngine = "InEngine"
-        case keyExpiry = "KeyExpiry"
+      internal func clean() -> Tailscale.Node {
+        return .init(id: self.ID,
+                     publicKey: self.PublicKey,
+                     keyExpiry: self.KeyExpiry.flatMap(df.date(from:)),
+                     hostName: self.HostName,
+                     dnsName: self.DNSName,
+                     os: self.OS,
+                     userID: self.UserID,
+                     isExitNode: self.ExitNode,
+                     tailscaleIPs: self.TailscaleIPs.map { Tailscale.Address(rawValue: $0) },
+                     subnetRoutes: self.PrimaryRoutes?.map { Tailscale.Subnet(rawValue: $0) } ?? [],
+                     region: self.Relay,
+                     isActive: self.Active,
+                     rxBytes: self.RxBytes,
+                     txBytes: self.TxBytes,
+                     created: df.date(from: self.Created)!,
+                     lastWrite: self.LastWrite.flatMap(df.date(from:)),
+                     lastSeen: self.LastSeen.flatMap(df.date(from:)),
+                     lastHandshake: self.LastHandshake.flatMap(df.date(from:)),
+                     isOnline: self.Online,
+                     inNetworkMap: self.InNetworkMap,
+                     inMagicSock: self.InMagicSock,
+                     inEngine: self.InEngine)
       }
     }
     
@@ -150,13 +147,12 @@ public enum Tailscale {
     public let health: [String]
     // Network
     public let magicDNSSuffix: String
-    public let currentTailnet: Tailnet
+    public let currentTailnet: Tailnet?
     // Nodes
     public let selfNode: Node
     public let peerNodes: [Node]
     // Users
-    public let selfUser: User?
-    public let peerUsers: [String:User]
+    public let users: [String: User]
   }
   
   public struct Node: Codable {
@@ -170,10 +166,11 @@ public enum Tailscale {
     public let userID: Int
     public let isExitNode: Bool
     // Network
-    public let tailscaleIPs: [Subnet]
+    public let tailscaleIPs: [Address]
     public let subnetRoutes: [Subnet]
     public let region: String
     // Traffic
+    public let isActive: Bool
     public let rxBytes: Int
     public let txBytes: Int
     // Timestamps
@@ -183,7 +180,6 @@ public enum Tailscale {
     public let lastHandshake: Date?
     // Status
     public let isOnline: Bool
-    public let isActive: Bool
     public let inNetworkMap: Bool
     public let inMagicSock: Bool
     public let inEngine: Bool
@@ -202,6 +198,13 @@ public enum Tailscale {
   }
   
   public struct Subnet: Codable, RawRepresentable {
+    public let rawValue: String
+    public init(rawValue: String) {
+      self.rawValue = rawValue
+    }
+  }
+  
+  public struct Address: Codable, RawRepresentable {
     public let rawValue: String
     public init(rawValue: String) {
       self.rawValue = rawValue
