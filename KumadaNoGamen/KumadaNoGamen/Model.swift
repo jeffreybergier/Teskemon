@@ -19,22 +19,12 @@
 //
 
 import Foundation
-import SwiftData
 
 nonisolated(unsafe) internal let df: ISO8601DateFormatter = {
   let formatter = ISO8601DateFormatter()
   formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
   return formatter
 }()
-
-@Model
-final class Item {
-  var timestamp: Date
-  
-  init(timestamp: Date) {
-    self.timestamp = timestamp
-  }
-}
 
 public enum Tailscale {
   internal enum Raw {
@@ -69,7 +59,6 @@ public enum Tailscale {
                      peerNodes: peers,
                      users: users)
       }
-  
     }
     
     internal struct Node: Codable {
@@ -210,7 +199,7 @@ public enum Tailscale {
       self.rawValue = rawValue
     }
   }
-
+  
   public struct User: Codable {
     public let id: Int
     public let loginName: String

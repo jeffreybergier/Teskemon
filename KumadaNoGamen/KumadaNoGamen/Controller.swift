@@ -18,10 +18,22 @@
 //  along with WaterMe.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-import Foundation
+import SwiftUI
 
-public struct Controller {
-  internal static func tailscaleStatus() -> Tailscale.Raw.Status? {
+@propertyWrapper
+public struct Controller: DynamicProperty {
+  @State private var cliStatus: Tailscale.Status?
+  public init() {}
+  public var wrappedValue: Tailscale.Status? {
+    return self.cliStatus
+  }
+  public func updateAll() {
+    self.cliStatus = type(of: self).cliStatus()
+  }
+}
+
+extension Controller {
+  internal static func cliStatus() -> Tailscale.Status? {
     // Create a Process instance
     let process = Process()
     process.executableURL = URL(fileURLWithPath: "/usr/bin/env") // Use `/usr/bin/env` to locate the command
@@ -47,7 +59,7 @@ public struct Controller {
       let decoder = JSONDecoder()
       let output = try decoder.decode(Tailscale.Raw.Status.self, from: data)
       
-      return output
+      return output.clean()
     } catch {
       print("Failed to execute process: \(error)")
       return nil
