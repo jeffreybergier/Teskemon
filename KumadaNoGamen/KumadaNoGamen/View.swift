@@ -80,7 +80,13 @@ public struct ContentView: View {
       .toolbar {
         ToolbarItem {
           Button("Update") {
-            self._controller.updateAll()
+            Task {
+              do {
+                try await self._controller.updateAll()
+              } catch {
+                NSLog("// TODO: Show an error dialog")
+              }
+            }
           }
         }
       }

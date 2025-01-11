@@ -34,98 +34,48 @@ public struct Controller: DynamicProperty {
     return self.storage
   }
   
-  public func updateAll() {
-    var storage = type(of: self).cliStatus(self.executable)
-    let nodes = storage?.nodes ?? []
-    //storage?.nodes = type(of: self).serviceStatus(nodes: nodes,
-    //                                              services: self.services)
+  public func updateAll() async throws {
+    var storage = try await type(of: self).cliStatus(self.executable)
+    storage.nodes = try await type(of: self).serviceStatus(nodes: storage.nodes, services: self.services)
     self.storage = storage
   }
   
-  public func updateCLI() {
-    self.storage = type(of: self).cliStatus(self.executable)
+  public func updateCLI() async throws {
+    self.storage = try await type(of: self).cliStatus(self.executable)
   }
   
-  public func updateServices() {
+  public func updateServices() async throws {
     let nodes = self.storage?.nodes ?? []
-    self.storage?.nodes = type(of: self).serviceStatus(nodes: nodes,
+    self.storage?.nodes = try await type(of: self).serviceStatus(nodes: nodes,
                                                       services: self.services)
   }
 }
 
 extension Controller {
   
-  internal static func serviceStatus(nodes: [Tailscale.Node], services: [Service]) -> [Tailscale.Node] {
+  internal static func serviceStatus(nodes: [Tailscale.Node], services: [Service]) async throws -> [Tailscale.Node] {
     guard !nodes.isEmpty, !services.isEmpty else { return nodes }
-    
-    // Start iterating
     var output = nodes
     for (index, node) in nodes.enumerated() {
-      let url = node.url
       for service in services {
-        let port = service.port
-        
-        // Create a Process instance
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-        process.arguments = ["/usr/bin/nc", "-z", url, String(describing: port)]
-        
-        // Pipe to capture output
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        
-        do {
-          // Launch the process
-          print("CHECKING: \(url):\(port)")
-          try process.run()
-          process.waitUntilExit() // Wait for the command to finish executing
-          
-          // Check the exit status for success
-          let result = process.terminationStatus == 0
-          output[index].serviceStatus[service] = result
-          print("SUCCESS: \(url):\(port)")
-        } catch {
-          guard process.terminationStatus == 0 else {
-            print("FAIL: \(url):\(port): Error: \(error)")
-            continue
-          }
-        }
+        let arguments: [String] = ["/usr/bin/nc", "-z", node.url, String(describing: service.port)]
+        NSLog("CHECKING: \(arguments)")
+        let result = try await Process.execute(arguments: arguments)
+        output[index].serviceStatus[service] = result.exitCode == 0
       }
     }
+    NSLog("ALL CHECKED")
     return nodes
   }
   
-  internal static func cliStatus(_ executable: String) -> Tailscale.Status? {
-    // Create a Process instance
-    let process = Process()
-    process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-    process.arguments = [executable, "status", "--json"]
+  internal static func cliStatus(_ executable: String) async throws -> Tailscale.Status {
     
-    // Pipe to capture output
-    let pipe = Pipe()
-    process.standardOutput = pipe
+    let result = try await Process.execute(arguments: [executable, "status", "--json"])
+    assert(result.exitCode == 0, "")
+    let decoder = JSONDecoder()
+    let output = try decoder.decode(Tailscale.Raw.Status.self, from: result.data)
     
-    do {
-      // Launch the process
-      try process.run()
-      process.waitUntilExit() // Wait for the command to finish executing
-      
-      // Check the process exit status
-      guard process.terminationStatus == 0 else {
-        NSLog("Process failed with exit code: \(process.terminationStatus)")
-        return nil
-      }
-      
-      // Decode the JSON
-      let data = pipe.fileHandleForReading.readDataToEndOfFile()
-      let decoder = JSONDecoder()
-      let output = try decoder.decode(Tailscale.Raw.Status.self, from: data)
-      
-      return output.clean()
-    } catch {
-      print("Failed to execute process: \(error)")
-      return nil
-    }
+    return output.clean()
   }
 }
 
@@ -141,6 +91,22 @@ public struct Services: DynamicProperty {
   }
 }
 
+extension Process {
+  static func execute(arguments: [String]) async throws -> (exitCode: Int, data: Data) {
+    let process = Process()
+    process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+    process.arguments = arguments
+    
+    let outputPipe = Pipe()
+    process.standardOutput = outputPipe
+    
+    try process.run()
+    process.waitUntilExit()
+    let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
+    
+    return (Int(process.terminationStatus), outputData)
+  }
+}
 
 // TODO: Delete after importing Umbrella via SPM
 /// Provides a SceneStorage API that takes any codable value
