@@ -47,7 +47,7 @@ public struct Controller: DynamicProperty {
   public func updateServices() async throws {
     let nodes = self.storage?.nodes ?? []
     self.storage?.nodes = try await type(of: self).serviceStatus(nodes: nodes,
-                                                      services: self.services)
+                                                                 services: self.services)
   }
 }
 
@@ -58,7 +58,7 @@ extension Controller {
     var output = nodes
     for (index, node) in nodes.enumerated() {
       for service in services {
-        let arguments: [String] = ["/usr/bin/nc", "-z", node.url, String(describing: service.port)]
+        let arguments: [String] = ["/usr/bin/nc", "-zv", "-w 5", node.url, String(describing: service.port)]
         NSLog("CHECKING: \(arguments)")
         let result = try await Process.execute(arguments: arguments)
         output[index].serviceStatus[service] = result.exitCode == 0
@@ -71,9 +71,9 @@ extension Controller {
   internal static func cliStatus(_ executable: String) async throws -> Tailscale.Status {
     
     let result = try await Process.execute(arguments: [executable, "status", "--json"])
-    assert(result.exitCode == 0, "")
+    //assert(result.exitCode == 0, "")
     let decoder = JSONDecoder()
-    let output = try decoder.decode(Tailscale.Raw.Status.self, from: result.data)
+    let output = try decoder.decode(Tailscale.Raw.Status.self, from: result.stdOut)
     
     return output.clean()
   }
@@ -92,19 +92,48 @@ public struct Services: DynamicProperty {
 }
 
 extension Process {
-  static func execute(arguments: [String]) async throws -> (exitCode: Int, data: Data) {
-    let process = Process()
-    process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-    process.arguments = arguments
-    
-    let outputPipe = Pipe()
-    process.standardOutput = outputPipe
-    
-    try process.run()
-    process.waitUntilExit()
-    let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
-    
-    return (Int(process.terminationStatus), outputData)
+  static func execute(arguments: [String]) async throws -> (exitCode: Int, stdOut: Data, errOut: Data) {
+    try await withCheckedThrowingContinuation { continuation  in
+      // Create files
+      let tempURL = URL(fileURLWithPath: NSTemporaryDirectory())
+      let url = tempURL.appendingPathComponent("0000_" + UUID().uuidString + ".stdout", isDirectory: false)
+      let urlError = tempURL.appendingPathComponent("0000_" + UUID().uuidString + ".stderr", isDirectory: false)
+      let fm = FileManager.default
+      fm.createFile(atPath: url.path(), contents: nil)
+      fm.createFile(atPath: urlError.path(), contents: nil)
+      
+      do {
+        let task = Process()
+        let handle = try FileHandle(forWritingTo: url)
+        let errorHandle = try FileHandle(forWritingTo: urlError)
+        
+        task.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        task.arguments = arguments
+        task.standardOutput = handle
+        task.standardError = errorHandle
+        task.qualityOfService = .userInitiated
+        
+        task.terminationHandler = { task in
+          do {
+            try handle.close()
+            try errorHandle.close()
+            let stdOut = try Data(contentsOf: url)
+            let errOut = try Data(contentsOf: urlError)
+            let fm = FileManager.default
+            try fm.removeItem(at: url)
+            try fm.removeItem(at: urlError)
+            continuation.resume(returning: (Int(task.terminationStatus), stdOut, errOut))
+          } catch {
+            continuation.resume(throwing: error)
+          }
+        }
+        
+        print(url.path())
+        try task.run()
+      } catch {
+        continuation.resume(throwing: error)
+      }
+    }
   }
 }
 
@@ -113,75 +142,75 @@ extension Process {
 @MainActor
 @propertyWrapper
 public struct JSBSceneStorage<Value: Codable>: DynamicProperty {
-    
-    @SceneStorage private var rawValue: String?
-    @StateObject  private var helper: CodableStorageHelper<Value>
-    
-    private let defaultValue: Value
-    
-    public init(defaultValue: Value, key: String, onError: OnError? = nil) {
-        _rawValue = .init(key)
-        _helper = .init(wrappedValue: .init(onError))
-        self.defaultValue = defaultValue
+  
+  @SceneStorage private var rawValue: String?
+  @StateObject  private var helper: CodableStorageHelper<Value>
+  
+  private let defaultValue: Value
+  
+  public init(defaultValue: Value, key: String, onError: OnError? = nil) {
+    _rawValue = .init(key)
+    _helper = .init(wrappedValue: .init(onError))
+    self.defaultValue = defaultValue
+  }
+  
+  public var wrappedValue: Value {
+    get { self.helper.readCacheOrDecode(self.rawValue) ?? self.defaultValue }
+    nonmutating set { self.rawValue = self.helper.encodeAndCache(newValue) }
+  }
+  
+  public var projectedValue: Binding<Value> {
+    Binding {
+      self.wrappedValue
+    } set: {
+      self.wrappedValue = $0
     }
-    
-    public var wrappedValue: Value {
-        get { self.helper.readCacheOrDecode(self.rawValue) ?? self.defaultValue }
-        nonmutating set { self.rawValue = self.helper.encodeAndCache(newValue) }
-    }
-    
-    public var projectedValue: Binding<Value> {
-        Binding {
-            self.wrappedValue
-        } set: {
-            self.wrappedValue = $0
-        }
-    }
+  }
 }
 
 public typealias OnError = (Error) -> Void
 
 internal class CodableStorageHelper<Value: Codable>: ObservableObject {
-    
-    // Not sure if storing these helps performance
-    private let encoder = PropertyListEncoder()
-    private let decoder = PropertyListDecoder()
-    
-    // Not sure if cache actually helps performance
-    private var cache: [String: Value] = [:]
-    private let onError: OnError?
-    
-    internal init(_ onError: OnError?) {
-        self.onError = onError
+  
+  // Not sure if storing these helps performance
+  private let encoder = PropertyListEncoder()
+  private let decoder = PropertyListDecoder()
+  
+  // Not sure if cache actually helps performance
+  private var cache: [String: Value] = [:]
+  private let onError: OnError?
+  
+  internal init(_ onError: OnError?) {
+    self.onError = onError
+  }
+  
+  internal func readCacheOrDecode(_ rawValue: String?) -> Value? {
+    do {
+      guard let rawValue else { return nil }
+      if let cache = self.cache[rawValue] { return cache }
+      guard let data = Data(base64Encoded: rawValue) else { return nil }
+      return try self.decoder.decode(Value.self, from: data)
+    } catch {
+      self.onError?(error)
+      guard self.onError == nil else { return nil }
+      NSLog(String(describing: error))
+      assertionFailure(String(describing: error))
+      return nil
     }
-    
-    internal func readCacheOrDecode(_ rawValue: String?) -> Value? {
-        do {
-            guard let rawValue else { return nil }
-            if let cache = self.cache[rawValue] { return cache }
-            guard let data = Data(base64Encoded: rawValue) else { return nil }
-            return try self.decoder.decode(Value.self, from: data)
-        } catch {
-            self.onError?(error)
-            guard self.onError == nil else { return nil }
-            NSLog(String(describing: error))
-            assertionFailure(String(describing: error))
-            return nil
-        }
+  }
+  
+  internal func encodeAndCache(_ newValue: Value) -> String? {
+    do {
+      let data = try self.encoder.encode(newValue)
+      let rawValue = data.base64EncodedString()
+      self.cache[rawValue] = newValue
+      return rawValue
+    } catch {
+      self.onError?(error)
+      guard self.onError == nil else { return nil }
+      NSLog(String(describing: error))
+      assertionFailure(String(describing: error))
+      return nil
     }
-    
-    internal func encodeAndCache(_ newValue: Value) -> String? {
-        do {
-            let data = try self.encoder.encode(newValue)
-            let rawValue = data.base64EncodedString()
-            self.cache[rawValue] = newValue
-            return rawValue
-        } catch {
-            self.onError?(error)
-            guard self.onError == nil else { return nil }
-            NSLog(String(describing: error))
-            assertionFailure(String(describing: error))
-            return nil
-        }
-    }
+  }
 }
