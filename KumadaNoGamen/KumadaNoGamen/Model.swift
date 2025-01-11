@@ -45,10 +45,8 @@ public enum Tailscale {
       internal let ClientVersion: ClientVersion?
       
       internal func clean() -> Tailscale.Status {
-        let nodes: [Tailscale.Node] = {
-          let peers = self.Peer?.values.map { $0.clean() } ?? []
-          return peers + [self.Self.clean()]
-        }()
+        let nodes: [Tailscale.Node] = (self.Peer?.values.map { $0.clean() } ?? [])
+                                    + [self.Self.clean()]
         let users: [String: Tailscale.User] = self.User ?? [:]
         return .init(version: self.Version,
                      versionUpToDate: self.ClientVersion?.runningLatest ?? false,
@@ -99,8 +97,8 @@ public enum Tailscale {
         return .init(id: self.ID,
                      publicKey: self.PublicKey,
                      keyExpiry: self.KeyExpiry.flatMap(df.date(from:)),
-                     hostName: self.HostName,
-                     dnsName: self.DNSName,
+                     hostname: self.HostName,
+                     url: self.DNSName,
                      os: self.OS,
                      userID: self.UserID,
                      isExitNode: self.ExitNode,
@@ -108,8 +106,8 @@ public enum Tailscale {
                      subnetRoutes: self.PrimaryRoutes?.map { Tailscale.Subnet(rawValue: $0) } ?? [],
                      region: self.Relay,
                      isActive: self.Active,
-                     rxBytes: self.RxBytes,
-                     txBytes: self.TxBytes,
+                     rxBytes: Int64(self.RxBytes),
+                     txBytes: Int64(self.TxBytes),
                      created: df.date(from: self.Created)!,
                      lastWrite: self.LastWrite.flatMap(df.date(from:)),
                      lastSeen: self.LastSeen.flatMap(df.date(from:)),
@@ -147,13 +145,13 @@ public enum Tailscale {
     public let users: [String: User]
   }
   
-  public struct Node: Codable {
+  public struct Node: Codable, Identifiable {
     // Information
     public let id: String
     public let publicKey: String
     public let keyExpiry: Date?
-    public let hostName: String
-    public let dnsName: String
+    public let hostname: String
+    public let url: String
     public let os: String
     public let userID: Int
     public let isExitNode: Bool
@@ -163,8 +161,8 @@ public enum Tailscale {
     public let region: String
     // Traffic
     public let isActive: Bool
-    public let rxBytes: Int
-    public let txBytes: Int
+    public let rxBytes: Int64
+    public let txBytes: Int64
     // Timestamps
     public let created: Date
     public let lastWrite: Date?

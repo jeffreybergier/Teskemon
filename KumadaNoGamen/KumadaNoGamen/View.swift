@@ -20,21 +20,66 @@
 
 import SwiftUI
 
+@MainActor internal let byteF = ByteCountFormatter()
+
 public struct ContentView: View {
   
   @Controller private var controller
   
   public var body: some View {
     NavigationStack {
-      Text("Peers: \(self.controller?.nodes.count ?? -1)")
-        .navigationTitle("Home")
-        .toolbar {
-          ToolbarItem {
-            Button("Update") {
-              self._controller.updateAll()
+      Table(self.controller?.nodes ?? []) {
+        TableColumn("") { node in
+          Image(systemName: node.isOnline ? "circle.fill" : "stop.fill")
+            .foregroundStyle(node.isOnline ? Color(nsColor: .systemGreen) : Color(nsColor: .systemRed))
+        }
+        TableColumn("Machine") { node in
+          HStack(alignment: .center) {
+            Group {
+              if (self.controller?.selfNodeID == node.id) {
+                Image(systemName: "house")
+              } else {
+                Image(systemName: "network")
+              }
+            }
+            .font(.title)
+            VStack(alignment: .leading) {
+              HStack(alignment:.firstTextBaseline) {
+                Text(node.hostname).font(.headline)
+                Text(node.os).font(.subheadline)
+              }
+              Text(node.url).font(.subheadline)
             }
           }
         }
+        TableColumn("Activity") { node in
+          HStack(alignment: .center) {
+            Group {
+              if (node.isActive) {
+                Image(systemName: "progress.indicator")
+              } else {
+                Image(systemName: "pause.circle")
+              }
+            }
+            .font(.title)
+            VStack(alignment: .leading) {
+              Label(byteF.string(fromByteCount: node.txBytes),
+                    systemImage:"chevron.up")
+              Label(byteF.string(fromByteCount: node.rxBytes),
+                    systemImage:"chevron.down")
+            }
+            .font(.subheadline)
+          }
+        }
+      }
+      .navigationTitle("Home")
+      .toolbar {
+        ToolbarItem {
+          Button("Update") {
+            self._controller.updateAll()
+          }
+        }
+      }
     }
   }
 }
