@@ -23,13 +23,13 @@ import SwiftUI
 @MainActor
 @propertyWrapper
 public struct Controller: DynamicProperty {
-  @JSBSceneStorage(wrappedValue: nil, "cliStatus") private var cliStatus: Tailscale.Status?
+  @JSBSceneStorage(defaultValue: nil, key:"CLIStatus") private var storage: Tailscale.Status?
   public init() {}
   public var wrappedValue: Tailscale.Status? {
-    return self.cliStatus
+    return self.storage
   }
   public func updateAll() {
-    self.cliStatus = type(of: self).cliStatus()
+    self.storage = type(of: self).cliStatus()
   }
 }
 
@@ -68,6 +68,23 @@ extension Controller {
   }
 }
 
+@MainActor
+@propertyWrapper
+public struct Services: DynamicProperty {
+  
+  @JSBSceneStorage(
+    defaultValue: Service.default,
+    key: "Services"
+  ) private var storage: [Service]
+  
+  public init() { }
+  
+  public var wrappedValue: [Service] {
+    get { self.storage }
+    nonmutating set { self.storage = newValue }
+  }
+}
+
 
 // TODO: Delete after importing Umbrella via SPM
 /// Provides a SceneStorage API that takes any codable value
@@ -80,10 +97,10 @@ public struct JSBSceneStorage<Value: Codable>: DynamicProperty {
     
     private let defaultValue: Value
     
-    public init(wrappedValue: Value, _ key: String, onError: OnError? = nil) {
+    public init(defaultValue: Value, key: String, onError: OnError? = nil) {
         _rawValue = .init(key)
         _helper = .init(wrappedValue: .init(onError))
-        self.defaultValue = wrappedValue
+        self.defaultValue = defaultValue
     }
     
     public var wrappedValue: Value {

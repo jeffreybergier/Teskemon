@@ -28,7 +28,7 @@ nonisolated(unsafe) internal let df: ISO8601DateFormatter = {
 
 public enum Tailscale {
   internal enum Raw {
-    internal struct Status: Codable {
+    internal struct Status: Codable, Sendable {
       internal let Version: String
       internal let TUN: Bool
       internal let BackendState: String
@@ -62,7 +62,7 @@ public enum Tailscale {
       }
     }
     
-    internal struct Node: Codable {
+    internal struct Node: Codable, Sendable {
       internal let ID: String
       internal let PublicKey: String
       internal let HostName: String
@@ -119,7 +119,7 @@ public enum Tailscale {
       }
     }
     
-    internal struct ClientVersion: Codable {
+    internal struct ClientVersion: Codable, Sendable {
       internal let runningLatest: Bool
       internal enum CodingKeys: String, CodingKey {
         case runningLatest = "RunningLatest"
@@ -127,7 +127,7 @@ public enum Tailscale {
     }
   }
   
-  public struct Status: Codable {
+  public struct Status: Codable, Sendable {
     // Status
     public let version: String
     public let versionUpToDate: Bool
@@ -145,7 +145,7 @@ public enum Tailscale {
     public let users: [String: User]
   }
   
-  public struct Node: Codable, Identifiable {
+  public struct Node: Codable, Sendable, Identifiable {
     // Information
     public let id: String
     public let publicKey: String
@@ -175,7 +175,7 @@ public enum Tailscale {
     public let inEngine: Bool
   }
   
-  public struct Tailnet: Codable {
+  public struct Tailnet: Codable, Sendable {
     public let name: String
     public let magicDNSSuffix: String
     public let magicDNSEnabled: Bool
@@ -187,21 +187,21 @@ public enum Tailscale {
     }
   }
   
-  public struct Subnet: Codable, RawRepresentable {
+  public struct Subnet: Codable, Sendable, RawRepresentable {
     public let rawValue: String
     public init(rawValue: String) {
       self.rawValue = rawValue
     }
   }
   
-  public struct Address: Codable, RawRepresentable {
+  public struct Address: Codable, Sendable, RawRepresentable {
     public let rawValue: String
     public init(rawValue: String) {
       self.rawValue = rawValue
     }
   }
   
-  public struct User: Codable {
+  public struct User: Codable, Sendable {
     public let id: Int
     public let loginName: String
     public let displayName: String
@@ -216,4 +216,19 @@ public enum Tailscale {
       case roles = "Roles"
     }
   }
+}
+
+public struct Service: Codable, Sendable {
+  public static let `default`: [Service] = {
+    return [
+      Service(name: "AFP", protocol: "afp", port: 548),
+      Service(name: "SSH", protocol: "ssh", port: 22),
+      Service(name: "SMB", protocol: "smb", port: 445),
+      Service(name: "RDP", protocol: "rdp", port: 3389),
+      Service(name: "VNC", protocol: "vnc", port: 5900),
+    ]
+  }()
+  public var name: String
+  public var `protocol`: String
+  public var port: Int
 }
