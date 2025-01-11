@@ -26,7 +26,7 @@ public struct ContentView: View {
   
   public var body: some View {
     NavigationStack {
-      Text("Peers: \(self.controller?.peerNodes.count ?? -1)")
+      Text("Peers: \(self.controller?.nodes.count ?? -1)")
         .navigationTitle("Home")
         .toolbar {
           ToolbarItem {

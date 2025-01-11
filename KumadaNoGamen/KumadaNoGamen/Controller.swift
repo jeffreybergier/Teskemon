@@ -20,9 +20,10 @@
 
 import SwiftUI
 
+@MainActor
 @propertyWrapper
 public struct Controller: DynamicProperty {
-  @State private var cliStatus: Tailscale.Status?
+  @JSBSceneStorage(wrappedValue: nil, "cliStatus") private var cliStatus: Tailscale.Status?
   public init() {}
   public var wrappedValue: Tailscale.Status? {
     return self.cliStatus
@@ -65,4 +66,83 @@ extension Controller {
       return nil
     }
   }
+}
+
+
+// TODO: Delete after importing Umbrella via SPM
+/// Provides a SceneStorage API that takes any codable value
+@MainActor
+@propertyWrapper
+public struct JSBSceneStorage<Value: Codable>: DynamicProperty {
+    
+    @SceneStorage private var rawValue: String?
+    @StateObject  private var helper: CodableStorageHelper<Value>
+    
+    private let defaultValue: Value
+    
+    public init(wrappedValue: Value, _ key: String, onError: OnError? = nil) {
+        _rawValue = .init(key)
+        _helper = .init(wrappedValue: .init(onError))
+        self.defaultValue = wrappedValue
+    }
+    
+    public var wrappedValue: Value {
+        get { self.helper.readCacheOrDecode(self.rawValue) ?? self.defaultValue }
+        nonmutating set { self.rawValue = self.helper.encodeAndCache(newValue) }
+    }
+    
+    public var projectedValue: Binding<Value> {
+        Binding {
+            self.wrappedValue
+        } set: {
+            self.wrappedValue = $0
+        }
+    }
+}
+
+public typealias OnError = (Error) -> Void
+
+internal class CodableStorageHelper<Value: Codable>: ObservableObject {
+    
+    // Not sure if storing these helps performance
+    private let encoder = PropertyListEncoder()
+    private let decoder = PropertyListDecoder()
+    
+    // Not sure if cache actually helps performance
+    private var cache: [String: Value] = [:]
+    private let onError: OnError?
+    
+    internal init(_ onError: OnError?) {
+        self.onError = onError
+    }
+    
+    internal func readCacheOrDecode(_ rawValue: String?) -> Value? {
+        do {
+            guard let rawValue else { return nil }
+            if let cache = self.cache[rawValue] { return cache }
+            guard let data = Data(base64Encoded: rawValue) else { return nil }
+            return try self.decoder.decode(Value.self, from: data)
+        } catch {
+            self.onError?(error)
+            guard self.onError == nil else { return nil }
+            NSLog(String(describing: error))
+            assertionFailure(String(describing: error))
+            return nil
+        }
+    }
+    
+    internal func encodeAndCache(_ newValue: Value) -> String? {
+        do {
+            let data = try self.encoder.encode(newValue)
+            let rawValue = data.base64EncodedString()
+            self.cache[rawValue] = newValue
+            return rawValue
+        } catch {
+            self.onError?(error)
+            guard self.onError == nil else { return nil }
+            NSLog(String(describing: error))
+            assertionFailure(String(describing: error))
+            return nil
+        }
+    }
 }

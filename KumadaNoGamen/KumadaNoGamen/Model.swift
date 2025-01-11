@@ -45,7 +45,10 @@ public enum Tailscale {
       internal let ClientVersion: ClientVersion?
       
       internal func clean() -> Tailscale.Status {
-        let peers: [Tailscale.Node] = self.Peer?.values.map { $0.clean() } ?? []
+        let nodes: [Tailscale.Node] = {
+          let peers = self.Peer?.values.map { $0.clean() } ?? []
+          return peers + [self.Self.clean()]
+        }()
         let users: [String: Tailscale.User] = self.User ?? [:]
         return .init(version: self.Version,
                      versionUpToDate: self.ClientVersion?.runningLatest ?? false,
@@ -55,8 +58,8 @@ public enum Tailscale {
                      health: self.Health,
                      magicDNSSuffix: self.MagicDNSSuffix,
                      currentTailnet: self.CurrentTailnet,
-                     selfNode: self.Self.clean(),
-                     peerNodes: peers,
+                     selfNodeID: self.Self.ID,
+                     nodes: nodes,
                      users: users)
       }
     }
@@ -138,8 +141,8 @@ public enum Tailscale {
     public let magicDNSSuffix: String
     public let currentTailnet: Tailnet?
     // Nodes
-    public let selfNode: Node
-    public let peerNodes: [Node]
+    public let selfNodeID: String
+    public let nodes: [Node]
     // Users
     public let users: [String: User]
   }
