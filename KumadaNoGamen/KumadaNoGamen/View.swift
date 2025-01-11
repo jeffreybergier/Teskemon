@@ -34,15 +34,15 @@ public struct ContentView: View {
   public var body: some View {
     NavigationStack {
       Table(self.controller.nodeIDs) {
-        TableColumn("") { id in
+        TableColumn("Online") { id in
           Image(systemName: self.node(id).isActive ? "circle.fill" : "stop.fill")
             .foregroundStyle(self.node(id).isOnline
                              ? Color(nsColor: .systemGreen).gradient
                              : Color(nsColor: .systemRed).gradient)
         }
         .width(24)
-        TableColumn("Machine") { id in
-          HStack(alignment: .center) {
+        TableColumn("Region") { id in
+          VStack(alignment: .center) {
             Group {
               if (self.controller.status?.selfNodeID == id) {
                 Image(systemName: "house")
@@ -50,14 +50,19 @@ public struct ContentView: View {
                 Image(systemName: "network")
               }
             }
-            .font(.title)
-            VStack(alignment: .leading) {
-              HStack(alignment:.firstTextBaseline) {
-                Text(self.node(id).hostname).font(.headline)
-                Text(self.node(id).os).font(.subheadline)
-              }
-              Text(self.node(id).url).font(.subheadline)
+            .font(.headline)
+            Text(self.node(id).region)
+              .font(.subheadline)
+          }
+        }
+        .width(24)
+        TableColumn("Machine") { id in
+          VStack(alignment: .leading) {
+            HStack(alignment:.firstTextBaseline) {
+              Text(self.node(id).hostname).font(.headline)
+              Text(self.node(id).os).font(.subheadline)
             }
+            Text(self.node(id).url).font(.subheadline)
           }
         }
         TableColumn("Activity") { id in
@@ -69,7 +74,7 @@ public struct ContentView: View {
                 Image(systemName: "pause.circle")
               }
             }
-            .font(.title)
+            .font(.headline)
             VStack(alignment: .leading) {
               Label(byteF.string(fromByteCount: self.node(id).txBytes),
                     systemImage:"chevron.up")

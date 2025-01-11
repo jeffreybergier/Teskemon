@@ -149,7 +149,7 @@ public enum Tailscale {
   }
   
   public struct Node: Codable, Sendable, Identifiable {
-    public struct Identifier: Codable, Sendable, Hashable, Equatable, Identifiable, RawRepresentable {
+    public struct Identifier: Codable, Sendable, Hashable, Identifiable, RawRepresentable {
       public var id: String { return self.rawValue }
       public let rawValue: String
       public init(rawValue: String) {
@@ -214,7 +214,7 @@ public enum Tailscale {
   }
   
   public struct User: Codable, Sendable {
-    public struct Identifier: Codable, Sendable, Hashable, Equatable, Identifiable, RawRepresentable {
+    public struct Identifier: Codable, Sendable, Hashable, Identifiable, RawRepresentable {
       public var id: Int { return self.rawValue }
       public let rawValue: Int
       public init(rawValue: Int) {

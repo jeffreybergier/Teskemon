@@ -45,7 +45,7 @@ public struct Controller: DynamicProperty {
   public func updateMachines() async throws {
     let value = try await type(of: self).cliStatus(self.executable)
     self.storage.status = value.status
-    self.storage.nodeIDs = Array(value.nodes.keys)
+    self.storage.nodeIDs = Array(value.nodes.keys.sorted(by: { $0.rawValue > $1.rawValue }))
     self.storage.nodes = value.nodes
     self.storage.users = value.users
   }
