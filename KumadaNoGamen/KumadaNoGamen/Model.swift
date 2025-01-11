@@ -140,7 +140,7 @@ public enum Tailscale {
     public let currentTailnet: Tailnet?
     // Nodes
     public let selfNodeID: String
-    public let nodes: [Node]
+    public var nodes: [Node]
     // Users
     public let users: [String: User]
   }
@@ -173,6 +173,8 @@ public enum Tailscale {
     public let inNetworkMap: Bool
     public let inMagicSock: Bool
     public let inEngine: Bool
+    // Services
+    public var serviceStatus: [Service: Bool] = [:]
   }
   
   public struct Tailnet: Codable, Sendable {
@@ -218,7 +220,7 @@ public enum Tailscale {
   }
 }
 
-public struct Service: Codable, Sendable {
+public struct Service: Codable, Sendable, Hashable {
   public static let `default`: [Service] = {
     return [
       Service(name: "AFP", protocol: "afp", port: 548),

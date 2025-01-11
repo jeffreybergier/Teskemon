@@ -25,14 +25,18 @@ import SwiftUI
 public struct ContentView: View {
   
   @Controller private var controller
+  @Services private var services
   
   public var body: some View {
     NavigationStack {
       Table(self.controller?.nodes ?? []) {
         TableColumn("") { node in
           Image(systemName: node.isOnline ? "circle.fill" : "stop.fill")
-            .foregroundStyle(node.isOnline ? Color(nsColor: .systemGreen) : Color(nsColor: .systemRed))
+            .foregroundStyle(node.isOnline
+                             ? Color(nsColor: .systemGreen).gradient
+                             : Color(nsColor: .systemRed).gradient)
         }
+        .width(24)
         TableColumn("Machine") { node in
           HStack(alignment: .center) {
             Group {

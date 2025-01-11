@@ -23,22 +23,83 @@ import SwiftUI
 @MainActor
 @propertyWrapper
 public struct Controller: DynamicProperty {
+  
   @JSBSceneStorage(defaultValue: nil, key:"CLIStatus") private var storage: Tailscale.Status?
+  @Services private var services
+  @AppStorage("TailscaleExecutable") private var executable: String = "/usr/local/bin/tailscale"
+  
   public init() {}
+  
   public var wrappedValue: Tailscale.Status? {
     return self.storage
   }
+  
   public func updateAll() {
-    self.storage = type(of: self).cliStatus()
+    var storage = type(of: self).cliStatus(self.executable)
+    let nodes = storage?.nodes ?? []
+    //storage?.nodes = type(of: self).serviceStatus(nodes: nodes,
+    //                                              services: self.services)
+    self.storage = storage
+  }
+  
+  public func updateCLI() {
+    self.storage = type(of: self).cliStatus(self.executable)
+  }
+  
+  public func updateServices() {
+    let nodes = self.storage?.nodes ?? []
+    self.storage?.nodes = type(of: self).serviceStatus(nodes: nodes,
+                                                      services: self.services)
   }
 }
 
 extension Controller {
-  internal static func cliStatus() -> Tailscale.Status? {
+  
+  internal static func serviceStatus(nodes: [Tailscale.Node], services: [Service]) -> [Tailscale.Node] {
+    guard !nodes.isEmpty, !services.isEmpty else { return nodes }
+    
+    // Start iterating
+    var output = nodes
+    for (index, node) in nodes.enumerated() {
+      let url = node.url
+      for service in services {
+        let port = service.port
+        
+        // Create a Process instance
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        process.arguments = ["/usr/bin/nc", "-z", url, String(describing: port)]
+        
+        // Pipe to capture output
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        
+        do {
+          // Launch the process
+          print("CHECKING: \(url):\(port)")
+          try process.run()
+          process.waitUntilExit() // Wait for the command to finish executing
+          
+          // Check the exit status for success
+          let result = process.terminationStatus == 0
+          output[index].serviceStatus[service] = result
+          print("SUCCESS: \(url):\(port)")
+        } catch {
+          guard process.terminationStatus == 0 else {
+            print("FAIL: \(url):\(port): Error: \(error)")
+            continue
+          }
+        }
+      }
+    }
+    return nodes
+  }
+  
+  internal static func cliStatus(_ executable: String) -> Tailscale.Status? {
     // Create a Process instance
     let process = Process()
-    process.executableURL = URL(fileURLWithPath: "/usr/bin/env") // Use `/usr/bin/env` to locate the command
-    process.arguments = ["/usr/local/bin/tailscale", "status", "--json"]
+    process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+    process.arguments = [executable, "status", "--json"]
     
     // Pipe to capture output
     let pipe = Pipe()
@@ -72,16 +133,11 @@ extension Controller {
 @propertyWrapper
 public struct Services: DynamicProperty {
   
-  @JSBSceneStorage(
-    defaultValue: Service.default,
-    key: "Services"
-  ) private var storage: [Service]
-  
   public init() { }
   
   public var wrappedValue: [Service] {
-    get { self.storage }
-    nonmutating set { self.storage = newValue }
+    get { Service.default }
+    nonmutating set { fatalError("// TODO: Add this to NSUserDefaults") }
   }
 }
 
