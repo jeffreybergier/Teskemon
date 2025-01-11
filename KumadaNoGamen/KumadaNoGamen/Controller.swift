@@ -24,30 +24,36 @@ import SwiftUI
 @propertyWrapper
 public struct Controller: DynamicProperty {
   
-  @JSBSceneStorage(defaultValue: nil, key:"CLIStatus") private var storage: Tailscale.Status?
+  public struct Value: Codable {
+    public var status: Tailscale.Status?
+    public var nodeIDs: [Tailscale.Node.Identifier] = []
+    public var nodes: [Tailscale.Node.Identifier: Tailscale.Node] = [:]
+    public var users: [Tailscale.Node.Identifier: Tailscale.User] = [:]
+    public var services: [Tailscale.Node.Identifier: Service.Status] = [:]
+  }
+  
+  @JSBSceneStorage("ControllerValue") private var storage: Value = Value()
   @Services private var services
   @AppStorage("TailscaleExecutable") private var executable: String = "/usr/local/bin/tailscale"
   
   public init() {}
   
-  public var wrappedValue: Tailscale.Status? {
+  public var wrappedValue: Value {
     return self.storage
   }
   
-  public func updateAll() async throws {
-    var storage = try await type(of: self).cliStatus(self.executable)
-    storage.nodes = try await type(of: self).serviceStatus(nodes: storage.nodes, services: self.services)
-    self.storage = storage
-  }
-  
-  public func updateCLI() async throws {
-    self.storage = try await type(of: self).cliStatus(self.executable)
+  public func updateMachines() async throws {
+    let value = try await type(of: self).cliStatus(self.executable)
+    self.storage.status = value.status
+    self.storage.nodeIDs = Array(value.nodes.keys)
+    self.storage.nodes = value.nodes
+    self.storage.users = value.users
   }
   
   public func updateServices() async throws {
-    let nodes = self.storage?.nodes ?? []
-    self.storage?.nodes = try await type(of: self).serviceStatus(nodes: nodes,
-                                                                 services: self.services)
+//    let nodes = self.storage?.nodes ?? []
+//    self.storage?.nodes = try await type(of: self).serviceStatus(nodes: nodes,
+//                                                                 services: self.services)
   }
 }
 
@@ -68,14 +74,10 @@ extension Controller {
     return nodes
   }
   
-  internal static func cliStatus(_ executable: String) async throws -> Tailscale.Status {
-    
-    let result = try await Process.execute(arguments: [executable, "status", "--json"])
-    //assert(result.exitCode == 0, "")
+  internal static func cliStatus(_ executable: String) async throws -> Tailscale.StatusValue {
     let decoder = JSONDecoder()
-    let output = try decoder.decode(Tailscale.Raw.Status.self, from: result.stdOut)
-    
-    return output.clean()
+    let result = try await Process.execute(arguments: [executable, "status", "--json"])
+    return try decoder.decode(Tailscale.Raw.Status.self, from: result.stdOut).clean()
   }
 }
 
@@ -148,10 +150,10 @@ public struct JSBSceneStorage<Value: Codable>: DynamicProperty {
   
   private let defaultValue: Value
   
-  public init(defaultValue: Value, key: String, onError: OnError? = nil) {
+  public init(wrappedValue: Value, _ key: String, onError: OnError? = nil) {
     _rawValue = .init(key)
     _helper = .init(wrappedValue: .init(onError))
-    self.defaultValue = defaultValue
+    self.defaultValue = wrappedValue
   }
   
   public var wrappedValue: Value {

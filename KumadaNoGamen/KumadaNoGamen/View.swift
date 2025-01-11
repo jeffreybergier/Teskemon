@@ -27,20 +27,24 @@ public struct ContentView: View {
   @Controller private var controller
   @Services private var services
   
+  private func node(_ id: Tailscale.Node.Identifier) -> Tailscale.Node {
+    return self.controller.nodes[id]!
+  }
+  
   public var body: some View {
     NavigationStack {
-      Table(self.controller?.nodes ?? []) {
-        TableColumn("") { node in
-          Image(systemName: node.isOnline ? "circle.fill" : "stop.fill")
-            .foregroundStyle(node.isOnline
+      Table(self.controller.nodeIDs) {
+        TableColumn("") { id in
+          Image(systemName: self.node(id).isActive ? "circle.fill" : "stop.fill")
+            .foregroundStyle(self.node(id).isOnline
                              ? Color(nsColor: .systemGreen).gradient
                              : Color(nsColor: .systemRed).gradient)
         }
         .width(24)
-        TableColumn("Machine") { node in
+        TableColumn("Machine") { id in
           HStack(alignment: .center) {
             Group {
-              if (self.controller?.selfNodeID == node.id) {
+              if (self.controller.status?.selfNodeID == id) {
                 Image(systemName: "house")
               } else {
                 Image(systemName: "network")
@@ -49,17 +53,17 @@ public struct ContentView: View {
             .font(.title)
             VStack(alignment: .leading) {
               HStack(alignment:.firstTextBaseline) {
-                Text(node.hostname).font(.headline)
-                Text(node.os).font(.subheadline)
+                Text(self.node(id).hostname).font(.headline)
+                Text(self.node(id).os).font(.subheadline)
               }
-              Text(node.url).font(.subheadline)
+              Text(self.node(id).url).font(.subheadline)
             }
           }
         }
-        TableColumn("Activity") { node in
+        TableColumn("Activity") { id in
           HStack(alignment: .center) {
             Group {
-              if (node.isActive) {
+              if (self.node(id).isActive) {
                 Image(systemName: "progress.indicator")
               } else {
                 Image(systemName: "pause.circle")
@@ -67,9 +71,9 @@ public struct ContentView: View {
             }
             .font(.title)
             VStack(alignment: .leading) {
-              Label(byteF.string(fromByteCount: node.txBytes),
+              Label(byteF.string(fromByteCount: self.node(id).txBytes),
                     systemImage:"chevron.up")
-              Label(byteF.string(fromByteCount: node.rxBytes),
+              Label(byteF.string(fromByteCount: self.node(id).rxBytes),
                     systemImage:"chevron.down")
             }
             .font(.subheadline)
@@ -79,10 +83,21 @@ public struct ContentView: View {
       .navigationTitle("Home")
       .toolbar {
         ToolbarItem {
-          Button("Update") {
+          Button("Machines") {
             Task {
               do {
-                try await self._controller.updateAll()
+                try await self._controller.updateMachines()
+              } catch {
+                NSLog("// TODO: Show an error dialog")
+              }
+            }
+          }
+        }
+        ToolbarItem {
+          Button("Services") {
+            Task {
+              do {
+                try await self._controller.updateServices()
               } catch {
                 NSLog("// TODO: Show an error dialog")
               }

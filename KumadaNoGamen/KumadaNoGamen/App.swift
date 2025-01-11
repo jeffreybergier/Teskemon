@@ -22,9 +22,9 @@ import SwiftUI
 
 @main
 struct KumadaNoGamenApp: App {
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-        }
+  var body: some Scene {
+    WindowGroup {
+      ContentView()
     }
+  }
 }

@@ -27,6 +27,7 @@ nonisolated(unsafe) internal let df: ISO8601DateFormatter = {
 }()
 
 public enum Tailscale {
+  public typealias StatusValue = (status: Tailscale.Status, nodes: [Tailscale.Node.Identifier: Tailscale.Node], users: [Tailscale.Node.Identifier: User])
   internal enum Raw {
     internal struct Status: Codable, Sendable {
       internal let Version: String
@@ -44,21 +45,25 @@ public enum Tailscale {
       internal let User: [String: User]?
       internal let ClientVersion: ClientVersion?
       
-      internal func clean() -> Tailscale.Status {
-        let nodes: [Tailscale.Node] = (self.Peer?.values.map { $0.clean() } ?? [])
-                                    + [self.Self.clean()]
-        let users: [String: Tailscale.User] = self.User ?? [:]
-        return .init(version: self.Version,
-                     versionUpToDate: self.ClientVersion?.runningLatest ?? false,
-                     tunnelingEnabled: self.TUN,
-                     backendState: self.BackendState,
-                     haveNodeKey: self.HaveNodeKey,
-                     health: self.Health,
-                     magicDNSSuffix: self.MagicDNSSuffix,
-                     currentTailnet: self.CurrentTailnet,
-                     selfNodeID: self.Self.ID,
-                     nodes: nodes,
-                     users: users)
+      internal func clean() -> StatusValue {
+        let status = Tailscale.Status(version: self.Version,
+                                      versionUpToDate: self.ClientVersion?.runningLatest ?? false,
+                                      tunnelingEnabled: self.TUN,
+                                      backendState: self.BackendState,
+                                      haveNodeKey: self.HaveNodeKey,
+                                      health: self.Health,
+                                      magicDNSSuffix: self.MagicDNSSuffix,
+                                      currentTailnet: self.CurrentTailnet,
+                                      selfNodeID: .init(rawValue: self.Self.ID),
+                                      selfUserID: .init(rawValue: self.Self.UserID))
+        let users = Dictionary<Tailscale.Node.Identifier, Tailscale.User>(
+          uniqueKeysWithValues: self.User?.map { (.init(rawValue: $0), $1) } ?? []
+        )
+        var nodes = Dictionary<Tailscale.Node.Identifier, Tailscale.Node>(
+          uniqueKeysWithValues: self.Peer?.map { (.init(rawValue: $0), $1.clean()) } ?? []
+        )
+        nodes[.init(rawValue: self.Self.ID)] = self.Self.clean()
+        return (status, nodes, users)
       }
     }
     
@@ -94,7 +99,7 @@ public enum Tailscale {
       internal let KeyExpiry: String?
       
       internal func clean() -> Tailscale.Node {
-        return .init(id: self.ID,
+        return .init(id: .init(rawValue: self.ID),
                      publicKey: self.PublicKey,
                      keyExpiry: self.KeyExpiry.flatMap(df.date(from:)),
                      hostname: self.HostName,
@@ -138,16 +143,21 @@ public enum Tailscale {
     // Network
     public let magicDNSSuffix: String
     public let currentTailnet: Tailnet?
-    // Nodes
-    public let selfNodeID: String
-    public var nodes: [Node]
-    // Users
-    public let users: [String: User]
+    // Identification
+    public let selfNodeID: Node.Identifier
+    public let selfUserID: User.Identifier
   }
   
   public struct Node: Codable, Sendable, Identifiable {
+    public struct Identifier: Codable, Sendable, Hashable, Equatable, Identifiable, RawRepresentable {
+      public var id: String { return self.rawValue }
+      public let rawValue: String
+      public init(rawValue: String) {
+        self.rawValue = rawValue
+      }
+    }
     // Information
-    public let id: String
+    public let id: Identifier
     public let publicKey: String
     public let keyExpiry: Date?
     public let hostname: String
@@ -204,7 +214,14 @@ public enum Tailscale {
   }
   
   public struct User: Codable, Sendable {
-    public let id: Int
+    public struct Identifier: Codable, Sendable, Hashable, Equatable, Identifiable, RawRepresentable {
+      public var id: Int { return self.rawValue }
+      public let rawValue: Int
+      public init(rawValue: Int) {
+        self.rawValue = rawValue
+      }
+    }
+    public let id: Identifier
     public let loginName: String
     public let displayName: String
     public let profilePicURL: String
@@ -221,6 +238,13 @@ public enum Tailscale {
 }
 
 public struct Service: Codable, Sendable, Hashable {
+  
+  public enum Status: Codable, Sendable, Hashable {
+    case error
+    case online
+    case offline
+  }
+  
   public static let `default`: [Service] = {
     return [
       Service(name: "AFP", protocol: "afp", port: 548),
@@ -230,6 +254,7 @@ public struct Service: Codable, Sendable, Hashable {
       Service(name: "VNC", protocol: "vnc", port: 5900),
     ]
   }()
+  
   public var name: String
   public var `protocol`: String
   public var port: Int
