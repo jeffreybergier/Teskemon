@@ -29,7 +29,7 @@ public struct Controller: DynamicProperty {
     public var nodeIDs: [Tailscale.Node.Identifier] = []
     public var nodes: [Tailscale.Node.Identifier: Tailscale.Node] = [:]
     public var users: [Tailscale.Node.Identifier: Tailscale.User] = [:]
-    public var services: [Tailscale.Node.Identifier: Service.Status] = [:]
+    public var services: [Tailscale.Node.Identifier: [Service: Service.Status]] = [:]
   }
   
   @JSBSceneStorage("ControllerValue") private var storage: Value = Value()
@@ -51,27 +51,26 @@ public struct Controller: DynamicProperty {
   }
   
   public func updateServices() async throws {
-//    let nodes = self.storage?.nodes ?? []
-//    self.storage?.nodes = try await type(of: self).serviceStatus(nodes: nodes,
-//                                                                 services: self.services)
+    self.storage.services = try await type(of: self).serviceStatus(nodes: self.storage.nodes, services: self.services)
   }
 }
 
 extension Controller {
   
-  internal static func serviceStatus(nodes: [Tailscale.Node], services: [Service]) async throws -> [Tailscale.Node] {
-    guard !nodes.isEmpty, !services.isEmpty else { return nodes }
-    var output = nodes
-    for (index, node) in nodes.enumerated() {
+  internal static func serviceStatus(nodes: [Tailscale.Node.Identifier: Tailscale.Node], services: [Service]) async throws -> [Tailscale.Node.Identifier: [Service: Service.Status]] {
+    guard !nodes.isEmpty, !services.isEmpty else { return [:] }
+    var output: [Tailscale.Node.Identifier: [Service: Service.Status]] = [:]
+    for (id, node) in nodes {
+      var status: [Service: Service.Status] = [:]
       for service in services {
-        let arguments: [String] = ["/usr/bin/nc", "-zv", "-w 5", node.url, String(describing: service.port)]
+        let arguments: [String] = ["/usr/bin/nc", "-zv", "-w 1", node.url, String(describing: service.port)]
         NSLog("CHECKING: \(arguments)")
         let result = try await Process.execute(arguments: arguments)
-        output[index].serviceStatus[service] = result.exitCode == 0
+        status[service] = result.exitCode == 0 ? .online : .error
       }
+      output[id] = status
     }
-    NSLog("ALL CHECKED")
-    return nodes
+    return output
   }
   
   internal static func cliStatus(_ executable: String) async throws -> Tailscale.StatusValue {
