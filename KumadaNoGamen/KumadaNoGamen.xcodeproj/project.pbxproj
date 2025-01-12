@@ -6,7 +6,14 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		7380FBFC2D33C89F0013D538 /* View in Frameworks */ = {isa = PBXBuildFile; productRef = 7380FBFB2D33C89F0013D538 /* View */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		7380FBF92D33C8890013D538 /* View */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = View; path = Packages/View; sourceTree = "<group>"; };
+		7380FBFD2D33C8FA0013D538 /* Controller */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = Controller; path = Packages/Controller; sourceTree = "<group>"; };
+		7380FBFE2D33FA2A0013D538 /* Model */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = Model; path = Packages/Model; sourceTree = "<group>"; };
 		739896AA2D2BFA8400E7C169 /* KumadaNoGamen.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KumadaNoGamen.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -23,16 +30,28 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7380FBFC2D33C89F0013D538 /* View in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		7380FBFA2D33C89F0013D538 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		739896A12D2BFA8400E7C169 = {
 			isa = PBXGroup;
 			children = (
 				739896AC2D2BFA8400E7C169 /* KumadaNoGamen */,
+				7380FBF92D33C8890013D538 /* View */,
+				7380FBFD2D33C8FA0013D538 /* Controller */,
+				7380FBFE2D33FA2A0013D538 /* Model */,
+				7380FBFA2D33C89F0013D538 /* Frameworks */,
 				739896AB2D2BFA8400E7C169 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -65,6 +84,7 @@
 			);
 			name = KumadaNoGamen;
 			packageProductDependencies = (
+				7380FBFB2D33C89F0013D538 /* View */,
 			);
 			productName = KumadaNoGamen;
 			productReference = 739896AA2D2BFA8400E7C169 /* KumadaNoGamen.app */;
@@ -319,6 +339,13 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		7380FBFB2D33C89F0013D538 /* View */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = View;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 739896A22D2BFA8400E7C169 /* Project object */;
 }

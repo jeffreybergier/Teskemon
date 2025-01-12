@@ -19,12 +19,16 @@
 //
 
 import SwiftUI
+import View
 
 @main
 struct KumadaNoGamenApp: App {
   var body: some Scene {
     WindowGroup {
       ContentView()
+        .onAppear {
+          let thing = Something.thing
+        }
     }
   }
 }

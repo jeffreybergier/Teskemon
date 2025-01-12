@@ -1,0 +1,15 @@
+{
+  "originHash" : "f2a86b93e3ddc94edde7f5286905b671e7b685803161371dd463cc641baa8562",
+  "pins" : [
+    {
+      "identity" : "umbrella",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/jeffreybergier/Umbrella.git",
+      "state" : {
+        "branch" : "waterme3-wOS10-Swift6",
+        "revision" : "fe48d055062c2a190434acb1cee920d1c9bd4ce3"
+      }
+    }
+  ],
+  "version" : 3
+}
