@@ -7,7 +7,6 @@ let name = "Model"
 
 let package = Package(
     name: name,
-    platforms: [.macOS(.v14)],
     products: [
         .library(
             name: name,

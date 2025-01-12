@@ -25,10 +25,7 @@ import View
 struct KumadaNoGamenApp: App {
   var body: some Scene {
     WindowGroup {
-      ContentView()
-        .onAppear {
-          let thing = Something.thing
-        }
+      MachineWindow()
     }
   }
 }

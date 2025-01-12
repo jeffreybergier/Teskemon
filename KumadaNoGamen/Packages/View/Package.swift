@@ -7,7 +7,7 @@ let name = "View"
 
 let package = Package(
     name: name,
-    platforms: [.macOS(.v14)],
+    platforms: [.macOS("14.4")],
     products: [
         .library(
             name: name,

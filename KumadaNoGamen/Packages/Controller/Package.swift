@@ -7,7 +7,7 @@ let name = "Controller"
 
 let package = Package(
     name: name,
-    platforms: [.macOS(.v14)],
+    platforms: [.macOS(.v13)],
     products: [
         .library(
             name: name,
