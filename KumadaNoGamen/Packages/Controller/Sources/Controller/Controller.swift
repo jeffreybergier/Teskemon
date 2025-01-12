@@ -32,6 +32,8 @@ public struct Controller: DynamicProperty {
     public var machines:   [Machine.Identifier: Machine] = [:]
     public var users:      [Machine.Identifier: User] = [:]
     public var services:   [Machine.Identifier: [Service: Service.Status]] = [:]
+    public var isUpdatingMachines = false
+    public var isUpdatingServices = false
   }
   
   @JSBSceneStorage("ControllerValue") private var storage: Value = Value()
@@ -45,16 +47,20 @@ public struct Controller: DynamicProperty {
   }
   
   public func updateMachines() async throws {
+    self.storage.isUpdatingMachines = true
     let value = try await type(of: self).getTailscale(self.location)
     self.storage.tailscale = value.tailscale
     self.storage.machineIDs = Array(value.machines.keys.sorted(by: { $0.rawValue > $1.rawValue }))
     self.storage.machines = value.machines
     self.storage.users = value.users
+    self.storage.isUpdatingMachines = false
   }
   
   public func updateServices() async throws {
+    self.storage.isUpdatingServices = true
     self.storage.services = try await type(of: self).getStatus(for: self.services,
                                                                on: self.storage.machines)
+    self.storage.isUpdatingServices = false
   }
 }
 

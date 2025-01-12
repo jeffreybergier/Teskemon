@@ -34,7 +34,10 @@ public struct MachineWindow: View {
         .navigationTitle(self.controller.tailscale?.currentTailnet?.name ?? "熊田の画面")
         .toolbar {
           ToolbarItem {
-            Button("Machines") {
+            Button("Machines", systemImage: self.controller.isUpdatingMachines
+                                          ? "progress.indicator"
+                                          : "desktopcomputer")
+            {
               Task {
                 do {
                   try await self._controller.updateMachines()
@@ -43,9 +46,13 @@ public struct MachineWindow: View {
                 }
               }
             }
+            .disabled(self.controller.isUpdatingMachines)
           }
           ToolbarItem {
-            Button("Services") {
+            Button("Services", systemImage: self.controller.isUpdatingServices
+                                          ? "progress.indicator"
+                                          : "network")
+            {
               Task {
                 do {
                   try await self._controller.updateServices()
@@ -54,6 +61,7 @@ public struct MachineWindow: View {
                 }
               }
             }
+            .disabled(self.controller.isUpdatingServices)
           }
         }
     }
