@@ -4,8 +4,6 @@
 import Controller
 import Model
 
-public enum Something {
-  static let controller = AController.controls
-  
+public enum Something {  
   case thing
 }
