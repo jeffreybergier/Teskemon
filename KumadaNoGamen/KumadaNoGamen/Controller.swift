@@ -19,6 +19,7 @@
 //
 
 import SwiftUI
+import Model
 
 @MainActor
 @propertyWrapper
@@ -91,9 +92,8 @@ extension Controller {
   }
   
   internal static func cliStatus(_ executable: String) async throws -> Tailscale.Refresh {
-    let decoder = JSONDecoder()
-    let result = try await Process.execute(arguments: [executable, "status", "--json"])
-    return try decoder.decode(JSON.TailscaleCLI.self, from: result.stdOut).clean()
+    let data = try await Process.execute(arguments: [executable, "status", "--json"]).stdOut
+    return try Tailscale.Refresh.new(data: data)
   }
 }
 

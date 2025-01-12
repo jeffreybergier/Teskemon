@@ -19,6 +19,7 @@
 //
 
 import SwiftUI
+import Model
 
 @MainActor internal let byteF = ByteCountFormatter()
 

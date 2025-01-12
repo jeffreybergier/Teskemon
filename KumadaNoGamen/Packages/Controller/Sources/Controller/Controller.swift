@@ -4,6 +4,5 @@
 import Model
 
 public enum AController: Sendable {
-  static let model = AModel.model
   case controls
 }
