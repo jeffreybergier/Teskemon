@@ -1,5 +1,5 @@
 //
-//  Created by Jeffrey Bergier on 15/1/18.
+//  Created by Jeffrey Bergier on 2025/01/12.
 //  Copyright © 2025 Saturday Apps.
 //
 //  This file is part of KumadaNoGamen, a macOS App.
@@ -60,8 +60,13 @@ public struct Controller: DynamicProperty {
 
 extension Controller {
   
+  internal static func getTailscale(_ location: String) async throws -> Tailscale.Refresh {
+    let data = try await Process.execute(arguments: [location, "status", "--json"]).stdOut
+    return try Tailscale.Refresh.new(data: data)
+  }
+  
   internal static func getStatus(for services: [Service],
-                                 on machines: [Machine.Identifier: Machine]) async throws
+                                 on  machines: [Machine.Identifier: Machine]) async throws
                                  -> [Machine.Identifier: [Service: Service.Status]]
   {
     guard !machines.isEmpty, !services.isEmpty else { return [:] }
@@ -92,67 +97,5 @@ extension Controller {
       output[id] = status
     }
     return output
-  }
-  
-  internal static func getTailscale(_ location: String) async throws -> Tailscale.Refresh {
-    let data = try await Process.execute(arguments: [location, "status", "--json"]).stdOut
-    return try Tailscale.Refresh.new(data: data)
-  }
-}
-
-@MainActor
-@propertyWrapper
-public struct Services: DynamicProperty {
-  
-  public init() { }
-  
-  public var wrappedValue: [Service] {
-    get { Service.default }
-    nonmutating set { fatalError("// TODO: Add this to NSUserDefaults") }
-  }
-}
-
-extension Process {
-  static func execute(url: URL = URL(fileURLWithPath: "/usr/bin/env"),
-                      arguments: [String]) async throws
-                      -> (exitCode: Int, stdOut: Data, errOut: Data)
-  {
-    try await withCheckedThrowingContinuation { continuation  in
-      let tempURL   = URL(fileURLWithPath: NSTemporaryDirectory())
-      let stdOutURL = tempURL.appendingPathComponent("com.saturdayapps.kumadanogamen." + UUID().uuidString + ".stdout", isDirectory: false)
-      let stdErrURL = tempURL.appendingPathComponent("com.saturdayapps.kumadanogamen." + UUID().uuidString + ".stderr", isDirectory: false)
-      FileManager.default.createFile(atPath: stdOutURL.path(), contents: nil)
-      FileManager.default.createFile(atPath: stdErrURL.path(), contents: nil)
-      
-      do {
-        let task = Process()
-        let stdOutHandle = try FileHandle(forWritingTo: stdOutURL)
-        let stdErrHandle = try FileHandle(forWritingTo: stdErrURL)
-        
-        task.executableURL    = url
-        task.arguments        = arguments
-        task.standardOutput   = stdOutHandle
-        task.standardError    = stdErrHandle
-        task.qualityOfService = .userInitiated
-        
-        task.terminationHandler = { task in
-          do {
-            try stdOutHandle.close()
-            try stdErrHandle.close()
-            let stdOut = try Data(contentsOf: stdOutURL)
-            let errOut = try Data(contentsOf: stdErrURL)
-            try FileManager.default.removeItem(at: stdOutURL)
-            try FileManager.default.removeItem(at: stdErrURL)
-            continuation.resume(returning: (Int(task.terminationStatus), stdOut, errOut))
-          } catch {
-            continuation.resume(throwing: error)
-          }
-        }
-        
-        try task.run()
-      } catch {
-        continuation.resume(throwing: error)
-      }
-    }
   }
 }
