@@ -25,11 +25,11 @@ import SwiftUI
 public struct Controller: DynamicProperty {
   
   public struct Value: Codable {
-    public var status: Tailscale.Status?
-    public var nodeIDs: [Tailscale.Node.Identifier] = []
-    public var nodes: [Tailscale.Node.Identifier: Tailscale.Node] = [:]
-    public var users: [Tailscale.Node.Identifier: Tailscale.User] = [:]
-    public var services: [Tailscale.Node.Identifier: [Service: Service.Status]] = [:]
+    public var tailscale:  Tailscale?
+    public var machineIDs: [Machine.Identifier] = []
+    public var machines:   [Machine.Identifier: Machine] = [:]
+    public var users:      [Machine.Identifier: User] = [:]
+    public var services:   [Machine.Identifier: [Service: Service.Status]] = [:]
   }
   
   @JSBSceneStorage("ControllerValue") private var storage: Value = Value()
@@ -44,26 +44,26 @@ public struct Controller: DynamicProperty {
   
   public func updateMachines() async throws {
     let value = try await type(of: self).cliStatus(self.executable)
-    self.storage.status = value.status
-    self.storage.nodeIDs = Array(value.nodes.keys.sorted(by: { $0.rawValue > $1.rawValue }))
-    self.storage.nodes = value.nodes
+    self.storage.tailscale = value.tailscale
+    self.storage.machineIDs = Array(value.machines.keys.sorted(by: { $0.rawValue > $1.rawValue }))
+    self.storage.machines = value.machines
     self.storage.users = value.users
   }
   
   public func updateServices() async throws {
-    self.storage.services = try await type(of: self).serviceStatus(nodes: self.storage.nodes, services: self.services)
+    self.storage.services = try await type(of: self).serviceStatus(nodes: self.storage.machines, services: self.services)
   }
 }
 
 extension Controller {
   
-  internal static func serviceStatus(nodes: [Tailscale.Node.Identifier: Tailscale.Node],
+  internal static func serviceStatus(nodes:    [Machine.Identifier: Machine],
                                      services: [Service]) async throws
-                                     -> [Tailscale.Node.Identifier: [Service: Service.Status]]
+                                            -> [Machine.Identifier: [Service: Service.Status]]
   {
     guard !nodes.isEmpty, !services.isEmpty else { return [:] }
     let timeout = 3
-    var output: [Tailscale.Node.Identifier: [Service: Service.Status]] = [:]
+    var output: [Machine.Identifier: [Service: Service.Status]] = [:]
     for (id, node) in nodes {
       var status: [Service: Service.Status] = [:]
       for service in services {
@@ -90,10 +90,10 @@ extension Controller {
     return output
   }
   
-  internal static func cliStatus(_ executable: String) async throws -> Tailscale.StatusValue {
+  internal static func cliStatus(_ executable: String) async throws -> Tailscale.Refresh {
     let decoder = JSONDecoder()
     let result = try await Process.execute(arguments: [executable, "status", "--json"])
-    return try decoder.decode(Tailscale.Raw.Status.self, from: result.stdOut).clean()
+    return try decoder.decode(JSON.TailscaleCLI.self, from: result.stdOut).clean()
   }
 }
 

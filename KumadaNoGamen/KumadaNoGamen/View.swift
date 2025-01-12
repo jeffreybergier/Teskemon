@@ -27,17 +27,17 @@ public struct ContentView: View {
   @Controller private var controller
   @Services private var services
   
-  private func node(_ id: Tailscale.Node.Identifier) -> Tailscale.Node {
-    return self.controller.nodes[id]!
+  private func node(_ id: Machine.Identifier) -> Machine {
+    return self.controller.machines[id]!
   }
   
-  private func status(_ id: Tailscale.Node.Identifier, _ service: Service) -> Service.Status {
+  private func status(_ id: Machine.Identifier, _ service: Service) -> Service.Status {
     return self.controller.services[id]?[service] ?? .unknown
   }
   
   public var body: some View {
     NavigationStack {
-      Table(self.controller.nodeIDs) {
+      Table(self.controller.machineIDs) {
         TableColumn("Online") { id in
           Image(systemName: self.node(id).isOnline ? "circle.fill" : "stop.fill")
             .foregroundStyle(self.node(id).isOnline
@@ -48,7 +48,7 @@ public struct ContentView: View {
         TableColumn("Region") { id in
           VStack(alignment: .center) {
             Group {
-              if (self.controller.status?.selfNodeID == id) {
+              if (self.controller.tailscale?.selfNodeID == id) {
                 Image(systemName: "house")
               } else {
                 Image(systemName: "network")
@@ -121,7 +121,7 @@ public struct ContentView: View {
           .width(64)
         }
       }
-      .navigationTitle(self.controller.status?.currentTailnet?.name ?? "熊田の画面")
+      .navigationTitle(self.controller.tailscale?.currentTailnet?.name ?? "熊田の画面")
       .toolbar {
         ToolbarItem {
           Button("Machines") {
