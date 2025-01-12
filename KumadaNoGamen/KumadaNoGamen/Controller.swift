@@ -57,16 +57,33 @@ public struct Controller: DynamicProperty {
 
 extension Controller {
   
-  internal static func serviceStatus(nodes: [Tailscale.Node.Identifier: Tailscale.Node], services: [Service]) async throws -> [Tailscale.Node.Identifier: [Service: Service.Status]] {
+  internal static func serviceStatus(nodes: [Tailscale.Node.Identifier: Tailscale.Node],
+                                     services: [Service]) async throws
+                                     -> [Tailscale.Node.Identifier: [Service: Service.Status]]
+  {
     guard !nodes.isEmpty, !services.isEmpty else { return [:] }
+    let timeout = 3
     var output: [Tailscale.Node.Identifier: [Service: Service.Status]] = [:]
     for (id, node) in nodes {
       var status: [Service: Service.Status] = [:]
       for service in services {
-        let arguments: [String] = ["/usr/bin/nc", "-zv", "-w 1", node.url, String(describing: service.port)]
-        NSLog("CHECKING: \(arguments)")
+        let arguments: [String] = ["/usr/bin/nc", "-zv", "-G \(timeout)", "-w \(timeout)", node.url, String(describing: service.port)]
         let result = try await Process.execute(arguments: arguments)
-        status[service] = result.exitCode == 0 ? .online : .error
+        // Not sure why the output always comes through Standard Error with NC
+        let output = String(data: result.errOut, encoding: .utf8)!
+        if output.hasSuffix("succeeded!\n") {
+          NSLog("OPEN: \(arguments)")
+          status[service] = .online
+        } else if output.hasSuffix("refused\n") {
+          NSLog("CLOSED: \(arguments)")
+          status[service] = .offline
+        } else if output.hasSuffix("Operation timed out\n") {
+          NSLog("TIMEOUT: \(arguments)")
+          status[service] = .error
+        } else {
+          assertionFailure()
+          status[service] = .error
+        }
       }
       output[id] = status
     }
@@ -95,41 +112,37 @@ public struct Services: DynamicProperty {
 extension Process {
   static func execute(arguments: [String]) async throws -> (exitCode: Int, stdOut: Data, errOut: Data) {
     try await withCheckedThrowingContinuation { continuation  in
-      // Create files
-      let tempURL = URL(fileURLWithPath: NSTemporaryDirectory())
-      let url = tempURL.appendingPathComponent("0000_" + UUID().uuidString + ".stdout", isDirectory: false)
-      let urlError = tempURL.appendingPathComponent("0000_" + UUID().uuidString + ".stderr", isDirectory: false)
-      let fm = FileManager.default
-      fm.createFile(atPath: url.path(), contents: nil)
-      fm.createFile(atPath: urlError.path(), contents: nil)
+      let tempURL   = URL(fileURLWithPath: NSTemporaryDirectory())
+      let stdOutURL = tempURL.appendingPathComponent("com.saturdayapps.kumadanogamen." + UUID().uuidString + ".stdout", isDirectory: false)
+      let stdErrURL = tempURL.appendingPathComponent("com.saturdayapps.kumadanogamen." + UUID().uuidString + ".stderr", isDirectory: false)
+      FileManager.default.createFile(atPath: stdOutURL.path(), contents: nil)
+      FileManager.default.createFile(atPath: stdErrURL.path(), contents: nil)
       
       do {
         let task = Process()
-        let handle = try FileHandle(forWritingTo: url)
-        let errorHandle = try FileHandle(forWritingTo: urlError)
+        let stdOutHandle = try FileHandle(forWritingTo: stdOutURL)
+        let stdErrHandle = try FileHandle(forWritingTo: stdErrURL)
         
         task.executableURL = URL(fileURLWithPath: "/usr/bin/env")
         task.arguments = arguments
-        task.standardOutput = handle
-        task.standardError = errorHandle
+        task.standardOutput = stdOutHandle
+        task.standardError = stdErrHandle
         task.qualityOfService = .userInitiated
         
         task.terminationHandler = { task in
           do {
-            try handle.close()
-            try errorHandle.close()
-            let stdOut = try Data(contentsOf: url)
-            let errOut = try Data(contentsOf: urlError)
-            let fm = FileManager.default
-            try fm.removeItem(at: url)
-            try fm.removeItem(at: urlError)
+            try stdOutHandle.close()
+            try stdErrHandle.close()
+            let stdOut = try Data(contentsOf: stdOutURL)
+            let errOut = try Data(contentsOf: stdErrURL)
+            try FileManager.default.removeItem(at: stdOutURL)
+            try FileManager.default.removeItem(at: stdErrURL)
             continuation.resume(returning: (Int(task.terminationStatus), stdOut, errOut))
           } catch {
             continuation.resume(throwing: error)
           }
         }
         
-        print(url.path())
         try task.run()
       } catch {
         continuation.resume(throwing: error)
