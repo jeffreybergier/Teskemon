@@ -237,9 +237,10 @@ public enum Tailscale {
   }
 }
 
-public struct Service: Codable, Sendable, Hashable {
+public struct Service: Codable, Sendable, Hashable, Identifiable {
   
   public enum Status: Codable, Sendable, Hashable {
+    case unknown
     case error
     case online
     case offline
@@ -258,4 +259,5 @@ public struct Service: Codable, Sendable, Hashable {
   public var name: String
   public var `protocol`: String
   public var port: Int
+  public var id: Int { self.port }
 }

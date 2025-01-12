@@ -31,11 +31,15 @@ public struct ContentView: View {
     return self.controller.nodes[id]!
   }
   
+  private func status(_ id: Tailscale.Node.Identifier, _ service: Service) -> Service.Status {
+    return self.controller.services[id]?[service] ?? .unknown
+  }
+  
   public var body: some View {
     NavigationStack {
       Table(self.controller.nodeIDs) {
         TableColumn("Online") { id in
-          Image(systemName: self.node(id).isActive ? "circle.fill" : "stop.fill")
+          Image(systemName: self.node(id).isOnline ? "circle.fill" : "stop.fill")
             .foregroundStyle(self.node(id).isOnline
                              ? Color(nsColor: .systemGreen).gradient
                              : Color(nsColor: .systemRed).gradient)
@@ -84,8 +88,40 @@ public struct ContentView: View {
             .font(.subheadline)
           }
         }
+        .width(96)
+        TableColumnForEach(self.services, id: \.self) { service in
+          TableColumn(service.name + String(format: " (%d)", service.port)) { id in
+            Button {
+              let url = URL(string: "\(service.protocol)://\(self.node(id).url):\(service.port)")!
+              NSLog("Open: \(url)")
+              NSWorkspace.shared.open(url)
+            } label: {
+              Label {
+                Text("Connect")
+              } icon: {
+                switch self.status(id, service) {
+                case .online:
+                  Image(systemName: "circle.fill")
+                    .foregroundStyle(Color(nsColor: .systemGreen).gradient)
+                case .offline:
+                  Image(systemName: "stop.fill")
+                    .foregroundStyle(Color(nsColor: .systemRed).gradient)
+                case .error:
+                  Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundStyle(Color(nsColor: .systemYellow).gradient)
+                case .unknown:
+                  Image(systemName: "questionmark.diamond.fill")
+                    .foregroundStyle(Color(nsColor: .systemGray).gradient)
+                }
+              }
+              .labelStyle(.iconOnly)
+            }
+            .help("\(service.protocol)://\(self.node(id).url):\(String(describing:service.port))")
+          }
+          .width(64)
+        }
       }
-      .navigationTitle("Home")
+      .navigationTitle(self.controller.status?.currentTailnet?.name ?? "熊田の画面")
       .toolbar {
         ToolbarItem {
           Button("Machines") {
