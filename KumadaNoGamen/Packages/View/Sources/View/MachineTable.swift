@@ -115,6 +115,8 @@ internal struct MachineTable: View {
               case .unknown:
                 Image(systemName: "questionmark.diamond.fill")
                   .foregroundStyle(Color(nsColor: .systemGray).gradient)
+              case .processing:
+                Image(systemName: "progress.indicator")
               }
             }
             .labelStyle(.iconOnly)

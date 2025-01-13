@@ -141,6 +141,7 @@ public struct Service: Codable, Sendable, Hashable, Identifiable {
     case error
     case online
     case offline
+    case processing
   }
   
   public static let `default`: [Service] = {

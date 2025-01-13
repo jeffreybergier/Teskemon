@@ -59,8 +59,9 @@ public struct Controller: DynamicProperty {
   
   public func updateServices() async throws {
     self.storage.isUpdatingServices = true
-    self.storage.services = try await type(of: self).getStatus(for: self.services,
-                                                               on: self.storage.machines)
+    try await type(of: self).getStatus(for: self.services,
+                                       on: Array(self.storage.machines.values),
+                                       bind: self.$storage.services)
     self.storage.isUpdatingServices = false
   }
 }
@@ -73,36 +74,48 @@ extension Controller {
   }
   
   internal static func getStatus(for services: [Service],
-                                 on  machines: [Machine.Identifier: Machine]) async throws
-                                 -> [Machine.Identifier: [Service: Service.Status]]
+                                 on  machines: [Machine],
+                                 bind: Binding<[Machine.Identifier: [Service: Service.Status]]>,
+                                 timeout: Int = 3)
+                                 async throws
   {
-    guard !machines.isEmpty, !services.isEmpty else { return [:] }
-    let timeout = 3
-    var output: [Machine.Identifier: [Service: Service.Status]] = [:]
-    for (id, node) in machines {
-      var status: [Service: Service.Status] = [:]
+    // Iterate over every machine
+    for machine in machines {
+      
+      // Prepare the binding to accept values for this machine
+      let id = machine.id
+      if bind.wrappedValue[id] == nil { bind.wrappedValue[id] = [:] }
+      
+      // Iterate over every service
       for service in services {
-        let arguments: [String] = ["/usr/bin/nc", "-zv", "-G \(timeout)", "-w \(timeout)", node.url, String(describing: service.port)]
+        // Mark status as processing while network activity happens
+        bind.wrappedValue[id]![service] = .processing
+        
+        // Perform network request
+        let arguments: [String] = [
+          "/usr/bin/nc",
+          "-zv",
+          "-G \(timeout)",
+          "-w \(timeout)",
+          machine.url,
+          "\(service.port)"
+        ]
         let result = try await Process.execute(arguments: arguments)
-        // Not sure why the output always comes through Standard Error with NC
+        // Not sure why Netcat puts the results in standard error, but it does
         let output = String(data: result.errOut, encoding: .utf8)!
+        
+        // Check result and update status
         if output.hasSuffix("succeeded!\n") {
-          NSLog("OPEN: \(arguments)")
-          status[service] = .online
+          bind.wrappedValue[id]![service] = .online
         } else if output.hasSuffix("refused\n") {
-          NSLog("CLSD: \(arguments)")
-          status[service] = .offline
+          bind.wrappedValue[id]![service] = .offline
         } else if output.hasSuffix("Operation timed out\n") {
-          NSLog("TMOT: \(arguments)")
-          status[service] = .error
+          bind.wrappedValue[id]![service] = .error
         } else {
           assertionFailure()
-          NSLog("ERRR: \(arguments)")
-          status[service] = .error
+          bind.wrappedValue[id]![service] = .error
         }
       }
-      output[id] = status
     }
-    return output
   }
 }
