@@ -192,8 +192,8 @@ internal enum JSON {
       let users = Dictionary<Machine.Identifier, User>(
         uniqueKeysWithValues: self.User?.map { (.init(rawValue: $0), $1) } ?? []
       )
-      var machines = Dictionary<Machine.Identifier, Machine>(
-        uniqueKeysWithValues: self.Peer?.map { (.init(rawValue: $0), $1.clean()) } ?? []
+      var machines: [Machine.Identifier: Machine] = Dictionary<Machine.Identifier, Machine>(
+        uniqueKeysWithValues: self.Peer?.map { (.init(rawValue: $1.ID), $1.clean()) } ?? []
       )
       machines[.init(rawValue: self.Self.ID)] = self.Self.clean()
       return .init(tailscale: tailscale, machines: machines, users: users)

@@ -47,7 +47,12 @@ public struct Controller: DynamicProperty {
     return self.storage
   }
   
+  public func resetData() {
+    self.storage = .init()
+  }
+  
   public func updateMachines() async throws {
+    NSLog("Controller: updateMachines: Start")
     self.storage.isUpdatingMachines = true
     let value = try await type(of: self).getTailscale(self.location)
     self.storage.tailscale = value.tailscale
@@ -55,14 +60,17 @@ public struct Controller: DynamicProperty {
     self.storage.machines = value.machines
     self.storage.users = value.users
     self.storage.isUpdatingMachines = false
+    NSLog("Controller: updateMachines: End")
   }
   
   public func updateServices() async throws {
+    NSLog("Controller: updateServices: Start")
     self.storage.isUpdatingServices = true
     try await type(of: self).getStatus(for: self.services,
                                        on: Array(self.storage.machines.values),
                                        bind: self.$storage.services)
     self.storage.isUpdatingServices = false
+    NSLog("Controller: updateServices: End")
   }
 }
 
@@ -81,7 +89,6 @@ extension Controller {
   {
     // Iterate over every machine
     for machine in machines {
-      
       // Prepare the binding to accept values for this machine
       let id = machine.id
       if bind.wrappedValue[id] == nil { bind.wrappedValue[id] = [:] }

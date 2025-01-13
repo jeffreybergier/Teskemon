@@ -63,6 +63,12 @@ public struct MachineWindow: View {
             }
             .disabled(self.controller.isUpdatingServices)
           }
+          ToolbarItem {
+            Button("Reset Data", systemImage: "trash")
+            {
+              self._controller.resetData()
+            }
+          }
         }
     }
   }
