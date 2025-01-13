@@ -37,7 +37,8 @@ public struct Controller: DynamicProperty {
   }
   
   @JSBSceneStorage("ControllerValue") private var storage: Value = Value()
-  @AppStorage("TailscaleLocation") private var location: String = "/usr/local/bin/tailscale"
+  @AppStorage("TailscaleLocation") private var location: String = "/Applications/Tailscale.app/Contents/MacOS/Tailscale"
+                                                            //  = "/usr/local/bin/tailscale"
   @Services private var services
   
   public init() {}

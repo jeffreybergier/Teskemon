@@ -19,16 +19,19 @@
 //
 
 import SwiftUI
+import Umbrella
 import Model
 
 @MainActor
 @propertyWrapper
 public struct Services: DynamicProperty {
   
+  @JSBAppStorage("Services") private var services = Service.default
+  
   public init() { }
   
   public var wrappedValue: [Service] {
-    get { Service.default }
-    nonmutating set { fatalError("// TODO: Add this to NSUserDefaults") }
+    get { self.services }
+    nonmutating set { self.services = newValue }
   }
 }
