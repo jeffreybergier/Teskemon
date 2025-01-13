@@ -52,7 +52,7 @@ public struct Controller: DynamicProperty {
   }
   
   public func updateMachines() async throws {
-    NSLog("Controller: updateMachines: Start")
+    NSLog("Controller: updateMachines")
     self.storage.isUpdatingMachines = true
     let value = try await type(of: self).getTailscale(self.location)
     self.storage.tailscale = value.tailscale
@@ -60,17 +60,15 @@ public struct Controller: DynamicProperty {
     self.storage.machines = value.machines
     self.storage.users = value.users
     self.storage.isUpdatingMachines = false
-    NSLog("Controller: updateMachines: End")
   }
   
   public func updateServices() async throws {
-    NSLog("Controller: updateServices: Start")
+    NSLog("Controller: updateServices")
     self.storage.isUpdatingServices = true
     try await type(of: self).getStatus(for: self.services,
                                        on: Array(self.storage.machines.values),
                                        bind: self.$storage.services)
     self.storage.isUpdatingServices = false
-    NSLog("Controller: updateServices: End")
   }
 }
 
@@ -98,29 +96,37 @@ extension Controller {
         // Mark status as processing while network activity happens
         bind.wrappedValue[id]![service] = .processing
         
-        // Perform network request
-        let arguments: [String] = [
-          "/usr/bin/nc",
-          "-zv",
-          "-G \(timeout)",
-          "-w \(timeout)",
-          machine.url,
-          "\(service.port)"
-        ]
-        let result = try await Process.execute(arguments: arguments)
-        // Not sure why Netcat puts the results in standard error, but it does
-        let output = String(data: result.errOut, encoding: .utf8)!
-        
-        // Check result and update status
-        if output.hasSuffix("succeeded!\n") {
-          bind.wrappedValue[id]![service] = .online
-        } else if output.hasSuffix("refused\n") {
-          bind.wrappedValue[id]![service] = .offline
-        } else if output.hasSuffix("Operation timed out\n") {
-          bind.wrappedValue[id]![service] = .error
-        } else {
-          assertionFailure()
-          bind.wrappedValue[id]![service] = .error
+        // Schedule all checks for simultaneous execution
+        Task {
+          // Perform network request
+          let arguments: [String] = [
+            "/usr/bin/nc",
+            "-zv",
+            "-G \(timeout)",
+            "-w \(timeout)",
+            machine.url,
+            "\(service.port)"
+          ]
+          let result = try await Process.execute(arguments: arguments)
+          // Not sure why Netcat puts the results in standard error, but it does
+          let output = String(data: result.errOut, encoding: .utf8)!
+          
+          // Check result and update status
+          let argsForLog = arguments[4...5]
+          if output.hasSuffix("succeeded!\n") {
+            bind.wrappedValue[id]![service] = .online
+            NSLog("Controller: updateServices: ONLINE \(argsForLog)")
+          } else if output.hasSuffix("refused\n") {
+            bind.wrappedValue[id]![service] = .offline
+            NSLog("Controller: updateServices: OFLINE \(argsForLog)")
+          } else if output.hasSuffix("Operation timed out\n") {
+            bind.wrappedValue[id]![service] = .error
+            NSLog("Controller: updateServices: TIMOUT \(argsForLog)")
+          } else {
+            assertionFailure()
+            bind.wrappedValue[id]![service] = .error
+            NSLog("Controller: updateServices: ERROR  \(argsForLog)")
+          }
         }
       }
     }
