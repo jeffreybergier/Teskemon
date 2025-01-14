@@ -120,20 +120,6 @@ public struct User: Codable, Sendable {
   }
 }
 
-public struct Subnet: Codable, Sendable, RawRepresentable {
-  public let rawValue: String
-  public init(rawValue: String) {
-    self.rawValue = rawValue
-  }
-}
-
-public struct Address: Codable, Sendable, RawRepresentable {
-  public let rawValue: String
-  public init(rawValue: String) {
-    self.rawValue = rawValue
-  }
-}
-
 public struct Service: Codable, Sendable, Hashable, Identifiable {
   
   public enum Status: Codable, Sendable, Hashable {
