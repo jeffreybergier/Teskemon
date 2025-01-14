@@ -20,12 +20,36 @@
 
 import Foundation
 
+public struct MachineIdentifier: Codable, Sendable, Hashable, Identifiable, RawRepresentable {
+  public var id: String { return self.rawValue }
+  public let rawValue: String
+  public init(rawValue: String) {
+    self.rawValue = rawValue
+  }
+}
+
+public struct MachineActivity: Codable, Sendable, Hashable {
+  public let isActive: Bool
+  public let rxBytes: Int64
+  public let txBytes: Int64
+}
+
+public protocol Machine2 {
+  var id: MachineIdentifier { get }
+  var name: String { get }
+  var url: String { get }
+  var os: String? { get }
+  var isSelf: Bool { get }
+  var location: Either<String, MachineIdentifier> { get }
+  var activity: MachineActivity? { get }
+}
+
 public struct Tailscale: Codable, Sendable {
   
   public struct Refresh: Codable, Sendable {
     public let tailscale: Tailscale
-    public let machines: [Machine.Identifier: Machine]
-    public let users: [Machine.Identifier: User]
+    public let machines: [MachineIdentifier: Machine]
+    public let users: [MachineIdentifier: User]
     public static func new(data: Data) throws -> Refresh {
       return try JSONDecoder().decode(JSON.TailscaleCLI.self, from: data).clean()
     }
@@ -42,7 +66,7 @@ public struct Tailscale: Codable, Sendable {
   public let magicDNSSuffix: String
   public let currentTailnet: Tailnet?
   // Identification
-  public let selfNodeID: Machine.Identifier
+  public let selfNodeID: MachineIdentifier
   public let selfUserID: User.Identifier
 }
 
@@ -59,18 +83,11 @@ public struct Tailnet: Codable, Sendable {
 }
 
 public struct Machine: Codable, Sendable, Identifiable {
-  public struct Identifier: Codable, Sendable, Hashable, Identifiable, RawRepresentable {
-    public var id: String { return self.rawValue }
-    public let rawValue: String
-    public init(rawValue: String) {
-      self.rawValue = rawValue
-    }
-  }
   // Information
-  public let id: Identifier
+  public let id: MachineIdentifier
   public let publicKey: String
   public let keyExpiry: Date?
-  public let hostname: String
+  public let name: String
   public let url: String
   public let os: String
   public let userID: Int
@@ -175,13 +192,16 @@ internal enum JSON {
                                 currentTailnet: self.CurrentTailnet,
                                 selfNodeID: .init(rawValue: self.Self.ID),
                                 selfUserID: .init(rawValue: self.Self.UserID))
-      let users = Dictionary<Machine.Identifier, User>(
+      let users = Dictionary<MachineIdentifier, User>(
         uniqueKeysWithValues: self.User?.map { (.init(rawValue: $0), $1) } ?? []
       )
-      var machines: [Machine.Identifier: Machine] = Dictionary<Machine.Identifier, Machine>(
+      var machines = Dictionary<MachineIdentifier, Machine>(
         uniqueKeysWithValues: self.Peer?.map { (.init(rawValue: $1.ID), $1.clean()) } ?? []
       )
       machines[.init(rawValue: self.Self.ID)] = self.Self.clean()
+      let something = machines[.init(rawValue: "nYed447uzA21CNTRL")]!.subnetRoutes.map {
+          $0.explodeAddresses()
+      }
       return .init(tailscale: tailscale, machines: machines, users: users)
     }
   }
@@ -221,7 +241,7 @@ internal enum JSON {
       return .init(id: .init(rawValue: self.ID),
                    publicKey: self.PublicKey,
                    keyExpiry: self.KeyExpiry.flatMap(df.date(from:)),
-                   hostname: self.HostName,
+                   name: self.HostName,
                    url: self.DNSName,
                    os: self.OS,
                    userID: self.UserID,

@@ -28,10 +28,10 @@ public struct Controller: DynamicProperty {
   
   public struct Value: Codable {
     public var tailscale:  Tailscale?
-    public var machineIDs: [Machine.Identifier] = []
-    public var machines:   [Machine.Identifier: Machine] = [:]
-    public var users:      [Machine.Identifier: User] = [:]
-    public var services:   [Machine.Identifier: [Service: Service.Status]] = [:]
+    public var machineIDs: [MachineIdentifier] = []
+    public var machines:   [MachineIdentifier: Machine] = [:]
+    public var users:      [MachineIdentifier: User] = [:]
+    public var services:   [MachineIdentifier: [Service: Service.Status]] = [:]
     public var isUpdatingMachines = false
     public var isUpdatingServices = false
   }
@@ -81,7 +81,7 @@ extension Controller {
   
   internal static func getStatus(for services: [Service],
                                  on  machines: [Machine],
-                                 bind: Binding<[Machine.Identifier: [Service: Service.Status]]>,
+                                 bind: Binding<[MachineIdentifier: [Service: Service.Status]]>,
                                  timeout: Int = 3)
                                  async throws
   {

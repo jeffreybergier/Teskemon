@@ -29,15 +29,15 @@ internal struct MachineTable: View {
   @Controller private var controller
   @Services private var services
   
-  private func machine(_ id: Machine.Identifier) -> Machine {
+  private func machine(_ id: MachineIdentifier) -> Machine {
     return self.controller.machines[id]!
   }
   
-  private func status(for service: Service, on id: Machine.Identifier) -> Service.Status {
+  private func status(for service: Service, on id: MachineIdentifier) -> Service.Status {
     return self.controller.services[id]?[service] ?? .unknown
   }
   
-  private func url(for service: Service, on id: Machine.Identifier) -> URL {
+  private func url(for service: Service, on id: MachineIdentifier) -> URL {
     return URL(string: "\(service.protocol)://\(self.machine(id).url):\(service.port)")!
   }
   
@@ -68,7 +68,7 @@ internal struct MachineTable: View {
       TableColumn("Machine") { id in
         VStack(alignment: .leading) {
           HStack(alignment:.firstTextBaseline) {
-            Text(self.machine(id).hostname).font(.headline)
+            Text(self.machine(id).name).font(.headline)
             Text(self.machine(id).os).font(.subheadline)
           }
           Text(self.machine(id).url).font(.subheadline)
