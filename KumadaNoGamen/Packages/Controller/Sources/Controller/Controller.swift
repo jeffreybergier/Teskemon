@@ -114,17 +114,17 @@ extension Controller {
           // Check result and update status
           let argsForLog = arguments[4...5]
           if output.hasSuffix("succeeded!\n") {
-            bind.wrappedValue[id]![service] = .online
+            bind.wrappedValue[id]?[service] = .online
             NSLog("Controller: updateServices: ONLINE \(argsForLog)")
           } else if output.hasSuffix("refused\n") {
-            bind.wrappedValue[id]![service] = .offline
+            bind.wrappedValue[id]?[service] = .offline
             NSLog("Controller: updateServices: OFLINE \(argsForLog)")
           } else if output.hasSuffix("Operation timed out\n") {
-            bind.wrappedValue[id]![service] = .error
+            bind.wrappedValue[id]?[service] = .error
             NSLog("Controller: updateServices: TIMOUT \(argsForLog)")
           } else {
             assertionFailure()
-            bind.wrappedValue[id]![service] = .error
+            bind.wrappedValue[id]?[service] = .error
             NSLog("Controller: updateServices: ERROR  \(argsForLog)")
           }
         }
