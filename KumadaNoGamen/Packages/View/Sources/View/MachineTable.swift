@@ -29,23 +29,11 @@ internal struct MachineTable: View {
   @TableController private var controller
   @Services private var services
   
-  private func machine(_ id: MachineIdentifier) -> Machine {
-    return self.controller.hosts[id]!
-  }
-  
-  private func status(for service: Service, on id: MachineIdentifier) -> Service.Status {
-    return self.controller.services[id]?[service] ?? .unknown
-  }
-  
-  private func url(for service: Service, on id: MachineIdentifier) -> URL {
-    return URL(string: "\(service.protocol)://\(self.machine(id).url):\(service.port)")!
-  }
-  
   internal var body: some View {
     Table(self.controller.ids) {
       TableColumn("Online") { id in
-        Image(systemName: self.machine(id).activity?.isOnline ?? false ? "circle.fill" : "stop.fill")
-          .foregroundStyle(self.machine(id).activity?.isOnline ?? false
+        Image(systemName: self.controller.machine(for: id).activity?.isOnline ?? false ? "circle.fill" : "stop.fill")
+          .foregroundStyle(self.controller.machine(for: id).activity?.isOnline ?? false
                            ? Color(nsColor: .systemGreen).gradient
                            : Color(nsColor: .systemRed).gradient)
       }
@@ -53,14 +41,14 @@ internal struct MachineTable: View {
       TableColumn("Relay") { id in
         VStack(alignment: .center) {
           Group {
-            if (self.machine(id).kind == .meHost) {
+            if (self.controller.machine(for: id).kind == .meHost) {
               Image(systemName: "house")
             } else {
               Image(systemName: "network")
             }
           }
           .font(.headline)
-          Text(self.machine(id).relay.left ?? "TODO")
+          Text(self.controller.machine(for: id).relay.left ?? "TODO")
             .font(.subheadline)
         }
       }
@@ -68,17 +56,17 @@ internal struct MachineTable: View {
       TableColumn("Machine") { id in
         VStack(alignment: .leading) {
           HStack(alignment:.firstTextBaseline) {
-            Text(self.machine(id).name).font(.headline)
-            Text(self.machine(id).os ?? "TODO").font(.subheadline)
+            Text(self.controller.machine(for: id).name).font(.headline)
+            Text(self.controller.machine(for: id).os ?? "TODO").font(.subheadline)
           }
-          Text(self.machine(id).url).font(.subheadline)
+          Text(self.controller.machine(for: id).url).font(.subheadline)
         }
       }
       TableColumn("Activity") { id in
         HStack(alignment: .center) {
           Group {
             // TODO
-            if (self.machine(id).activity?.isActive ?? false) {
+            if (self.controller.machine(for: id).activity?.isActive ?? false) {
               Image(systemName: "progress.indicator")
             } else {
               Image(systemName: "pause.circle")
@@ -87,9 +75,9 @@ internal struct MachineTable: View {
           .font(.headline)
           VStack(alignment: .leading) {
             // TODO
-            Label(byteF.string(fromByteCount: self.machine(id).activity?.txBytes ?? -1),
+            Label(byteF.string(fromByteCount: self.controller.machine(for: id).activity?.txBytes ?? -1),
                   systemImage:"chevron.up")
-            Label(byteF.string(fromByteCount: self.machine(id).activity?.rxBytes ?? -1),
+            Label(byteF.string(fromByteCount: self.controller.machine(for: id).activity?.rxBytes ?? -1),
                   systemImage:"chevron.down")
           }
           .font(.subheadline)
@@ -99,12 +87,12 @@ internal struct MachineTable: View {
       TableColumnForEach(self.services, id: \.self) { service in
         TableColumn(service.name + String(format: " (%d)", service.port)) { id in
           Button {
-            NSWorkspace.shared.open(self.url(for: service, on: id))
+            NSWorkspace.shared.open(self.controller.url(for: service, on: id))
           } label: {
             Label {
               Text("Connect")
             } icon: {
-              switch self.status(for: service, on: id) {
+              switch self.controller.status(for: service, on: id) {
               case .online:
                 Image(systemName: "circle.fill")
                   .foregroundStyle(Color(nsColor: .systemGreen).gradient)
@@ -123,7 +111,7 @@ internal struct MachineTable: View {
             }
             .labelStyle(.iconOnly)
           }
-          .help("Open: " + self.url(for: service, on: id).absoluteString)
+          .help("Open: " + self.controller.url(for: service, on: id).absoluteString)
         }
         .width(64)
       }

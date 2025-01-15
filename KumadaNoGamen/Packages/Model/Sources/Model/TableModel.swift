@@ -21,6 +21,7 @@
 import Foundation
 
 public struct TableModel: Codable {
+  
   public var tailscale: Tailscale?
   public var ids:      [MachineIdentifier] = []
   public var hosts:    [MachineIdentifier: HostMachine] = [:]
@@ -31,4 +32,20 @@ public struct TableModel: Codable {
   public var isUpdatingServices = false
   
   public init() {}
+  
+  public var allMachines: [Machine] {
+    return Array(self.hosts.values) + Array(self.subnets.values)
+  }
+  
+  public func machine(for id: MachineIdentifier) -> Machine {
+    return (self.hosts[id] ?? self.subnets[id])!
+  }
+  
+  public func status(for service: Service, on id: MachineIdentifier) -> Service.Status {
+    return self.services[id]?[service] ?? .unknown
+  }
+  
+  public func url(for service: Service, on id: MachineIdentifier) -> URL {
+    return URL(string: "\(service.protocol)://\(self.machine(for: id).url):\(service.port)")!
+  }
 }

@@ -89,6 +89,16 @@ public struct SubnetMachine: Machine, Codable, Sendable, Identifiable {
   public let kind: MachineKind
   public let relay: Either<String, MachineIdentifier>
   public let activity: MachineActivity?
+  
+  internal init(address: Address, hostID: MachineIdentifier, selfID: MachineIdentifier) {
+    self.id   = .init(rawValue: selfID.rawValue + ":" + address.rawValue)
+    self.name = address.rawValue
+    self.url  = address.rawValue
+    self.os   = nil
+    self.kind = hostID == selfID ? .meSubnet : .remoteSubnet
+    self.relay    = .right(hostID)
+    self.activity = nil
+  }
 }
 
 public struct User: Codable, Sendable {

@@ -45,19 +45,14 @@ public struct TableController: DynamicProperty {
   public func updateMachines() async throws {
     NSLog("Controller: updateMachines")
     self.storage.isUpdatingMachines = true
-    let value = try await type(of: self).getTailscale(self.location)
-    self.storage.tailscale = value.tailscale
-    self.storage.ids = Array(value.hosts.keys.sorted(by: { $0.rawValue > $1.rawValue }))
-    self.storage.hosts = value.hosts
-    self.storage.users = value.users
-    self.storage.isUpdatingMachines = false
+    self.storage = try await type(of: self).getTailscale(self.location)
   }
   
   public func updateServices() async throws {
     NSLog("Controller: updateServices")
     self.storage.isUpdatingServices = true
     try await type(of: self).getStatus(for: self.services,
-                                       on: Array(self.storage.hosts.values),
+                                       on: self.storage.allMachines,
                                        bind: self.$storage.services)
     self.storage.isUpdatingServices = false
   }
@@ -67,7 +62,8 @@ extension TableController {
   
   internal static func getTailscale(_ location: String) async throws -> TableModel {
     let data = try await Process.execute(arguments: [location, "status", "--json"]).stdOut
-    return try TableModel(data: data)
+    let model = try TableModel(data: data)
+    return model
   }
   
   internal static func getStatus(for services: [Service],

@@ -36,13 +36,31 @@ extension TableModel {
     let users = Dictionary<MachineIdentifier, User>(
       uniqueKeysWithValues: model.User?.map { (.init(rawValue: $0), $1) } ?? []
     )
-    var machines = Dictionary<MachineIdentifier, HostMachine>(
-      uniqueKeysWithValues: model.Peer?.map { (.init(rawValue: $1.ID), HostMachine($1, meID: tailscale.selfNodeID)) } ?? []
-    )
-    machines[.init(rawValue: model.Self.ID)] = HostMachine(model.Self, meID: tailscale.selfNodeID)
+    
+    var ids: [MachineIdentifier] = []
+    var hosts: [MachineIdentifier: HostMachine] = [:]
+    var subnets: [MachineIdentifier: SubnetMachine] = [:]
+    
+    let modelMachines = [model.Self] + (model.Peer.map { Array($0.values) } ?? [])
+    for modelMachine in modelMachines {
+      let machine = HostMachine(modelMachine, meID: tailscale.selfNodeID)
+      ids.append(machine.id)
+      hosts[machine.id] = machine
+      for subnet in machine.subnetRoutes {
+        for address in subnet.explodeAddresses() {
+          let subnetMachine = SubnetMachine(address: address,
+                                            hostID: machine.id,
+                                            selfID: tailscale.selfNodeID)
+          ids.append(subnetMachine.id)
+          subnets[subnetMachine.id] = subnetMachine
+        }
+      }
+    }
+    
     self.tailscale = tailscale
-    self.ids = Array(machines.keys.sorted(by: { $0.rawValue > $1.rawValue }))
-    self.hosts = machines
+    self.ids = ids
+    self.hosts = hosts
+    self.subnets = subnets
     self.users = users
   }
 }
