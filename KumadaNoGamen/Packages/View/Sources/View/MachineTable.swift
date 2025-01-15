@@ -26,7 +26,7 @@ import Controller
 
 internal struct MachineTable: View {
   
-  @Controller private var controller
+  @TableController private var controller
   @Services private var services
   
   private func machine(_ id: MachineIdentifier) -> Machine {

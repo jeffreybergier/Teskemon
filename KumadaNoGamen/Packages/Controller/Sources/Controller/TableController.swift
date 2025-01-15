@@ -24,27 +24,18 @@ import Umbrella
 
 @MainActor
 @propertyWrapper
-public struct Controller: DynamicProperty {
+public struct TableController: DynamicProperty {
   
-  public struct Value: Codable {
-    public var tailscale:  Tailscale?
-    public var machineIDs: [MachineIdentifier] = []
-    public var machines:   [MachineIdentifier: Machine] = [:]
-    public var users:      [MachineIdentifier: User] = [:]
-    public var services:   [MachineIdentifier: [Service: Service.Status]] = [:]
-    public var isUpdatingMachines = false
-    public var isUpdatingServices = false
-  }
-  
-  @JSBSceneStorage("ControllerValue") private var storage: Value = Value()
-  @AppStorage("TailscaleLocation") private var location: String = "/Applications/Tailscale.app/Contents/MacOS/Tailscale"
-                                                            //  = "/usr/local/bin/tailscale"
+  @JSBSceneStorage("ControllerValue") private var storage = TableModel()
+  @AppStorage("TailscaleLocation") private var location = "/Applications/Tailscale.app/Contents/MacOS/Tailscale"
+                                                    //  = "/usr/local/bin/tailscale"
   @Services private var services
   
   public init() {}
   
-  public var wrappedValue: Value {
-    return self.storage
+  public var wrappedValue: TableModel {
+    get { self.storage }
+    nonmutating set { self.storage = newValue }
   }
   
   public func resetData() {
@@ -72,11 +63,11 @@ public struct Controller: DynamicProperty {
   }
 }
 
-extension Controller {
+extension TableController {
   
-  internal static func getTailscale(_ location: String) async throws -> Tailscale.Refresh {
+  internal static func getTailscale(_ location: String) async throws -> TableModel {
     let data = try await Process.execute(arguments: [location, "status", "--json"]).stdOut
-    return try Tailscale.Refresh.new(data: data)
+    return try TableModel(data: data)
   }
   
   internal static func getStatus(for services: [Service],

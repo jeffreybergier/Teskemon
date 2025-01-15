@@ -24,7 +24,7 @@ import Controller
 
 public struct MachineWindow: View {
   
-  @Controller private var controller
+  @TableController private var controller
   
   public init() { }
   
