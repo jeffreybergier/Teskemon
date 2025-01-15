@@ -23,7 +23,7 @@ import Foundation
 public struct TableModel: Codable {
   public var tailscale:  Tailscale?
   public var machineIDs: [MachineIdentifier] = []
-  public var machines:   [MachineIdentifier: Machine] = [:]
+  public var machines:   [MachineIdentifier: HostMachine] = [:]
   public var users:      [MachineIdentifier: User] = [:]
   public var services:   [MachineIdentifier: [Service: Service.Status]] = [:]
   public var isUpdatingMachines = false

@@ -44,23 +44,23 @@ internal struct MachineTable: View {
   internal var body: some View {
     Table(self.controller.machineIDs) {
       TableColumn("Online") { id in
-        Image(systemName: self.machine(id).isOnline ? "circle.fill" : "stop.fill")
-          .foregroundStyle(self.machine(id).isOnline
+        Image(systemName: self.machine(id).activity?.isOnline ?? false ? "circle.fill" : "stop.fill")
+          .foregroundStyle(self.machine(id).activity?.isOnline ?? false
                            ? Color(nsColor: .systemGreen).gradient
                            : Color(nsColor: .systemRed).gradient)
       }
       .width(24)
-      TableColumn("Region") { id in
+      TableColumn("Relay") { id in
         VStack(alignment: .center) {
           Group {
-            if (self.controller.tailscale?.selfNodeID == id) {
+            if (self.machine(id).kind == .meHost) {
               Image(systemName: "house")
             } else {
               Image(systemName: "network")
             }
           }
           .font(.headline)
-          Text(self.machine(id).region)
+          Text(self.machine(id).relay.left ?? "TODO")
             .font(.subheadline)
         }
       }
@@ -69,7 +69,7 @@ internal struct MachineTable: View {
         VStack(alignment: .leading) {
           HStack(alignment:.firstTextBaseline) {
             Text(self.machine(id).name).font(.headline)
-            Text(self.machine(id).os).font(.subheadline)
+            Text(self.machine(id).os ?? "TODO").font(.subheadline)
           }
           Text(self.machine(id).url).font(.subheadline)
         }
@@ -77,7 +77,8 @@ internal struct MachineTable: View {
       TableColumn("Activity") { id in
         HStack(alignment: .center) {
           Group {
-            if (self.machine(id).isActive) {
+            // TODO
+            if (self.machine(id).activity?.isActive ?? false) {
               Image(systemName: "progress.indicator")
             } else {
               Image(systemName: "pause.circle")
@@ -85,9 +86,10 @@ internal struct MachineTable: View {
           }
           .font(.headline)
           VStack(alignment: .leading) {
-            Label(byteF.string(fromByteCount: self.machine(id).txBytes),
+            // TODO
+            Label(byteF.string(fromByteCount: self.machine(id).activity?.txBytes ?? -1),
                   systemImage:"chevron.up")
-            Label(byteF.string(fromByteCount: self.machine(id).rxBytes),
+            Label(byteF.string(fromByteCount: self.machine(id).activity?.rxBytes ?? -1),
                   systemImage:"chevron.down")
           }
           .font(.subheadline)

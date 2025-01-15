@@ -29,80 +29,55 @@ public struct MachineIdentifier: Codable, Sendable, Hashable, Identifiable, RawR
 }
 
 public struct MachineActivity: Codable, Sendable, Hashable {
+  public let isOnline: Bool
   public let isActive: Bool
   public let rxBytes: Int64
   public let txBytes: Int64
+  public let lastSeen: Date?
 }
 
-public protocol Machine2 {
+public enum MachineKind: Codable, Sendable, Hashable {
+  case meHost, remoteHost, meSubnet, remoteSubnet
+}
+
+public protocol Machine: Codable, Sendable {
   var id: MachineIdentifier { get }
   var name: String { get }
   var url: String { get }
   var os: String? { get }
-  var isSelf: Bool { get }
-  var location: Either<String, MachineIdentifier> { get }
+  var kind: MachineKind { get }
+  var relay: Either<String, MachineIdentifier> { get }
   var activity: MachineActivity? { get }
 }
 
-public struct Tailscale: Codable, Sendable {
-  
-  // Status
-  public let version: String
-  public let versionUpToDate: Bool
-  public let tunnelingEnabled: Bool
-  public let backendState: String
-  public let haveNodeKey: Bool
-  public let health: [String]
-  // Network
-  public let magicDNSSuffix: String
-  public let currentTailnet: Tailnet?
-  // Identification
-  public let selfNodeID: MachineIdentifier
-  public let selfUserID: User.Identifier
-}
-
-public struct Tailnet: Codable, Sendable {
-  public let name: String
-  public let magicDNSSuffix: String
-  public let magicDNSEnabled: Bool
-  
-  public enum CodingKeys: String, CodingKey {
-    case name = "Name"
-    case magicDNSSuffix = "MagicDNSSuffix"
-    case magicDNSEnabled = "MagicDNSEnabled"
-  }
-}
-
-public struct Machine: Codable, Sendable, Identifiable {
-  // Information
+public struct HostMachine: Machine, Codable, Sendable, Identifiable {
+  // Machine Conformance
   public let id: MachineIdentifier
-  public let publicKey: String
-  public let keyExpiry: Date?
   public let name: String
   public let url: String
-  public let os: String
-  public let userID: Int
+  public let os: String?
+  public let kind: MachineKind
+  public let relay: Either<String, MachineIdentifier>
+  public let activity: MachineActivity?
+  
+  // Information
+  public let publicKey: String
+  public let keyExpiry: Date?
   public let isExitNode: Bool
+  public let userID: Int
+  
   // Network
   public let tailscaleIPs: [Address]
   public let subnetRoutes: [Subnet]
-  public let region: String
-  // Traffic
-  public let isActive: Bool
-  public let rxBytes: Int64
-  public let txBytes: Int64
+  
   // Timestamps
   public let created: Date
   public let lastWrite: Date?
-  public let lastSeen: Date?
   public let lastHandshake: Date?
   // Status
-  public let isOnline: Bool
   public let inNetworkMap: Bool
   public let inMagicSock: Bool
   public let inEngine: Bool
-  // Services
-  public var serviceStatus: [Service: Bool] = [:]
 }
 
 public struct User: Codable, Sendable {
@@ -152,4 +127,32 @@ public struct Service: Codable, Sendable, Hashable, Identifiable {
   public var `protocol`: String
   public var port: Int
   public var id: Int { self.port }
+}
+
+public struct Tailscale: Codable, Sendable {
+  // Status
+  public let version: String
+  public let versionUpToDate: Bool
+  public let tunnelingEnabled: Bool
+  public let backendState: String
+  public let haveNodeKey: Bool
+  public let health: [String]
+  // Network
+  public let magicDNSSuffix: String
+  public let currentTailnet: Tailnet?
+  // Identification
+  public let selfNodeID: MachineIdentifier
+  public let selfUserID: User.Identifier
+}
+
+public struct Tailnet: Codable, Sendable {
+  public let name: String
+  public let magicDNSSuffix: String
+  public let magicDNSEnabled: Bool
+  
+  public enum CodingKeys: String, CodingKey {
+    case name = "Name"
+    case magicDNSSuffix = "MagicDNSSuffix"
+    case magicDNSEnabled = "MagicDNSEnabled"
+  }
 }

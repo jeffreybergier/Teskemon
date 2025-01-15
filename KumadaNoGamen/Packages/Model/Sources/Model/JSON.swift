@@ -36,17 +36,42 @@ extension TableModel {
     let users = Dictionary<MachineIdentifier, User>(
       uniqueKeysWithValues: model.User?.map { (.init(rawValue: $0), $1) } ?? []
     )
-    var machines = Dictionary<MachineIdentifier, Machine>(
-      uniqueKeysWithValues: model.Peer?.map { (.init(rawValue: $1.ID), $1.clean()) } ?? []
+    var machines = Dictionary<MachineIdentifier, HostMachine>(
+      uniqueKeysWithValues: model.Peer?.map { (.init(rawValue: $1.ID), HostMachine($1, meID: tailscale.selfNodeID)) } ?? []
     )
-    machines[.init(rawValue: model.Self.ID)] = model.Self.clean()
-    let something = machines[.init(rawValue: "nYed447uzA21CNTRL")]!.subnetRoutes.map {
-        $0.explodeAddresses()
-    }
+    machines[.init(rawValue: model.Self.ID)] = HostMachine(model.Self, meID: tailscale.selfNodeID)
     self.tailscale = tailscale
     self.machineIDs = Array(machines.keys.sorted(by: { $0.rawValue > $1.rawValue }))
     self.machines = machines
     self.users = users
+  }
+}
+
+extension HostMachine {
+  internal init(_ model: JSON.MachineCLI, meID: MachineIdentifier) {
+    self.id       = .init(rawValue: model.ID)
+    self.name     = model.HostName
+    self.url      = model.DNSName
+    self.os       = model.OS
+    self.kind     = model.ID == meID.rawValue ? .meHost : .remoteHost
+    self.relay    = .left(model.Relay)
+    self.activity = .init(isOnline: model.Online,
+                         isActive: model.Active,
+                         rxBytes: Int64(model.RxBytes),
+                         txBytes: Int64(model.TxBytes),
+                         lastSeen: model.LastSeen.flatMap(df.date(from:)))
+    self.publicKey     = model.PublicKey
+    self.keyExpiry     = model.KeyExpiry.flatMap(df.date(from:))
+    self.isExitNode    = model.ExitNode
+    self.userID        = model.UserID
+    self.tailscaleIPs  = model.TailscaleIPs.map { Address(rawValue: $0) }
+    self.subnetRoutes  = model.PrimaryRoutes?.map { Subnet(rawValue: $0) } ?? []
+    self.created       = df.date(from: model.Created)!
+    self.lastWrite     = model.LastWrite.flatMap(df.date(from:))
+    self.lastHandshake = model.LastHandshake.flatMap(df.date(from:))
+    self.inNetworkMap  = model.InNetworkMap
+    self.inMagicSock   = model.InMagicSock
+    self.inEngine      = model.InEngine
   }
 }
 
@@ -99,31 +124,6 @@ internal enum JSON {
     internal let InMagicSock: Bool
     internal let InEngine: Bool
     internal let KeyExpiry: String?
-    
-    internal func clean() -> Machine {
-      return .init(id: .init(rawValue: self.ID),
-                   publicKey: self.PublicKey,
-                   keyExpiry: self.KeyExpiry.flatMap(df.date(from:)),
-                   name: self.HostName,
-                   url: self.DNSName,
-                   os: self.OS,
-                   userID: self.UserID,
-                   isExitNode: self.ExitNode,
-                   tailscaleIPs: self.TailscaleIPs.map { Address(rawValue: $0) },
-                   subnetRoutes: self.PrimaryRoutes?.map { Subnet(rawValue: $0) } ?? [],
-                   region: self.Relay,
-                   isActive: self.Active,
-                   rxBytes: Int64(self.RxBytes),
-                   txBytes: Int64(self.TxBytes),
-                   created: df.date(from: self.Created)!,
-                   lastWrite: self.LastWrite.flatMap(df.date(from:)),
-                   lastSeen: self.LastSeen.flatMap(df.date(from:)),
-                   lastHandshake: self.LastHandshake.flatMap(df.date(from:)),
-                   isOnline: self.Online,
-                   inNetworkMap: self.InNetworkMap,
-                   inMagicSock: self.InMagicSock,
-                   inEngine: self.InEngine)
-    }
   }
   
   internal struct ClientVersion: Codable, Sendable {
