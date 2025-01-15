@@ -32,35 +32,15 @@ internal struct MachineTable: View {
   internal var body: some View {
     Table(self.controller.ids) {
       TableColumn("Online") { id in
-        Image(systemName: self.controller.machine(for: id).activity?.isOnline ?? false ? "circle.fill" : "stop.fill")
-          .foregroundStyle(self.controller.machine(for: id).activity?.isOnline ?? false
-                           ? Color(nsColor: .systemGreen).gradient
-                           : Color(nsColor: .systemRed).gradient)
+        TableRowOnline(isOnline: self.controller.machine(for: id).activity?.isOnline)
       }
       .width(24)
       TableColumn("Relay") { id in
-        VStack(alignment: .center) {
-          Group {
-            if (self.controller.machine(for: id).kind == .meHost) {
-              Image(systemName: "house")
-            } else {
-              Image(systemName: "network")
-            }
-          }
-          .font(.headline)
-          Text(self.controller.machine(for: id).relay.left ?? "TODO")
-            .font(.subheadline)
-        }
+        TableRowRelay(machine: self.controller.machine(for: id))
       }
-      .width(24)
+      .width(64)
       TableColumn("Machine") { id in
-        VStack(alignment: .leading) {
-          HStack(alignment:.firstTextBaseline) {
-            Text(self.controller.machine(for: id).name).font(.headline)
-            Text(self.controller.machine(for: id).os ?? "TODO").font(.subheadline)
-          }
-          Text(self.controller.machine(for: id).url).font(.subheadline)
-        }
+        TableRowName(machine: self.controller.machine(for: id))
       }
       TableColumn("Activity") { id in
         HStack(alignment: .center) {
@@ -115,6 +95,77 @@ internal struct MachineTable: View {
         }
         .width(64)
       }
+    }
+  }
+}
+
+internal struct TableRowOnline: View {
+  internal let isOnline: Bool?
+  internal var body: some View {
+    switch self.isOnline {
+    case .none:
+      Image(systemName: "questionmark.diamond.fill")
+        .foregroundStyle(Color(nsColor: .systemGray).gradient)
+    case .some(true):
+      Image(systemName: "circle.fill")
+        .foregroundStyle(Color(nsColor: .systemGreen).gradient)
+    case .some(false):
+      Image(systemName: "stop.fill")
+        .foregroundStyle(Color(nsColor: .systemGreen).gradient)
+    }
+  }
+}
+
+internal struct TableRowRelay: View {
+  
+  internal let machine: Machine
+  
+  @TableController private var controller
+  
+  internal var body: some View {
+    VStack(alignment: .leading) {
+      Image(systemName: self.systemImage)
+        .font(.headline)
+      Text(self.labelText)
+        .font(.subheadline)
+    }
+  }
+  
+  private var systemImage: String {
+    switch self.machine.kind {
+    case .meHost:
+      return "house"
+    case .remoteHost:
+      return "network"
+    case .meSubnet:
+      fallthrough
+    case .remoteSubnet:
+      return "shuffle"
+      
+    }
+  }
+  
+  private var labelText: String {
+    switch self.machine.relay {
+    case .left(let left):
+      return left
+    case .right(let right):
+      return self.controller.machine(for: right).name
+    }
+  }
+}
+
+internal struct TableRowName: View {
+  internal let machine: Machine
+  internal var body: some View {
+    VStack(alignment: .leading) {
+      HStack(alignment:.firstTextBaseline) {
+        Text(self.machine.name).font(.headline)
+        if let os = self.machine.os {
+          Text(os).font(.subheadline)
+        }
+      }
+      Text(self.machine.url).font(.subheadline)
     }
   }
 }
