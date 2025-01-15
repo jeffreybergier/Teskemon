@@ -41,8 +41,8 @@ extension TableModel {
     )
     machines[.init(rawValue: model.Self.ID)] = HostMachine(model.Self, meID: tailscale.selfNodeID)
     self.tailscale = tailscale
-    self.machineIDs = Array(machines.keys.sorted(by: { $0.rawValue > $1.rawValue }))
-    self.machines = machines
+    self.ids = Array(machines.keys.sorted(by: { $0.rawValue > $1.rawValue }))
+    self.hosts = machines
     self.users = users
   }
 }

@@ -80,6 +80,17 @@ public struct HostMachine: Machine, Codable, Sendable, Identifiable {
   public let inEngine: Bool
 }
 
+public struct SubnetMachine: Machine, Codable, Sendable, Identifiable {
+  // Machine Conformance
+  public let id: MachineIdentifier
+  public let name: String
+  public let url: String
+  public let os: String?
+  public let kind: MachineKind
+  public let relay: Either<String, MachineIdentifier>
+  public let activity: MachineActivity?
+}
+
 public struct User: Codable, Sendable {
   public struct Identifier: Codable, Sendable, Hashable, Identifiable, RawRepresentable {
     public var id: Int { return self.rawValue }

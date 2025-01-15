@@ -47,8 +47,8 @@ public struct TableController: DynamicProperty {
     self.storage.isUpdatingMachines = true
     let value = try await type(of: self).getTailscale(self.location)
     self.storage.tailscale = value.tailscale
-    self.storage.machineIDs = Array(value.machines.keys.sorted(by: { $0.rawValue > $1.rawValue }))
-    self.storage.machines = value.machines
+    self.storage.ids = Array(value.hosts.keys.sorted(by: { $0.rawValue > $1.rawValue }))
+    self.storage.hosts = value.hosts
     self.storage.users = value.users
     self.storage.isUpdatingMachines = false
   }
@@ -57,7 +57,7 @@ public struct TableController: DynamicProperty {
     NSLog("Controller: updateServices")
     self.storage.isUpdatingServices = true
     try await type(of: self).getStatus(for: self.services,
-                                       on: Array(self.storage.machines.values),
+                                       on: Array(self.storage.hosts.values),
                                        bind: self.$storage.services)
     self.storage.isUpdatingServices = false
   }

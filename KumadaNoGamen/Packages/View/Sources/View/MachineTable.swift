@@ -30,7 +30,7 @@ internal struct MachineTable: View {
   @Services private var services
   
   private func machine(_ id: MachineIdentifier) -> Machine {
-    return self.controller.machines[id]!
+    return self.controller.hosts[id]!
   }
   
   private func status(for service: Service, on id: MachineIdentifier) -> Service.Status {
@@ -42,7 +42,7 @@ internal struct MachineTable: View {
   }
   
   internal var body: some View {
-    Table(self.controller.machineIDs) {
+    Table(self.controller.ids) {
       TableColumn("Online") { id in
         Image(systemName: self.machine(id).activity?.isOnline ?? false ? "circle.fill" : "stop.fill")
           .foregroundStyle(self.machine(id).activity?.isOnline ?? false
