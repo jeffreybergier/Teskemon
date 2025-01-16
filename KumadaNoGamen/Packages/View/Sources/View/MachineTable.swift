@@ -1,5 +1,5 @@
 //
-//  Created by Jeffrey Bergier on 15/1/18.
+//  Created by Jeffrey Bergier on 2025/01/12.
 //  Copyright © 2025 Saturday Apps.
 //
 //  This file is part of KumadaNoGamen, a macOS App.

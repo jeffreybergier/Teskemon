@@ -1,5 +1,5 @@
 //
-//  Created by Jeffrey Bergier on 15/1/18.
+//  Created by Jeffrey Bergier on 2025/01/16.
 //  Copyright © 2025 Saturday Apps.
 //
 //  This file is part of KumadaNoGamen, a macOS App.
@@ -19,16 +19,18 @@
 //
 
 import SwiftUI
-import View
+import Model
+import Controller
 
-@main
-struct KumadaNoGamenApp: App {
-  var body: some Scene {
-    WindowGroup {
-      MachineWindow()
-    }
-    Settings {
-      Settings()
+public struct Settings: View {
+  
+  @TableController private var controller
+  
+  public init() { }
+  
+  public var body: some View {
+    NavigationStack {
+      Text("Settings")
     }
   }
 }
