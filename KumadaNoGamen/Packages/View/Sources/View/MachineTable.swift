@@ -22,8 +22,6 @@ import SwiftUI
 import Model
 import Controller
 
-@MainActor internal let byteF = ByteCountFormatter()
-
 internal struct MachineTable: View {
   
   @TableController private var controller
@@ -31,69 +29,28 @@ internal struct MachineTable: View {
   
   internal var body: some View {
     Table(self.controller.ids) {
+      
       TableColumn("Online") { id in
         TableRowOnline(isOnline: self.controller.machine(for: id).activity?.isOnline)
-      }
-      .width(24)
+      }.width(24)
+      
       TableColumn("Relay") { id in
         TableRowRelay(machine: self.controller.machine(for: id))
-      }
-      .width(64)
+      }.width(48)
+      
       TableColumn("Machine") { id in
         TableRowName(machine: self.controller.machine(for: id))
       }
+      
       TableColumn("Activity") { id in
-        HStack(alignment: .center) {
-          Group {
-            // TODO
-            if (self.controller.machine(for: id).activity?.isActive ?? false) {
-              Image(systemName: "progress.indicator")
-            } else {
-              Image(systemName: "pause.circle")
-            }
-          }
-          .font(.headline)
-          VStack(alignment: .leading) {
-            // TODO
-            Label(byteF.string(fromByteCount: self.controller.machine(for: id).activity?.txBytes ?? -1),
-                  systemImage:"chevron.up")
-            Label(byteF.string(fromByteCount: self.controller.machine(for: id).activity?.rxBytes ?? -1),
-                  systemImage:"chevron.down")
-          }
-          .font(.subheadline)
-        }
-      }
-      .width(96)
+        TableRowActiity(activity: self.controller.machine(for: id).activity)
+      }.width(96)
+      
       TableColumnForEach(self.services, id: \.self) { service in
         TableColumn(service.name + String(format: " (%d)", service.port)) { id in
-          Button {
-            NSWorkspace.shared.open(self.controller.url(for: service, on: id))
-          } label: {
-            Label {
-              Text("Connect")
-            } icon: {
-              switch self.controller.status(for: service, on: id) {
-              case .online:
-                Image(systemName: "circle.fill")
-                  .foregroundStyle(Color(nsColor: .systemGreen).gradient)
-              case .offline:
-                Image(systemName: "stop.fill")
-                  .foregroundStyle(Color(nsColor: .systemRed).gradient)
-              case .error:
-                Image(systemName: "exclamationmark.triangle.fill")
-                  .foregroundStyle(Color(nsColor: .systemYellow).gradient)
-              case .unknown:
-                Image(systemName: "questionmark.diamond.fill")
-                  .foregroundStyle(Color(nsColor: .systemGray).gradient)
-              case .processing:
-                Image(systemName: "progress.indicator")
-              }
-            }
-            .labelStyle(.iconOnly)
-          }
-          .help("Open: " + self.controller.url(for: service, on: id).absoluteString)
-        }
-        .width(64)
+          TableRowStatus(status: self.controller.status(for: service, on: id),
+                         url: self.controller.url(for: service, on: id))
+        }.width(64)
       }
     }
   }
@@ -104,8 +61,8 @@ internal struct TableRowOnline: View {
   internal var body: some View {
     switch self.isOnline {
     case .none:
-      Image(systemName: "questionmark.diamond.fill")
-        .foregroundStyle(Color(nsColor: .systemGray).gradient)
+      Image(systemName: "circle.dotted")
+        .foregroundStyle(Color(nsColor: .systemGray))
     case .some(true):
       Image(systemName: "circle.fill")
         .foregroundStyle(Color(nsColor: .systemGreen).gradient)
@@ -120,37 +77,43 @@ internal struct TableRowRelay: View {
   
   internal let machine: Machine
   
-  @TableController private var controller
+  // TODO: Make separate column for relay
   
   internal var body: some View {
-    VStack(alignment: .leading) {
+    HStack(alignment: .center, spacing: 4) {
       Image(systemName: self.systemImage)
         .font(.headline)
-      Text(self.labelText)
-        .font(.subheadline)
+        .help(self.help)
+      if case let .left(relay) = machine.relay {
+        Text(relay)
+          .font(.subheadline)
+      }
+    }
+  }
+  
+  private var help: String {
+    switch self.machine.kind {
+    case .meHost:
+      return "This Node"
+    case .remoteHost:
+      return "Peer Node"
+    case .meSubnet:
+      return "Route Advertised by this Node"
+    case .remoteSubnet:
+      return "Route Advertised by Peer Node"
     }
   }
   
   private var systemImage: String {
     switch self.machine.kind {
     case .meHost:
-      return "house"
+      return "person.crop.rectangle"
     case .remoteHost:
-      return "network"
+      return "rectangle"
     case .meSubnet:
-      fallthrough
+      return "person.crop.rectangle.stack"
     case .remoteSubnet:
-      return "shuffle"
-      
-    }
-  }
-  
-  private var labelText: String {
-    switch self.machine.relay {
-    case .left(let left):
-      return left
-    case .right(let right):
-      return self.controller.machine(for: right).name
+      return "rectangle.stack"
     }
   }
 }
@@ -167,5 +130,75 @@ internal struct TableRowName: View {
       }
       Text(self.machine.url).font(.subheadline)
     }
+  }
+}
+
+internal struct TableRowActiity: View {
+  
+  private let byteF = ByteCountFormatter()
+  
+  internal let activity: MachineActivity?
+  internal var body: some View {
+    HStack(alignment: .center) {
+      self.indicator
+      if let activity {
+        HStack(spacing: 4) {
+          Image(systemName: "chevron.up.chevron.down")
+            .font(.headline)
+          VStack(alignment: .leading, spacing: 0) {
+            Text(byteF.string(fromByteCount: activity.txBytes))
+            Text(byteF.string(fromByteCount: activity.rxBytes))
+          }.font(.subheadline)
+        }
+      }
+    }
+  }
+  
+  @ViewBuilder private var indicator: some View {
+    if let activity {
+      // TODO: Add animations for progress indicator
+      Image(systemName: activity.isActive ? "progress.indicator" : "pause.circle")
+        .font(.headline)
+    } else {
+      Image(systemName: "circle.dotted")
+        .font(.headline)
+        .foregroundStyle(Color(nsColor: .systemGray).gradient)
+    }
+  }
+}
+
+internal struct TableRowStatus: View {
+  
+  internal let status: Service.Status
+  internal let url: URL
+  
+  internal var body: some View {
+    Button {
+      NSWorkspace.shared.open(self.url)
+    } label: {
+      Label {
+        Text("Open")
+      } icon: {
+        switch self.status {
+        case .online:
+          Image(systemName: "circle.fill")
+            .foregroundStyle(Color(nsColor: .systemGreen).gradient)
+        case .offline:
+          Image(systemName: "stop.fill")
+            .foregroundStyle(Color(nsColor: .systemRed).gradient)
+        case .error:
+          Image(systemName: "exclamationmark.triangle.fill")
+            .foregroundStyle(Color(nsColor: .systemYellow).gradient)
+        case .unknown:
+          Image(systemName: "questionmark.diamond.fill")
+            .foregroundStyle(Color(nsColor: .systemGray).gradient)
+        case .processing:
+          Image(systemName: "progress.indicator")
+        }
+      }
+      .labelStyle(.iconOnly)
+    }
+    .buttonStyle(.bordered)
+    .help("Open: " + self.url.absoluteString)
   }
 }
