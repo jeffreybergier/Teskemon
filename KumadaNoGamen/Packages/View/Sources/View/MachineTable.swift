@@ -206,6 +206,16 @@ internal struct TableRowStatus: View {
       .labelStyle(.iconOnly)
     }
     .buttonStyle(.bordered)
-    .help("Open: " + self.url.absoluteString)
+    .help(self.help)
+  }
+  
+  private var help: String {
+    switch self.status {
+    case .unknown: return "Netcat: Not yet scanned"
+    case .error: return "Netcat: Timeout"
+    case .online: return "Netcat: Port listening"
+    case .offline: return "Netcat: Port not listening"
+    case .processing: return "Netcat: Scanning"
+    }
   }
 }
