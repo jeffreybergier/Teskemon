@@ -28,8 +28,6 @@ public struct TableModel: Codable {
   public var subnets:  [MachineIdentifier: SubnetMachine] = [:]
   public var users:    [MachineIdentifier: User] = [:]
   public var services: [MachineIdentifier: [Service: Service.Status]] = [:]
-  public var isUpdatingMachines = false
-  public var isUpdatingServices = false
   
   public init() {}
   

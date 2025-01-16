@@ -28,7 +28,7 @@ public struct TableController: DynamicProperty {
   
   @JSBSceneStorage("ControllerValue") private var storage = TableModel()
   @AppStorage("TailscaleLocation") private var location = "/Applications/Tailscale.app/Contents/MacOS/Tailscale"
-                                                    //  = "/usr/local/bin/tailscale"
+  //  = "/usr/local/bin/tailscale"
   @Services private var services
   
   public init() {}
@@ -44,17 +44,17 @@ public struct TableController: DynamicProperty {
   
   public func updateMachines() async throws {
     NSLog("Controller: updateMachines")
-    self.storage.isUpdatingMachines = true
     self.storage = try await type(of: self).getTailscale(self.location)
   }
   
   public func updateServices() async throws {
     NSLog("Controller: updateServices")
-    self.storage.isUpdatingServices = true
-    try await type(of: self).getStatus(for: self.services,
-                                       on: self.storage.allMachines,
-                                       bind: self.$storage.services)
-    self.storage.isUpdatingServices = false
+    self.storage.services = [:]
+    Task {
+      try await type(of: self).getStatus(for: self.services,
+                                         on: self.storage.allMachines,
+                                         bind: self.$storage.services)
+    }
   }
 }
 
@@ -70,21 +70,20 @@ extension TableController {
                                  on  machines: [Machine],
                                  bind: Binding<[MachineIdentifier: [Service: Service.Status]]>,
                                  timeout: Int = 3)
-                                 async throws
+  async throws
   {
     // Iterate over every machine
     for machine in machines {
       // Prepare the binding to accept values for this machine
       let id = machine.id
       if bind.wrappedValue[id] == nil { bind.wrappedValue[id] = [:] }
-      
-      // Iterate over every service
+      // Mark status as processing while network activity happens
       for service in services {
-        // Mark status as processing while network activity happens
         bind.wrappedValue[id]![service] = .processing
-        
-        // Schedule all checks for simultaneous execution
-        Task {
+      }
+      Task {
+        // Iterate over every service
+        for service in services {
           // Perform network request
           let arguments: [String] = [
             "/usr/bin/nc",
@@ -97,22 +96,17 @@ extension TableController {
           let result = try await Process.execute(arguments: arguments)
           // Not sure why Netcat puts the results in standard error, but it does
           let output = String(data: result.errOut, encoding: .utf8)!
-          
           // Check result and update status
-          let argsForLog = arguments[4...5]
           if output.hasSuffix("succeeded!\n") {
             bind.wrappedValue[id]?[service] = .online
-            NSLog("Controller: updateServices: ONLINE \(argsForLog)")
+            //NSLog("Controller: updateServices: ONLINE \(argsForLog)")
           } else if output.hasSuffix("refused\n") {
             bind.wrappedValue[id]?[service] = .offline
-            NSLog("Controller: updateServices: OFLINE \(argsForLog)")
           } else if output.hasSuffix("Operation timed out\n") {
             bind.wrappedValue[id]?[service] = .error
-            NSLog("Controller: updateServices: TIMOUT \(argsForLog)")
           } else {
             assertionFailure()
             bind.wrappedValue[id]?[service] = .error
-            NSLog("Controller: updateServices: ERROR  \(argsForLog)")
           }
         }
       }

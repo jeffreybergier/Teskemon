@@ -34,9 +34,7 @@ public struct MachineWindow: View {
         .navigationTitle(self.controller.tailscale?.currentTailnet?.name ?? "熊田の画面")
         .toolbar {
           ToolbarItem {
-            Button("Machines", systemImage: self.controller.isUpdatingMachines
-                                          ? "progress.indicator"
-                                          : "desktopcomputer")
+            Button("Machines", systemImage: "desktopcomputer")
             {
               Task {
                 do {
@@ -46,12 +44,9 @@ public struct MachineWindow: View {
                 }
               }
             }
-            .disabled(self.controller.isUpdatingMachines)
           }
           ToolbarItem {
-            Button("Services", systemImage: self.controller.isUpdatingServices
-                                          ? "progress.indicator"
-                                          : "network")
+            Button("Services", systemImage: "network")
             {
               Task {
                 do {
@@ -61,7 +56,6 @@ public struct MachineWindow: View {
                 }
               }
             }
-            .disabled(self.controller.isUpdatingServices)
           }
           ToolbarItem {
             Button("Reset Data", systemImage: "trash")
