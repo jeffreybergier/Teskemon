@@ -40,13 +40,24 @@ public enum MachineKind: Codable, Sendable, Hashable {
   case meHost, remoteHost, meSubnet, remoteSubnet
 }
 
+public enum MachineRelay: Codable, Sendable, Hashable {
+  case relay(String)
+  case route(id: MachineIdentifier, name: String)
+  public var displayName: String {
+    switch self {
+    case .relay(let name): return name
+    case .route(_, let name): return name
+    }
+  }
+}
+
 public protocol Machine: Codable, Sendable {
   var id: MachineIdentifier { get }
   var name: String { get }
   var url: String { get }
   var os: String? { get }
   var kind: MachineKind { get }
-  var relay: Either<String, MachineIdentifier> { get }
+  var relay: MachineRelay { get }
   var activity: MachineActivity? { get }
 }
 
@@ -57,7 +68,7 @@ public struct HostMachine: Machine, Codable, Sendable, Identifiable {
   public let url: String
   public let os: String?
   public let kind: MachineKind
-  public let relay: Either<String, MachineIdentifier>
+  public let relay: MachineRelay
   public let activity: MachineActivity?
   
   // Information
@@ -87,16 +98,16 @@ public struct SubnetMachine: Machine, Codable, Sendable, Identifiable {
   public let url: String
   public let os: String?
   public let kind: MachineKind
-  public let relay: Either<String, MachineIdentifier>
+  public let relay: MachineRelay
   public let activity: MachineActivity?
   
-  internal init(address: Address, hostID: MachineIdentifier, selfID: MachineIdentifier) {
+  internal init(address: Address, selfID: MachineIdentifier, host: Machine) {
     self.id   = .init(rawValue: selfID.rawValue + ":" + address.rawValue)
     self.name = address.rawValue
     self.url  = address.rawValue
     self.os   = nil
-    self.kind = hostID == selfID ? .meSubnet : .remoteSubnet
-    self.relay    = .right(hostID)
+    self.kind = host.id == selfID ? .meSubnet : .remoteSubnet
+    self.relay    = .route(id: host.id, name: host.name)
     self.activity = nil
   }
 }

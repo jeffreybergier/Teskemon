@@ -49,8 +49,8 @@ extension TableModel {
       for subnet in machine.subnetRoutes {
         for address in subnet.explodeAddresses() {
           let subnetMachine = SubnetMachine(address: address,
-                                            hostID: machine.id,
-                                            selfID: tailscale.selfNodeID)
+                                            selfID: tailscale.selfNodeID,
+                                            host: machine)
           ids.append(subnetMachine.id)
           subnets[subnetMachine.id] = subnetMachine
         }
@@ -72,7 +72,7 @@ extension HostMachine {
     self.url      = model.DNSName
     self.os       = model.OS
     self.kind     = model.ID == meID.rawValue ? .meHost : .remoteHost
-    self.relay    = .left(model.Relay)
+    self.relay    = .relay(model.Relay)
     self.activity = .init(isOnline: model.Online,
                          isActive: model.Active,
                          rxBytes: Int64(model.RxBytes),

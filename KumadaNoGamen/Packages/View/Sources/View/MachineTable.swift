@@ -34,23 +34,27 @@ internal struct MachineTable: View {
         TableRowOnline(isOnline: self.controller.machine(for: id).activity?.isOnline)
       }.width(24)
       
+      TableColumn("Kind") { id in
+        TableRowKind(kind: self.controller.machine(for: id).kind)
+      }.width(24)
+      
       TableColumn("Relay") { id in
-        TableRowRelay(machine: self.controller.machine(for: id))
-      }.width(48)
+        TableRowRelay(relay: self.controller.machine(for: id).relay)
+      }.width(ideal: 48)
       
       TableColumn("Machine") { id in
         TableRowName(machine: self.controller.machine(for: id))
-      }
+      }.width(ideal: 128)
       
       TableColumn("Activity") { id in
         TableRowActiity(activity: self.controller.machine(for: id).activity)
-      }.width(96)
+      }.width(ideal: 96)
       
       TableColumnForEach(self.services, id: \.self) { service in
         TableColumn(service.name + String(format: " (%d)", service.port)) { id in
           TableRowStatus(status: self.controller.status(for: service, on: id),
                          url: self.controller.url(for: service, on: id))
-        }.width(64)
+        }.width(36)
       }
     }
   }
@@ -73,26 +77,18 @@ internal struct TableRowOnline: View {
   }
 }
 
-internal struct TableRowRelay: View {
+internal struct TableRowKind: View {
   
-  internal let machine: Machine
-  
-  // TODO: Make separate column for relay
+  internal let kind: MachineKind
   
   internal var body: some View {
-    HStack(alignment: .center, spacing: 4) {
-      Image(systemName: self.systemImage)
-        .font(.headline)
-        .help(self.help)
-      if case let .left(relay) = machine.relay {
-        Text(relay)
-          .font(.subheadline)
-      }
-    }
+    Image(systemName: self.systemImage)
+      .font(.headline)
+      .help(self.help)
   }
   
   private var help: String {
-    switch self.machine.kind {
+    switch self.kind {
     case .meHost:
       return "This Node"
     case .remoteHost:
@@ -105,7 +101,7 @@ internal struct TableRowRelay: View {
   }
   
   private var systemImage: String {
-    switch self.machine.kind {
+    switch self.kind {
     case .meHost:
       return "person.crop.rectangle"
     case .remoteHost:
@@ -115,6 +111,17 @@ internal struct TableRowRelay: View {
     case .remoteSubnet:
       return "rectangle.stack"
     }
+  }
+}
+
+internal struct TableRowRelay: View {
+  
+  internal let relay: MachineRelay
+  
+  internal var body: some View {
+    Text(self.relay.displayName)
+      .font(.subheadline)
+      .help(self.relay.displayName)
   }
 }
 
