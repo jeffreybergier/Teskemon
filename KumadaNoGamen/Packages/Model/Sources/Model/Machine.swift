@@ -20,6 +20,92 @@
 
 import Foundation
 
+public struct Machine: Codable, Sendable, Identifiable {
+  
+  // Machine Conformance
+  public let id: MachineIdentifier
+  public let name: String
+  public let url: String
+  public let os: String?
+  public let kind: MachineKind
+  public let relay: MachineRelay
+  public let activity: MachineActivity?
+  public let subnetRoutes: [Machine]?
+  public let extraInfo: MachineExtraInfo?
+  
+  /// Init for advertised subnets
+  internal init(address: Address, hostName: String, hostID: MachineIdentifier, selfID: MachineIdentifier) {
+    self.id   = .init(rawValue: selfID.rawValue + ":" + address.rawValue)
+    self.name = address.rawValue
+    self.url  = address.rawValue
+    self.os   = nil
+    self.kind = hostID == selfID ? .meSubnet : .remoteSubnet
+    self.relay = .route(id: hostID, name: hostName)
+    self.activity = nil
+    self.subnetRoutes = nil
+    self.extraInfo = nil
+  }
+  
+  /// Init for JSON from the Tailscale CLI
+  internal init(_ model: JSON.MachineCLI, selfID: MachineIdentifier) {
+    self.id       = .init(rawValue: model.ID)
+    self.name     = model.HostName
+    self.url      = model.DNSName
+    self.os       = model.OS
+    self.kind     = model.ID == selfID.rawValue ? .meHost : .remoteHost
+    self.relay    = .relay(model.Relay)
+    self.activity = .init(isOnline: model.Online,
+                         isActive: model.Active,
+                         rxBytes: Int64(model.RxBytes),
+                         txBytes: Int64(model.TxBytes),
+                         lastSeen: model.LastSeen.flatMap(df.date(from:)))
+    
+    let subnetRoutes: [Machine]? = model.PrimaryRoutes?.flatMap { subnet in
+      Subnet(rawValue: subnet).explodeAddresses().map { address in
+        Machine(address: address,
+                       hostName: model.HostName,
+                       hostID: .init(rawValue: model.ID),
+                       selfID: selfID)
+      }
+    }
+    self.subnetRoutes = (subnetRoutes?.isEmpty ?? true) ? nil : subnetRoutes
+    
+    self.extraInfo = .init(
+      publicKey: model.PublicKey,
+      keyExpiry: model.KeyExpiry.flatMap(df.date(from:)),
+      isExitNode: model.ExitNode,
+      userID: model.UserID,
+      tailscaleIPs: model.TailscaleIPs.map { Address(rawValue: $0) },
+      created: df.date(from: model.Created)!,
+      lastWrite: model.LastWrite.flatMap(df.date(from:)),
+      lastHandshake: model.LastWrite.flatMap(df.date(from:)),
+      inNetworkMap: model.InNetworkMap,
+      inMagicSock: model.InMagicSock,
+      inEngine: model.InEngine
+    )
+  }
+}
+
+public struct MachineExtraInfo: Codable, Sendable, Hashable {
+  // Information
+  public let publicKey: String
+  public let keyExpiry: Date?
+  public let isExitNode: Bool
+  public let userID: Int
+  
+  // Network
+  public let tailscaleIPs: [Address]
+  
+  // Timestamps
+  public let created: Date
+  public let lastWrite: Date?
+  public let lastHandshake: Date?
+  // Status
+  public let inNetworkMap: Bool
+  public let inMagicSock: Bool
+  public let inEngine: Bool
+}
+
 public struct MachineIdentifier: Codable, Sendable, Hashable, Identifiable, RawRepresentable {
   public var id: String { return self.rawValue }
   public let rawValue: String
@@ -51,67 +137,6 @@ public enum MachineRelay: Codable, Sendable, Hashable {
   }
 }
 
-public protocol Machine: Codable, Sendable {
-  var id: MachineIdentifier { get }
-  var name: String { get }
-  var url: String { get }
-  var os: String? { get }
-  var kind: MachineKind { get }
-  var relay: MachineRelay { get }
-  var activity: MachineActivity? { get }
-}
-
-public struct HostMachine: Machine, Codable, Sendable, Identifiable {
-  // Machine Conformance
-  public let id: MachineIdentifier
-  public let name: String
-  public let url: String
-  public let os: String?
-  public let kind: MachineKind
-  public let relay: MachineRelay
-  public let activity: MachineActivity?
-  
-  // Information
-  public let publicKey: String
-  public let keyExpiry: Date?
-  public let isExitNode: Bool
-  public let userID: Int
-  
-  // Network
-  public let tailscaleIPs: [Address]
-  public let subnetRoutes: [Subnet]
-  
-  // Timestamps
-  public let created: Date
-  public let lastWrite: Date?
-  public let lastHandshake: Date?
-  // Status
-  public let inNetworkMap: Bool
-  public let inMagicSock: Bool
-  public let inEngine: Bool
-}
-
-public struct SubnetMachine: Machine, Codable, Sendable, Identifiable {
-  // Machine Conformance
-  public let id: MachineIdentifier
-  public let name: String
-  public let url: String
-  public let os: String?
-  public let kind: MachineKind
-  public let relay: MachineRelay
-  public let activity: MachineActivity?
-  
-  internal init(address: Address, selfID: MachineIdentifier, host: Machine) {
-    self.id   = .init(rawValue: selfID.rawValue + ":" + address.rawValue)
-    self.name = address.rawValue
-    self.url  = address.rawValue
-    self.os   = nil
-    self.kind = host.id == selfID ? .meSubnet : .remoteSubnet
-    self.relay    = .route(id: host.id, name: host.name)
-    self.activity = nil
-  }
-}
-
 public struct User: Codable, Sendable {
   public struct Identifier: Codable, Sendable, Hashable, Identifiable, RawRepresentable {
     public var id: Int { return self.rawValue }
@@ -133,32 +158,6 @@ public struct User: Codable, Sendable {
     case profilePicURL = "ProfilePicURL"
     case roles = "Roles"
   }
-}
-
-public struct Service: Codable, Sendable, Hashable, Identifiable {
-  
-  public enum Status: Codable, Sendable, Hashable {
-    case unknown
-    case error
-    case online
-    case offline
-    case processing
-  }
-  
-  public static let `default`: [Service] = {
-    return [
-      Service(name: "AFP", protocol: "afp", port: 548),
-      Service(name: "SSH", protocol: "ssh", port: 22),
-      Service(name: "SMB", protocol: "smb", port: 445),
-      Service(name: "RDP", protocol: "rdp", port: 3389),
-      Service(name: "VNC", protocol: "vnc", port: 5900),
-    ]
-  }()
-  
-  public var name: String
-  public var `protocol`: String
-  public var port: Int
-  public var id: Int { self.port }
 }
 
 public struct Tailscale: Codable, Sendable {

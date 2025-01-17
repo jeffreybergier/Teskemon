@@ -23,17 +23,15 @@ import Foundation
 public struct MachineModel: Codable, Sendable {
   
   public var tailscale: Tailscale?
-  public var allIDs: [MachineIdentifier] = []
-  public var selectedIDs: Set<String> = []
-  public var hosts: [MachineIdentifier: HostMachine] = [:]
-  public var subnets: [MachineIdentifier: SubnetMachine] = [:]
+  public var selection = Set<MachineIdentifier>()
+  public var machines = Array<Machine>()
   public var users: [MachineIdentifier: User] = [:]
   public var status: [MachineIdentifier: [Service: Service.Status]] = [:]
   
   public init() {}
   
   public func machine(for id: MachineIdentifier) -> Machine {
-    return (self.hosts[id] ?? self.subnets[id])!
+    return self.machines.first(where: { $0.id == id })!
   }
     
   public func status(for service: Service, on id: MachineIdentifier) -> Service.Status {
@@ -45,11 +43,35 @@ public struct MachineModel: Codable, Sendable {
   }
   
   public func selectedMachines() -> [Machine] {
-    let selectedMachines = self.selectedIDs.map { self.machine(for: .init(rawValue: $0)) }
+    let selectedMachines = self.selection.map { self.machine(for: $0) }
     if selectedMachines.isEmpty {
-      return self.allIDs.map { self.machine(for: $0) }
+      return self.machines
     } else {
       return selectedMachines
     }
+  }
+  
+  public init(data: Data) throws {
+    let model = try JSONDecoder().decode(JSON.TailscaleCLI.self, from: data)
+    let tailscale = Tailscale(version: model.Version,
+                              versionUpToDate: model.ClientVersion?.runningLatest ?? false,
+                              tunnelingEnabled: model.TUN,
+                              backendState: model.BackendState,
+                              haveNodeKey: model.HaveNodeKey,
+                              health: model.Health,
+                              magicDNSSuffix: model.MagicDNSSuffix,
+                              currentTailnet: model.CurrentTailnet,
+                              selfNodeID: .init(rawValue: model.Self.ID),
+                              selfUserID: .init(rawValue: model.Self.UserID))
+    let users = Dictionary<MachineIdentifier, User>(
+      uniqueKeysWithValues: model.User?.map { (.init(rawValue: $0), $1) } ?? []
+    )
+    
+    let modelMachines = ([model.Self] + (model.Peer.map { Array($0.values) } ?? [])).sorted { $0.ID < $1.ID }
+    let machines = modelMachines.map { Machine($0, selfID: tailscale.selfNodeID) }
+    
+    self.tailscale = tailscale
+    self.machines = machines
+    self.users = users
   }
 }
