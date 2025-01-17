@@ -6,21 +6,21 @@ import PackageDescription
 let name = "Model"
 
 let package = Package(
-    name: name,
-    products: [
-        .library(
-            name: name,
-            targets: [name]
-        ),
-    ],
-    dependencies: [
-    ],
-    targets: [
-        .target(
-            name: name,
-            dependencies: [
-            ],
-            swiftSettings: [.swiftLanguageMode(.v6)]
-        ),
-    ]
+  name: name,
+  products: [
+    .library(
+      name: name,
+      targets: [name]
+    ),
+  ],
+  dependencies: [
+  ],
+  targets: [
+    .target(
+      name: name,
+      dependencies: [
+      ],
+      swiftSettings: [.swiftLanguageMode(.v6)]
+    ),
+  ]
 )

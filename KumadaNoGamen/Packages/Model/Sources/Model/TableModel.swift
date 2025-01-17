@@ -20,7 +20,7 @@
 
 import Foundation
 
-public struct TableModel: Codable {
+public struct TableModel: Codable, Sendable {
   
   public var tailscale: Tailscale?
   public var allIDs: [MachineIdentifier] = []

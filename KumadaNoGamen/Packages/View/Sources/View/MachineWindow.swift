@@ -24,38 +24,36 @@ import Controller
 
 public struct MachineWindow: View {
   
+  @State private var isAwaiting = false
   @TableController private var controller
+  @Services private var services
   
   public init() { }
   
   public var body: some View {
     NavigationStack {
-      MachineTable()
-        .navigationTitle(self.controller.tailscale?.currentTailnet?.name ?? "熊田の画面")
+      MachineTable(model: self.$controller, services: self.services)
+        .navigationTitle(self.controller.tailscale?.currentTailnet?.name ?? "テスケモン")
         .toolbar {
           ToolbarItem {
-            Button("Machines", systemImage: "desktopcomputer")
-            {
+            Button("Machines", systemImage: self.isAwaiting ? "progress.indicator" : "desktopcomputer") {
+              self.isAwaiting = true
               Task {
-                do {
-                  try await self._controller.updateMachines()
-                } catch {
-                  NSLog("// TODO: Show an error dialog")
-                }
+                try await self._controller.updateMachines()
+                self.isAwaiting = false
               }
             }
+            .disabled(self.isAwaiting)
           }
           ToolbarItem {
-            Button("Services", systemImage: "network")
-            {
+            Button("Services", systemImage: self.isAwaiting ? "progress.indicator" : "network") {
+              self.isAwaiting = true
               Task {
-                do {
-                  try await self._controller.updateServices()
-                } catch {
-                  NSLog("// TODO: Show an error dialog")
-                }
+                try await self._controller.updateServices()
+                self.isAwaiting = false
               }
             }
+            .disabled(self.isAwaiting)
           }
           ToolbarItem {
             Button("Reset Data", systemImage: "trash")

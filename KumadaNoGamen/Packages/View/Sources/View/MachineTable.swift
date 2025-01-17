@@ -24,36 +24,36 @@ import Controller
 
 internal struct MachineTable: View {
   
-  @TableController private var controller
-  @Services private var services
+  @Binding internal var model: TableModel
+  @State internal var services: [Service]
   
   internal var body: some View {
-    Table(self.controller.allIDs, selection: self.$controller.selectedIDs) {
+    Table(self.model.allIDs, selection: self.$model.selectedIDs) {
       
       TableColumn("Online") { id in
-        TableRowOnline(isOnline: self.controller.machine(for: id).activity?.isOnline)
+        TableRowOnline(isOnline: self.model.machine(for: id).activity?.isOnline)
       }.width(24)
       
       TableColumn("Kind") { id in
-        TableRowKind(kind: self.controller.machine(for: id).kind)
+        TableRowKind(kind: self.model.machine(for: id).kind)
       }.width(24)
       
       TableColumn("Relay") { id in
-        TableRowRelay(relay: self.controller.machine(for: id).relay)
+        TableRowRelay(relay: self.model.machine(for: id).relay)
       }.width(ideal: 48)
       
       TableColumn("Machine") { id in
-        TableRowName(machine: self.controller.machine(for: id))
+        TableRowName(machine: self.model.machine(for: id))
       }.width(ideal: 128)
       
       TableColumn("Activity") { id in
-        TableRowActiity(activity: self.controller.machine(for: id).activity)
+        TableRowActiity(activity: self.model.machine(for: id).activity)
       }.width(ideal: 96)
       
       TableColumnForEach(self.services, id: \.self) { service in
         TableColumn(service.name + String(format: " (%d)", service.port)) { id in
-          TableRowStatus(status: self.controller.status(for: service, on: id),
-                         url: self.controller.url(for: service, on: id))
+          TableRowStatus(status: self.model.status(for: service, on: id),
+                         url: self.model.url(for: service, on: id))
         }.width(36)
       }
     }
