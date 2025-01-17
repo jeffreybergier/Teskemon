@@ -24,7 +24,8 @@ let package = Package(
             dependencies: [
                 .byNameItem(name: "Model", condition: nil),
                 .byNameItem(name: "Umbrella", condition: nil),
-            ]
+            ],
+            swiftSettings: [.swiftLanguageMode(.v6)]
         ),
     ]
 )

@@ -19,7 +19,8 @@ let package = Package(
         .target(
             name: name,
             dependencies: [
-            ]
+            ],
+            swiftSettings: [.swiftLanguageMode(.v6)]
         ),
     ]
 )

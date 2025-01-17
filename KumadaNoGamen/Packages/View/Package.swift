@@ -26,7 +26,8 @@ let package = Package(
                 .byNameItem(name: "Controller", condition: nil),
                 .byNameItem(name: "Model", condition: nil),
                 .byNameItem(name: "Umbrella", condition: nil),
-            ]
+            ],
+            swiftSettings: [.swiftLanguageMode(.v6)]
         ),
     ]
 )
