@@ -28,32 +28,35 @@ internal struct MachineTable: View {
   @State internal var services: [Service]
   
   internal var body: some View {
-    Table(self.model.allIDs, selection: self.$model.selectedIDs) {
+    Table(self.model.machines,
+          children: \.subnetRoutes,
+          selection: self.$model.selection)
+    {
       
-      TableColumn("Online") { id in
-        TableRowOnline(isOnline: self.model.machine(for: id).activity?.isOnline)
+      TableColumn("Online") { machine in
+        TableRowOnline(isOnline: machine.activity?.isOnline)
+      }.width(36)
+      
+      TableColumn("Kind") { machine in
+        TableRowKind(kind: machine.kind)
       }.width(24)
       
-      TableColumn("Kind") { id in
-        TableRowKind(kind: self.model.machine(for: id).kind)
-      }.width(24)
-      
-      TableColumn("Relay") { id in
-        TableRowRelay(relay: self.model.machine(for: id).relay)
+      TableColumn("Relay") { machine in
+        TableRowRelay(relay: machine.relay)
       }.width(ideal: 48)
       
-      TableColumn("Machine") { id in
-        TableRowName(machine: self.model.machine(for: id))
+      TableColumn("Machine") { machine in
+        TableRowName(machine: machine)
       }.width(ideal: 128)
       
-      TableColumn("Activity") { id in
-        TableRowActiity(activity: self.model.machine(for: id).activity)
+      TableColumn("Activity") { machine in
+        TableRowActiity(activity: machine.activity)
       }.width(ideal: 96)
       
       TableColumnForEach(self.services, id: \.self) { service in
-        TableColumn(service.name + String(format: " (%d)", service.port)) { id in
-          TableRowStatus(status: self.model.status(for: service, on: id),
-                         url: self.model.url(for: service, on: id))
+        TableColumn(service.name + String(format: " (%d)", service.port)) { machine in
+          TableRowStatus(status: self.model.status(for: service, on: machine.id),
+                         url: self.model.url(for: service, on: machine.id))
         }.width(36)
       }
     }
