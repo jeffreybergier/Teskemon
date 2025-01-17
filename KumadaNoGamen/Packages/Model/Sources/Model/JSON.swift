@@ -20,7 +20,7 @@
 
 import Foundation
 
-extension TableModel {
+extension MachineModel {
   public init(data: Data) throws {
     let model = try JSONDecoder().decode(JSON.TailscaleCLI.self, from: data)
     let tailscale = Tailscale(version: model.Version,

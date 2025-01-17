@@ -24,7 +24,7 @@ import Controller
 
 internal struct MachineTable: View {
   
-  @Binding internal var model: TableModel
+  @Binding internal var model: MachineModel
   @State internal var services: [Service]
   
   internal var body: some View {

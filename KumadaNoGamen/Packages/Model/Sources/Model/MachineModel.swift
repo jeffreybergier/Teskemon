@@ -20,7 +20,7 @@
 
 import Foundation
 
-public struct TableModel: Codable, Sendable {
+public struct MachineModel: Codable, Sendable {
   
   public var tailscale: Tailscale?
   public var allIDs: [MachineIdentifier] = []
@@ -28,7 +28,7 @@ public struct TableModel: Codable, Sendable {
   public var hosts: [MachineIdentifier: HostMachine] = [:]
   public var subnets: [MachineIdentifier: SubnetMachine] = [:]
   public var users: [MachineIdentifier: User] = [:]
-  public var services: [MachineIdentifier: [Service: Service.Status]] = [:]
+  public var status: [MachineIdentifier: [Service: Service.Status]] = [:]
   
   public init() {}
   
@@ -37,7 +37,7 @@ public struct TableModel: Codable, Sendable {
   }
     
   public func status(for service: Service, on id: MachineIdentifier) -> Service.Status {
-    return self.services[id]?[service] ?? .unknown
+    return self.status[id]?[service] ?? .unknown
   }
   
   public func url(for service: Service, on id: MachineIdentifier) -> URL {
