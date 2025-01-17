@@ -21,46 +21,59 @@
 import Foundation
 
 extension Process {
+  
+  internal struct Output: Sendable, Codable, Hashable {
+    internal let exitCode: Int
+    internal let stdOut: Data
+    internal let errOut: Data
+  }
+  
   internal static func execute(url: URL = URL(fileURLWithPath: "/usr/bin/env"),
                                arguments: [String]) async throws
-                               -> (exitCode: Int, stdOut: Data, errOut: Data)
+                               -> Output
   {
-    try await withCheckedThrowingContinuation { continuation  in
-      let tempURL   = URL(fileURLWithPath: NSTemporaryDirectory())
-      let stdOutURL = tempURL.appendingPathComponent("com.saturdayapps.kumadanogamen." + UUID().uuidString + ".stdout", isDirectory: false)
-      let stdErrURL = tempURL.appendingPathComponent("com.saturdayapps.kumadanogamen." + UUID().uuidString + ".stderr", isDirectory: false)
-      FileManager.default.createFile(atPath: stdOutURL.path(), contents: nil)
-      FileManager.default.createFile(atPath: stdErrURL.path(), contents: nil)
+    return try await Task { try self.execute(url: url, arguments: arguments) }.value
+  }
+  
+  internal static func execute(url: URL = URL(fileURLWithPath: "/usr/bin/env"),
+                               arguments: [String]) throws
+                               -> Output
+  {
+    // Create Output Files
+    let tempURL   = URL(fileURLWithPath: NSTemporaryDirectory())
+    let stdOutURL = tempURL.appendingPathComponent("com.saturdayapps.kumadanogamen." + UUID().uuidString + ".stdout", isDirectory: false)
+    let stdErrURL = tempURL.appendingPathComponent("com.saturdayapps.kumadanogamen." + UUID().uuidString + ".stderr", isDirectory: false)
+    FileManager.default.createFile(atPath: stdOutURL.path(), contents: nil)
+    FileManager.default.createFile(atPath: stdErrURL.path(), contents: nil)
+    
+    do {
+      // Create File Handles
+      let stdOutHandle = try FileHandle(forWritingTo: stdOutURL)
+      let stdErrHandle = try FileHandle(forWritingTo: stdErrURL)
       
-      do {
-        let task = Process()
-        let stdOutHandle = try FileHandle(forWritingTo: stdOutURL)
-        let stdErrHandle = try FileHandle(forWritingTo: stdErrURL)
-        
-        task.executableURL    = url
-        task.arguments        = arguments
-        task.standardOutput   = stdOutHandle
-        task.standardError    = stdErrHandle
-        task.qualityOfService = .userInitiated
-        
-        task.terminationHandler = { task in
-          do {
-            try stdOutHandle.close()
-            try stdErrHandle.close()
-            let stdOut = try Data(contentsOf: stdOutURL)
-            let errOut = try Data(contentsOf: stdErrURL)
-            try FileManager.default.removeItem(at: stdOutURL)
-            try FileManager.default.removeItem(at: stdErrURL)
-            continuation.resume(returning: (Int(task.terminationStatus), stdOut, errOut))
-          } catch {
-            continuation.resume(throwing: error)
-          }
-        }
-        
-        try task.run()
-      } catch {
-        continuation.resume(throwing: error)
-      }
+      // Configure Task
+      let task = Process()
+      task.executableURL    = url
+      task.arguments        = arguments
+      task.standardOutput   = stdOutHandle
+      task.standardError    = stdErrHandle
+      task.qualityOfService = .userInitiated
+      
+      // Execute Task
+      try task.run()
+      task.waitUntilExit()
+      
+      // Process output
+      try stdOutHandle.close()
+      try stdErrHandle.close()
+      let stdOut = try Data(contentsOf: stdOutURL)
+      let errOut = try Data(contentsOf: stdErrURL)
+      try FileManager.default.removeItem(at: stdOutURL)
+      try FileManager.default.removeItem(at: stdErrURL)
+      
+      return .init(exitCode: Int(task.terminationStatus), stdOut: stdOut, errOut: errOut)
+    } catch {
+      throw error
     }
   }
 }
