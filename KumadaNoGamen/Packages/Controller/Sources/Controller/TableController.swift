@@ -81,35 +81,52 @@ extension TableController {
       for service in services {
         bind.wrappedValue[id]![service] = .processing
       }
-      Task {
-        // Iterate over every service
-        for service in services {
-          // Perform network request
-          let arguments: [String] = [
-            "/usr/bin/nc",
-            "-zv",
-            "-G \(timeout)",
-            "-w \(timeout)",
-            machine.url,
-            "\(service.port)"
-          ]
-          let result = try await Process.execute(arguments: arguments)
-          // Not sure why Netcat puts the results in standard error, but it does
-          let output = String(data: result.errOut, encoding: .utf8)!
-          // Check result and update status
-          if output.hasSuffix("succeeded!\n") {
-            bind.wrappedValue[id]?[service] = .online
-            //NSLog("Controller: updateServices: ONLINE \(argsForLog)")
-          } else if output.hasSuffix("refused\n") {
-            bind.wrappedValue[id]?[service] = .offline
-          } else if output.hasSuffix("Operation timed out\n") {
-            bind.wrappedValue[id]?[service] = .error
-          } else {
-            assertionFailure()
-            bind.wrappedValue[id]?[service] = .error
+      let machineResults = try await withThrowingTaskGroup(of: [ServiceStatusReturn].self) { group in
+        group.addTask {
+          var output = [ServiceStatusReturn]()
+          // Iterate over every service
+          for service in services {
+            // Perform network request
+            let arguments: [String] = [
+              "/usr/bin/nc",
+              "-zv",
+              "-G \(timeout)",
+              "-w \(timeout)",
+              machine.url,
+              "\(service.port)"
+            ]
+            let result = try await Process.execute(arguments: arguments)
+            // Not sure why Netcat puts the results in standard error, but it does
+            let resultString = String(data: result.errOut, encoding: .utf8)!
+            // Check result and update status
+            if resultString.hasSuffix("succeeded!\n") {
+              output.append(.init(status: .online, service: service, id: id))
+            } else if resultString.hasSuffix("refused\n") {
+              output.append(.init(status: .offline, service: service, id: id))
+            } else if resultString.hasSuffix("Operation timed out\n") {
+              output.append(.init(status: .error, service: service, id: id))
+            } else {
+              assertionFailure()
+              output.append(.init(status: .error, service: service, id: id))
+            }
           }
+          return output
         }
+        var output = [ServiceStatusReturn]()
+        for try await result in group {
+          output.append(contentsOf: result)
+        }
+        return output
+      }
+      for machineResult in machineResults {
+        bind.wrappedValue[machineResult.id]![machineResult.service] = machineResult.status
       }
     }
   }
+}
+
+internal struct ServiceStatusReturn {
+  internal let status: Service.Status
+  internal let service: Service
+  internal let id: MachineIdentifier
 }
