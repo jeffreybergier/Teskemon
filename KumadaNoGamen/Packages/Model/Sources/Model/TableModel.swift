@@ -23,27 +23,33 @@ import Foundation
 public struct TableModel: Codable {
   
   public var tailscale: Tailscale?
-  public var ids:      [MachineIdentifier] = []
-  public var hosts:    [MachineIdentifier: HostMachine] = [:]
-  public var subnets:  [MachineIdentifier: SubnetMachine] = [:]
-  public var users:    [MachineIdentifier: User] = [:]
+  public var allIDs: [MachineIdentifier] = []
+  public var selectedIDs: Set<String> = []
+  public var hosts: [MachineIdentifier: HostMachine] = [:]
+  public var subnets: [MachineIdentifier: SubnetMachine] = [:]
+  public var users: [MachineIdentifier: User] = [:]
   public var services: [MachineIdentifier: [Service: Service.Status]] = [:]
   
   public init() {}
   
-  public var allMachines: [Machine] {
-    return Array(self.hosts.values) + Array(self.subnets.values)
-  }
-  
   public func machine(for id: MachineIdentifier) -> Machine {
     return (self.hosts[id] ?? self.subnets[id])!
   }
-  
+    
   public func status(for service: Service, on id: MachineIdentifier) -> Service.Status {
     return self.services[id]?[service] ?? .unknown
   }
   
   public func url(for service: Service, on id: MachineIdentifier) -> URL {
     return URL(string: "\(service.protocol)://\(self.machine(for: id).url):\(service.port)")!
+  }
+  
+  public func selectedMachines() -> [Machine] {
+    let selectedMachines = self.selectedIDs.map { self.machine(for: .init(rawValue: $0)) }
+    if selectedMachines.isEmpty {
+      return self.allIDs.map { self.machine(for: $0) }
+    } else {
+      return selectedMachines
+    }
   }
 }

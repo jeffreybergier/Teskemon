@@ -58,7 +58,7 @@ extension TableModel {
     }
     
     self.tailscale = tailscale
-    self.ids = ids
+    self.allIDs = ids
     self.hosts = hosts
     self.subnets = subnets
     self.users = users

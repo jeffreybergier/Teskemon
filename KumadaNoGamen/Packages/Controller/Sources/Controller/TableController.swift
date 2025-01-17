@@ -38,6 +38,10 @@ public struct TableController: DynamicProperty {
     nonmutating set { self.storage = newValue }
   }
   
+  public var projectedValue: Binding<TableModel> {
+    return self.$storage
+  }
+  
   public func resetData() {
     self.storage = .init()
   }
@@ -52,7 +56,7 @@ public struct TableController: DynamicProperty {
     self.storage.services = [:]
     Task {
       try await type(of: self).getStatus(for: self.services,
-                                         on: self.storage.allMachines,
+                                         on: self.storage.selectedMachines(),
                                          bind: self.$storage.services)
     }
   }

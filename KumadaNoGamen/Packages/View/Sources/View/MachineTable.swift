@@ -28,7 +28,7 @@ internal struct MachineTable: View {
   @Services private var services
   
   internal var body: some View {
-    Table(self.controller.ids) {
+    Table(self.controller.allIDs, selection: self.$controller.selectedIDs) {
       
       TableColumn("Online") { id in
         TableRowOnline(isOnline: self.controller.machine(for: id).activity?.isOnline)
