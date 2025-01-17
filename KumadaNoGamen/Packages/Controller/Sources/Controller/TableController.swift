@@ -26,19 +26,19 @@ import Umbrella
 @propertyWrapper
 public struct TableController: DynamicProperty {
   
-  @JSBSceneStorage("ControllerValue") private var model = MachineModel()
+  @JSBSceneStorage("ControllerValue") private var model = MachineTableModel()
   @AppStorage("TailscaleLocation") private var executable = "/Applications/Tailscale.app/Contents/MacOS/Tailscale"
   //  = "/usr/local/bin/tailscale"
   @Services private var services
   
   public init() {}
   
-  public var wrappedValue: MachineModel {
+  public var wrappedValue: MachineTableModel {
     get { self.model }
     nonmutating set { self.model = newValue }
   }
   
-  public var projectedValue: Binding<MachineModel> {
+  public var projectedValue: Binding<MachineTableModel> {
     return self.$model
   }
   

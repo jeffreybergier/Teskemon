@@ -20,18 +20,19 @@
 
 import Foundation
 
-public struct MachineModel: Codable, Sendable {
+public struct MachineTableModel: Codable, Sendable {
   
   public var tailscale: Tailscale?
   public var selection = Set<MachineIdentifier>()
-  public var machines = Array<Machine>()
-  public var users: [MachineIdentifier: User] = [:]
-  public var status: [MachineIdentifier: [Service: Service.Status]] = [:]
+  public var machines  = [Machine]()
+  public var lookUp    = [MachineIdentifier: Machine]()
+  public var users     = [MachineIdentifier: User]()
+  public var status    = [MachineIdentifier: [Service: Service.Status]]()
   
   public init() {}
   
   public func machine(for id: MachineIdentifier) -> Machine {
-    return self.machines.first(where: { $0.id == id })!
+    return self.lookUp[id]!
   }
     
   public func status(for service: Service, on id: MachineIdentifier) -> Service.Status {
@@ -70,6 +71,9 @@ public struct MachineModel: Codable, Sendable {
     let modelMachines = ([model.Self] + (model.Peer.map { Array($0.values) } ?? [])).sorted { $0.ID < $1.ID }
     let machines = modelMachines.map { Machine($0, selfID: tailscale.selfNodeID) }
     
+    self.lookUp = Dictionary(uniqueKeysWithValues: machines.flatMap { machine in
+      return [(machine.id, machine)] + (machine.subnetRoutes?.map { ($0.id, $0) } ?? [])
+    })
     self.tailscale = tailscale
     self.machines = machines
     self.users = users
