@@ -82,7 +82,7 @@ internal struct TableRowOnline: View {
 
 internal struct TableRowKind: View {
   
-  internal let kind: MachineKind
+  internal let kind: Machine.Kind
   
   internal var body: some View {
     Image(systemName: self.systemImage)
@@ -119,7 +119,7 @@ internal struct TableRowKind: View {
 
 internal struct TableRowRelay: View {
   
-  internal let relay: MachineRelay
+  internal let relay: Machine.Relay
   
   internal var body: some View {
     Text(self.relay.displayName)
@@ -147,7 +147,7 @@ internal struct TableRowActiity: View {
   
   private let byteF = ByteCountFormatter()
   
-  internal let activity: MachineActivity?
+  internal let activity: Machine.Activity?
   internal var body: some View {
     HStack(alignment: .center) {
       self.indicator

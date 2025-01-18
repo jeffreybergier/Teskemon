@@ -23,23 +23,23 @@ import Foundation
 public struct MachineTableModel: Codable, Sendable {
   
   public var tailscale: Tailscale?
-  public var selection = Set<MachineIdentifier>()
+  public var selection = Set<Machine.Identifier>()
   public var machines  = [Machine]()
-  public var lookUp    = [MachineIdentifier: Machine]()
-  public var users     = [MachineIdentifier: User]()
-  public var status    = [MachineIdentifier: [Service: Service.Status]]()
+  public var lookUp    = [Machine.Identifier: Machine]()
+  public var users     = [Machine.Identifier: User]()
+  public var status    = [Machine.Identifier: [Service: Service.Status]]()
   
   public init() {}
   
-  public func machine(for id: MachineIdentifier) -> Machine {
+  public func machine(for id: Machine.Identifier) -> Machine {
     return self.lookUp[id]!
   }
     
-  public func status(for service: Service, on id: MachineIdentifier) -> Service.Status {
+  public func status(for service: Service, on id: Machine.Identifier) -> Service.Status {
     return self.status[id]?[service] ?? .unknown
   }
   
-  public func url(for service: Service, on id: MachineIdentifier) -> URL {
+  public func url(for service: Service, on id: Machine.Identifier) -> URL {
     return URL(string: "\(service.protocol)://\(self.machine(for: id).url):\(service.port)")!
   }
   
@@ -64,7 +64,7 @@ public struct MachineTableModel: Codable, Sendable {
                               currentTailnet: model.CurrentTailnet,
                               selfNodeID: .init(rawValue: model.Self.ID),
                               selfUserID: .init(rawValue: model.Self.UserID))
-    let users = Dictionary<MachineIdentifier, User>(
+    let users = Dictionary<Machine.Identifier, User>(
       uniqueKeysWithValues: model.User?.map { (.init(rawValue: $0), $1) } ?? []
     )
     

@@ -26,7 +26,7 @@ extension Process {
   @MainActor
   internal static func status(for services: [Service],
                               on  machines: [Machine],
-                              bind: Binding<[MachineIdentifier: [Service: Service.Status]]>,
+                              bind: Binding<[Machine.Identifier: [Service: Service.Status]]>,
                               timeout: Int = 3) async throws
   {
     // Update UI to show Processing
@@ -37,7 +37,7 @@ extension Process {
       }
     }
     // Schedule Tasks
-    try await withThrowingTaskGroup(of: (MachineIdentifier, Service, Service.Status).self) { group in
+    try await withThrowingTaskGroup(of: (Machine.Identifier, Service, Service.Status).self) { group in
       for machine in machines {
         for service in services {
           group.addTask {

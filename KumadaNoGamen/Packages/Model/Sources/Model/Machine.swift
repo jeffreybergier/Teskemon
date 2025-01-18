@@ -23,18 +23,18 @@ import Foundation
 public struct Machine: Codable, Sendable, Identifiable {
   
   // Machine Conformance
-  public let id: MachineIdentifier
+  public let id: Identifier
   public let name: String
   public let url: String
   public let os: String?
-  public let kind: MachineKind
-  public let relay: MachineRelay
-  public let activity: MachineActivity?
+  public let kind: Kind
+  public let relay: Relay
+  public let activity: Activity?
   public let subnetRoutes: [Machine]?
-  public let extraInfo: MachineExtraInfo?
+  public let nodeInfo: NodeInfo?
   
   /// Init for advertised subnets
-  internal init(address: Address, hostName: String, hostID: MachineIdentifier, selfID: MachineIdentifier) {
+  internal init(address: Address, hostName: String, hostID: Machine.Identifier, selfID: Machine.Identifier) {
     self.id   = .init(rawValue: selfID.rawValue + ":" + address.rawValue)
     self.name = address.rawValue
     self.url  = address.rawValue
@@ -43,11 +43,11 @@ public struct Machine: Codable, Sendable, Identifiable {
     self.relay = .route(id: hostID, name: hostName)
     self.activity = nil
     self.subnetRoutes = nil
-    self.extraInfo = nil
+    self.nodeInfo = nil
   }
   
   /// Init for JSON from the Tailscale CLI
-  internal init(_ model: JSON.MachineCLI, selfID: MachineIdentifier) {
+  internal init(_ model: JSON.MachineCLI, selfID: Machine.Identifier) {
     self.id       = .init(rawValue: model.ID)
     self.name     = model.HostName
     self.url      = model.DNSName
@@ -55,10 +55,10 @@ public struct Machine: Codable, Sendable, Identifiable {
     self.kind     = model.ID == selfID.rawValue ? .meHost : .remoteHost
     self.relay    = .relay(model.Relay)
     self.activity = .init(isOnline: model.Online,
-                         isActive: model.Active,
-                         rxBytes: Int64(model.RxBytes),
-                         txBytes: Int64(model.TxBytes),
-                         lastSeen: model.LastSeen.flatMap(df.date(from:)))
+                          isActive: model.Active,
+                          rxBytes: Int64(model.RxBytes),
+                          txBytes: Int64(model.TxBytes),
+                          lastSeen: model.LastSeen.flatMap(df.date(from:)))
     
     let subnetRoutes: [Machine]? = model.PrimaryRoutes?.flatMap { subnet in
       Subnet(rawValue: subnet).explodeAddresses().map { address in
@@ -70,7 +70,7 @@ public struct Machine: Codable, Sendable, Identifiable {
     }
     self.subnetRoutes = (subnetRoutes?.isEmpty ?? true) ? nil : subnetRoutes
     
-    self.extraInfo = .init(
+    self.nodeInfo = .init(
       publicKey: model.PublicKey,
       keyExpiry: model.KeyExpiry.flatMap(df.date(from:)),
       isExitNode: model.ExitNode,
@@ -86,54 +86,56 @@ public struct Machine: Codable, Sendable, Identifiable {
   }
 }
 
-public struct MachineExtraInfo: Codable, Sendable, Hashable {
-  // Information
-  public let publicKey: String
-  public let keyExpiry: Date?
-  public let isExitNode: Bool
-  public let userID: Int
-  
-  // Network
-  public let tailscaleIPs: [Address]
-  
-  // Timestamps
-  public let created: Date
-  public let lastWrite: Date?
-  public let lastHandshake: Date?
-  // Status
-  public let inNetworkMap: Bool
-  public let inMagicSock: Bool
-  public let inEngine: Bool
-}
-
-public struct MachineIdentifier: Codable, Sendable, Hashable, Identifiable, RawRepresentable {
-  public var id: String { return self.rawValue }
-  public let rawValue: String
-  public init(rawValue: String) {
-    self.rawValue = rawValue
-  }
-}
-
-public struct MachineActivity: Codable, Sendable, Hashable {
-  public let isOnline: Bool
-  public let isActive: Bool
-  public let rxBytes: Int64
-  public let txBytes: Int64
-  public let lastSeen: Date?
-}
-
-public enum MachineKind: Codable, Sendable, Hashable {
-  case meHost, remoteHost, meSubnet, remoteSubnet
-}
-
-public enum MachineRelay: Codable, Sendable, Hashable {
-  case relay(String)
-  case route(id: MachineIdentifier, name: String)
-  public var displayName: String {
-    switch self {
-    case .relay(let name): return name
-    case .route(_, let name): return name
+extension Machine {
+  public struct Identifier: Codable, Sendable, Hashable, RawRepresentable {
+    public var id: String { return self.rawValue }
+    public let rawValue: String
+    public init(rawValue: String) {
+      self.rawValue = rawValue
     }
+  }
+  
+  public struct Activity: Codable, Sendable, Hashable {
+    public let isOnline: Bool
+    public let isActive: Bool
+    public let rxBytes: Int64
+    public let txBytes: Int64
+    public let lastSeen: Date?
+  }
+  
+  public enum Kind: Codable, Sendable, Hashable {
+    case meHost, remoteHost, meSubnet, remoteSubnet
+  }
+  
+  public enum Relay: Codable, Sendable, Hashable {
+    case relay(String)
+    case route(id: Machine.Identifier, name: String)
+    public var displayName: String {
+      switch self {
+      case .relay(let name): return name
+      case .route(_, let name): return name
+      }
+    }
+  }
+  
+  public struct NodeInfo: Codable, Sendable, Hashable {
+    // Information
+    public let publicKey: String
+    public let keyExpiry: Date?
+    public let isExitNode: Bool
+    public let userID: Int
+    
+    // Network
+    public let tailscaleIPs: [Address]
+    
+    // Timestamps
+    public let created: Date
+    public let lastWrite: Date?
+    public let lastHandshake: Date?
+    // Status
+    public let inNetworkMap: Bool
+    public let inMagicSock: Bool
+    public let inEngine: Bool
   }
 }
 
@@ -172,7 +174,7 @@ public struct Tailscale: Codable, Sendable {
   public let magicDNSSuffix: String
   public let currentTailnet: Tailnet?
   // Identification
-  public let selfNodeID: MachineIdentifier
+  public let selfNodeID: Machine.Identifier
   public let selfUserID: User.Identifier
 }
 
