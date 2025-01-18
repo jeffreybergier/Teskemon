@@ -26,13 +26,13 @@ public struct MachineWindow: View {
   
   @State private var isAwaiting = false
   @TableController private var controller
-  @Services private var services
+  @SettingsController private var settings
   
   public init() { }
   
   public var body: some View {
     NavigationStack {
-      MachineTable(model: self.$controller, services: self.services)
+      MachineTable(model: self.$controller, services: self.settings.services)
         .navigationTitle(self.controller.tailscale?.currentTailnet?.name ?? "テスケモン")
         .toolbar {
           ToolbarItem {

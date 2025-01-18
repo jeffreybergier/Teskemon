@@ -1,5 +1,5 @@
 //
-//  Created by Jeffrey Bergier on 15/1/18.
+//  Created by Jeffrey Bergier on 2025/01/18.
 //  Copyright © 2025 Saturday Apps.
 //
 //  This file is part of KumadaNoGamen, a macOS App.
@@ -18,17 +18,29 @@
 //  along with KumadaNoGamen.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-import SwiftUI
-import View
+import Foundation
 
-@main
-struct KumadaNoGamenApp: App {
-  var body: some Scene {
-    WindowGroup {
-      MachineWindow()
-    }
-    Settings {
-      SettingsWindow()
+public struct SettingsModel: Codable, Hashable, Sendable {
+  
+  public var services = Service.default
+  public var timeout = 5
+  public var batchSize = 8
+  public var executable = Executable.cli
+  
+  public init () {}
+  
+}
+
+public enum Executable: Codable, Hashable, Sendable {
+  case cli
+  case app
+  case custom(String)
+  
+  public var stringValue: String {
+    switch self {
+    case .cli: return "/usr/local/bin/tailscale"
+    case .app: return "/Applications/Tailscale.app/Contents/MacOS/Tailscale"
+    case .custom(let value): return value
     }
   }
 }

@@ -1,5 +1,5 @@
 //
-//  Created by Jeffrey Bergier on 2025/01/12.
+//  Created by Jeffrey Bergier on 2025/01/18.
 //  Copyright © 2025 Saturday Apps.
 //
 //  This file is part of KumadaNoGamen, a macOS App.
@@ -24,14 +24,19 @@ import Model
 
 @MainActor
 @propertyWrapper
-public struct Services: DynamicProperty {
+public struct SettingsController: DynamicProperty {
   
-  @JSBAppStorage("Services") private var services = Service.default
+  @JSBAppStorage("Settings") private var model = SettingsModel()
   
   public init() { }
   
-  public var wrappedValue: [Service] {
-    get { self.services }
-    nonmutating set { self.services = newValue }
+  public var wrappedValue: SettingsModel {
+    get { self.model }
+    nonmutating set { self.model = newValue }
   }
+  
+  public var projectedValue: Binding<SettingsModel> {
+    return self.$model
+  }
+  
 }

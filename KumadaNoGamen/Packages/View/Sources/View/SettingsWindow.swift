@@ -19,18 +19,17 @@
 //
 
 import SwiftUI
-import Model
 import Controller
 
-public struct Settings: View {
+public struct SettingsWindow: View {
   
-  @TableController private var controller
+  @SettingsController private var settings
   
   public init() { }
   
   public var body: some View {
     NavigationStack {
-      Text("Settings")
+      Text(self.settings.executable.stringValue)
     }
   }
 }

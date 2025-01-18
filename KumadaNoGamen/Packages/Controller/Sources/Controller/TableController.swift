@@ -26,10 +26,8 @@ import Umbrella
 @propertyWrapper
 public struct TableController: DynamicProperty {
   
+  @SettingsController private var settings
   @JSBSceneStorage("ControllerValue") private var model = MachineTableModel()
-  @AppStorage("TailscaleLocation") private var executable = "/Applications/Tailscale.app/Contents/MacOS/Tailscale"
-  //  = "/usr/local/bin/tailscale"
-  @Services private var services
   
   public init() {}
   
@@ -48,13 +46,13 @@ public struct TableController: DynamicProperty {
   
   public func updateMachines() async throws {
     NSLog("[START] Controller.updateMachines()")
-    self.model = try await Process.tableModel(with: self.executable)
+    self.model = try await Process.tableModel(with: self.settings.executable.stringValue)
     NSLog("[END  ] Controller.updateMachines()")
   }
   
   public func updateServices() async throws {
     NSLog("[START] Controller.updateServices()")
-    try await Process.status(for: self.services,
+    try await Process.status(for: self.settings.services,
                              on: self.model.selectedMachines(),
                              bind: self.$model.status)
     NSLog("[END  ] Controller.updateServices()")
