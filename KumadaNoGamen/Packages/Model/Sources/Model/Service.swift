@@ -43,5 +43,11 @@ public struct Service: Codable, Sendable, Hashable, Identifiable {
   public var name: String
   public var `protocol`: String
   public var port: Int
-  public var id: Int { self.port }
+  public var id: Int = Int.random(in: 0...10_000)
+  
+  public init(name: String = "", protocol: String = "", port: Int = 0) {
+    self.name = name
+    self.protocol = `protocol`
+    self.port = port
+  }
 }

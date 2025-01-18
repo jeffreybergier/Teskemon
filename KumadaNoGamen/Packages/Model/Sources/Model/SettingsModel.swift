@@ -26,21 +26,27 @@ public struct SettingsModel: Codable, Hashable, Sendable {
   public var timeout = 5
   public var batchSize = 8
   public var executable = Executable.cli
+  public var executableRaw: String = ""
+  
+  public var executableString: String {
+    switch self.executable {
+    case .cli:    return "/usr/local/bin/tailscale"
+    case .app:    return "/Applications/Tailscale.app/Contents/MacOS/Tailscale"
+    case .custom: return self.executableRaw
+    }
+  }
+  
+  public mutating func delete(service: Service) {
+    guard let index = self.services.firstIndex(where: { $0.id == service.id }) else { return }
+    self.services.remove(at: index)
+  }
   
   public init () {}
   
 }
 
-public enum Executable: Codable, Hashable, Sendable {
+public enum Executable: CaseIterable, Codable, Hashable, Sendable {
   case cli
   case app
-  case custom(String)
-  
-  public var stringValue: String {
-    switch self {
-    case .cli: return "/usr/local/bin/tailscale"
-    case .app: return "/Applications/Tailscale.app/Contents/MacOS/Tailscale"
-    case .custom(let value): return value
-    }
-  }
+  case custom
 }

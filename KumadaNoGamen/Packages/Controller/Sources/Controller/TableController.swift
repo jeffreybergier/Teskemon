@@ -46,7 +46,7 @@ public struct TableController: DynamicProperty {
   
   public func updateMachines() async throws {
     NSLog("[START] Controller.updateMachines()")
-    self.model = try await Process.tableModel(with: self.settings.executable.stringValue)
+    self.model = try await Process.tableModel(with: self.settings.executableString)
     NSLog("[END  ] Controller.updateMachines()")
   }
   

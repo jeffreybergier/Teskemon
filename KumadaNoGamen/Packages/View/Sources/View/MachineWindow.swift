@@ -32,7 +32,7 @@ public struct MachineWindow: View {
   
   public var body: some View {
     NavigationStack {
-      MachineTable(model: self.$controller, services: self.settings.services)
+      MachineTable(model: self.$controller, services: self.$settings.services)
         .navigationTitle(self.controller.tailscale?.currentTailnet?.name ?? "テスケモン")
         .toolbar {
           ToolbarItem {

@@ -19,6 +19,7 @@
 //
 
 import SwiftUI
+import Model
 import Controller
 
 public struct SettingsWindow: View {
@@ -28,8 +29,67 @@ public struct SettingsWindow: View {
   public init() { }
   
   public var body: some View {
-    NavigationStack {
-      Text(self.settings.executable.stringValue)
+    VStack {
+      Form {
+        Section(header: Text("Netcat").font(.headline)) {
+          TextField("Timeout",
+                    text: self.$settings.timeout.map(get: { $0.description },
+                                                     set: { Int($0) ?? -1 }))
+          TextField("Batch Size",
+                    text: self.$settings.batchSize.map(get: { $0.description },
+                                                       set: { Int($0) ?? -1 }))
+        }
+        
+        Section(header: Text("Tailscale").font(.headline),
+                footer: Text(self.settings.executableString).font(.caption))
+        {
+          Picker("Path", selection: self.$settings.executable) {
+            Text("Command Line").tag(Executable.cli)
+            Text("App Store").tag(Executable.app)
+            Text("Custom").tag(Executable.custom)
+          }
+          if self.settings.executable == .custom {
+            TextField("Path", text: self.$settings.executableRaw)
+          }
+        }
+      }
+      .padding()
+      Section(header: Text("Services").font(.headline)) {
+        ZStack(alignment: .bottomTrailing) {
+          Table(self.$settings.services) {
+            TableColumn("Name") { service in
+              TextField("", text: service.name)
+            }
+            TableColumn("Protocol") { service in
+              TextField("", text: service.protocol)
+            }.width(64)
+            TableColumn("Port") { service in
+              TextField("", text: service.port.map(get: { $0.description },
+                                                   set: { Int($0) ?? -1 }))
+            }.width(64)
+            TableColumn("") { service in
+              Button("Delete", systemImage: "x.circle") {
+                self.settings.delete(service: service.wrappedValue)
+              }
+              .labelStyle(.iconOnly)
+            }.width(16)
+          }
+          .textFieldStyle(.roundedBorder)
+          .safeAreaInset(edge: .bottom) {
+            HStack {
+              Spacer()
+              Button("Reset", systemImage: "arrow.uturn.left") {
+                self.settings.services = Service.default
+              }
+              Button("Add", systemImage: "plus") {
+                self.settings.services.append(.init())
+              }
+            }.padding([.bottom, .trailing])
+          }
+        }
+      }
     }
+    .frame(width: 480)
+    .navigationTitle("Settings")
   }
 }

@@ -49,6 +49,7 @@ extension Process {
     for batch in toProcess.batch(into: batchSize) {
       try await withThrowingTaskGroup(of: (Machine.Identifier, Service, Service.Status).self) { group in
         for (machine, service) in batch {
+          // Schedule new tasks
           group.addTask {
             let status = try await status(for: service, on: machine, with: timeout)
             return (machine.id, service, status)
