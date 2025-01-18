@@ -46,7 +46,10 @@ internal struct MachineTable: View {
       }.width(ideal: 48)
       
       TableColumn("Machine") { machine in
-        TableRowName(machine: machine)
+        TableRowName(name: machine.name,
+                     url: machine.url,
+                     os: machine.os,
+                     customName: self.settingsModel.customNames[machine.id])
       }.width(ideal: 128)
       
       TableColumn("Activity") { machine in
@@ -129,16 +132,21 @@ internal struct TableRowRelay: View {
 }
 
 internal struct TableRowName: View {
-  internal let machine: Machine
+  
+  internal let name: String
+  internal let url: String
+  internal let os: String?
+  internal let customName: String?
+  
   internal var body: some View {
     VStack(alignment: .leading) {
       HStack(alignment:.firstTextBaseline) {
-        Text(self.machine.name).font(.headline)
-        if let os = self.machine.os {
+        Text(self.customName ?? self.name).font(.headline)
+        if let os {
           Text(os).font(.subheadline)
         }
       }
-      Text(self.machine.url).font(.subheadline)
+      Text(self.url).font(.subheadline)
     }
   }
 }

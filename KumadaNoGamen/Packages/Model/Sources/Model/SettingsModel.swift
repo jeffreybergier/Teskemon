@@ -26,6 +26,7 @@ public struct SettingsModel: Codable, Hashable, Sendable {
   public var timeout = 5
   public var batchSize = 8
   public var executable = Executable()
+  public var customNames = [Machine.Identifier: String]()
   
   public mutating func delete(service: Service) {
     guard let index = self.services.firstIndex(where: { $0.id == service.id }) else { return }
