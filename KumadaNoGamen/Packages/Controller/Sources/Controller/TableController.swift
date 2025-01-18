@@ -46,7 +46,9 @@ public struct TableController: DynamicProperty {
   
   public func updateMachines() async throws {
     NSLog("[START] Controller.updateMachines()")
+    let status = self.model.status // Preserve the statuses
     self.model = try await Process.tableModel(with: self.settings.executableString)
+    self.model.status = status
     NSLog("[END  ] Controller.updateMachines()")
   }
   
@@ -54,7 +56,9 @@ public struct TableController: DynamicProperty {
     NSLog("[START] Controller.updateServices()")
     try await Process.status(for: self.settings.services,
                              on: self.model.selectedMachines(),
-                             bind: self.$model.status)
+                             bind: self.$model.status,
+                             timeout: self.settings.timeout,
+                             batchSize: self.settings.batchSize)
     NSLog("[END  ] Controller.updateServices()")
   }
 }

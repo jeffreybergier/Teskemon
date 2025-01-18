@@ -25,7 +25,7 @@ import Controller
 internal struct MachineTable: View {
   
   @Binding internal var model: MachineTableModel
-  @Binding internal var services: [Service]
+  @Binding internal var settingsModel: SettingsModel
   
   internal var body: some View {
     Table(self.model.machines,
@@ -53,7 +53,7 @@ internal struct MachineTable: View {
         TableRowActiity(activity: machine.activity)
       }.width(ideal: 96)
       
-      TableColumnForEach(self.services, id: \.self) { service in
+      TableColumnForEach(self.settingsModel.services) { service in
         TableColumn(service.name + String(format: " (%d)", service.port)) { machine in
           TableRowStatus(status: self.model.status(for: service, on: machine.id),
                          url: self.model.url(for: service, on: machine.id))

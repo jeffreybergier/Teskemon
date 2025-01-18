@@ -27,8 +27,8 @@ extension Process {
   internal static func status(for services: [Service],
                               on  machines: [Machine],
                               bind: Binding<[Machine.Identifier: [Service: Service.Status]]>,
-                              timeout: Int = 5,
-                              batchSize: Int = 8) async throws
+                              timeout: Int,
+                              batchSize: Int) async throws
   {
     // Update UI to show Processing
     for machine in machines {
