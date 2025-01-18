@@ -46,7 +46,7 @@ public struct MachineTableModel: Codable, Sendable {
   public func selectedMachines() -> [Machine] {
     let selectedMachines = self.selection.map { self.machine(for: $0) }
     if selectedMachines.isEmpty {
-      return self.machines
+      return Array(self.lookUp.values)
     } else {
       return selectedMachines
     }
