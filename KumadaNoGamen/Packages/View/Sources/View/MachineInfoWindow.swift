@@ -27,6 +27,9 @@ internal struct MachineInfoWindow: View {
   @SceneStorage("MachineInfoSelectedTab") private var currentTab = 0
   @Environment(\.dismiss) private var dismiss
   
+  @TableController private var controller
+  @SettingsController private var settings
+
   private let ids: [Machine.Identifier]
   
   internal init(ids: Set<Machine.Identifier>) {
@@ -46,6 +49,7 @@ internal struct MachineInfoWindow: View {
           Label("Passwords", systemImage: "ellipsis.rectangle")
         }.tag(2)
       }
+      .frame(width: 480, height: 320)
       .navigationTitle("Machine Info")
       .padding([.top])
       .toolbar {
@@ -61,11 +65,26 @@ internal struct MachineInfoWindow: View {
   }
   
   private var customNames: some View {
-    Text("Custom Names")
+    Table(self.ids) {
+      TableColumn("Original Name") { id in
+        Text(self.controller.machine(for: id).name)
+          .font(.body)
+      }.width(120)
+      TableColumn("Custom Name") { id in
+        TextField("", text: self.customNameBinding(for: id),
+                    prompt: Text(self.controller.machine(for: id).name))
+        .font(.headline)
+      }
+    }
   }
   
   private var passwords: some View {
     Text("Passwords")
+  }
+  
+  private func customNameBinding(for id: Machine.Identifier) -> Binding<String> {
+    .init(get: { self.settings.customNames[id] ?? "" },
+          set: { self.settings.customNames[id] = $0.trimmed })
   }
   
 }
