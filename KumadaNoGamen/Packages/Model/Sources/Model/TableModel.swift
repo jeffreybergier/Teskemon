@@ -20,7 +20,7 @@
 
 import Foundation
 
-public struct MachineTableModel: Codable, Sendable {
+public struct TableModel: Codable, Sendable {
   
   public var tailscale: Tailscale?
   public var selection = Set<Machine.Identifier>()
@@ -28,6 +28,7 @@ public struct MachineTableModel: Codable, Sendable {
   public var lookUp    = [Machine.Identifier: Machine]()
   public var users     = [Machine.Identifier: User]()
   public var status    = [Machine.Identifier: [Service: Service.Status]]()
+  public var isShowingInfoPanel = Set<Machine.Identifier>()
   
   public init() {}
   

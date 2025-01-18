@@ -23,9 +23,9 @@ import Model
 
 extension Process {
   @MainActor
-  internal static func tableModel(with executable: String) async throws -> MachineTableModel {
+  internal static func tableModel(with executable: String) async throws -> TableModel {
     let data = try await Process.execute(arguments: [executable, "status", "--json"]).stdOut
-    let model = try MachineTableModel(data: data)
+    let model = try TableModel(data: data)
     return model
   }
 }

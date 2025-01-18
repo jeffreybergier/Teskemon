@@ -34,34 +34,52 @@ public struct MachineWindow: View {
     NavigationStack {
       MachineTable(model: self.$controller, settingsModel: self.$settings)
         .navigationTitle(self.controller.tailscale?.currentTailnet?.name ?? "テスケモン")
+        .sheet(items: self.$controller.isShowingInfoPanel,
+               content: { MachineInfoWindow(ids: $0) })
         .toolbar {
-          ToolbarItem {
-            Button("Machines", systemImage: self.isAwaiting ? "progress.indicator" : "desktopcomputer") {
-              self.isAwaiting = true
-              Task {
-                try await self._controller.updateMachines()
-                self.isAwaiting = false
-              }
-            }
-            .disabled(self.isAwaiting)
-          }
-          ToolbarItem {
-            Button("Services", systemImage: self.isAwaiting ? "progress.indicator" : "network") {
-              self.isAwaiting = true
-              Task {
-                try await self._controller.updateServices()
-                self.isAwaiting = false
-              }
-            }
-            .disabled(self.isAwaiting)
-          }
-          ToolbarItem {
-            Button("Reset Data", systemImage: "trash")
-            {
-              self._controller.resetData()
-            }
-          }
+          ToolbarItem { self.infoButton     }
+          ToolbarItem { self.machineButton  }
+          ToolbarItem { self.servicesButton }
+          ToolbarItem { self.resetButton    }
         }
     }
   }
+  
+  private var infoButton: some View {
+    Button("Machine Info", systemImage: "info.circle") {
+      self.controller.isShowingInfoPanel = self.controller.selection
+    }
+    .disabled(self.controller.selection.isEmpty)
+  }
+  
+  private var machineButton: some View {
+    Button("Update Machines", systemImage: self.isAwaiting ? "progress.indicator" : "desktopcomputer.and.arrow.down") {
+      self.isAwaiting = true
+      Task {
+        try await self._controller.updateMachines()
+        self.isAwaiting = false
+      }
+    }
+    .disabled(self.isAwaiting)
+  }
+  
+  private var servicesButton: some View {
+    Button("Update Services", systemImage: self.isAwaiting ? "progress.indicator" : "slider.horizontal.2.arrow.trianglehead.counterclockwise") {
+      self.isAwaiting = true
+      Task {
+        try await self._controller.updateServices()
+        self.isAwaiting = false
+      }
+    }
+    .disabled(self.isAwaiting)
+  }
+  
+  private var resetButton: some View {
+    Button("Reset Data", systemImage: "trash")
+    {
+      self._controller.resetData()
+    }
+    .disabled(self.isAwaiting)
+  }
+
 }

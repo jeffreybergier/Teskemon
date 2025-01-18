@@ -87,7 +87,7 @@ public struct Machine: Codable, Sendable, Identifiable {
 }
 
 extension Machine {
-  public struct Identifier: Codable, Sendable, Hashable, RawRepresentable {
+  public struct Identifier: Identifiable, Codable, Sendable, Hashable, RawRepresentable {
     public var id: String { return self.rawValue }
     public let rawValue: String
     public init(rawValue: String) {

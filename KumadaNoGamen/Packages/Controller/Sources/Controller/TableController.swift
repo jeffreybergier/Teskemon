@@ -27,16 +27,16 @@ import Umbrella
 public struct TableController: DynamicProperty {
   
   @SettingsController private var settings
-  @JSBSceneStorage("ControllerValue") private var model = MachineTableModel()
+  @JSBSceneStorage("ControllerValue") private var model = TableModel()
   
   public init() {}
   
-  public var wrappedValue: MachineTableModel {
+  public var wrappedValue: TableModel {
     get { self.model }
     nonmutating set { self.model = newValue }
   }
   
-  public var projectedValue: Binding<MachineTableModel> {
+  public var projectedValue: Binding<TableModel> {
     return self.$model
   }
   
