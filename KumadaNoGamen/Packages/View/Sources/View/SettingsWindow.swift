@@ -41,15 +41,15 @@ public struct SettingsWindow: View {
         }
         
         Section(header: Text("Tailscale").font(.headline),
-                footer: Text(self.settings.executableString).font(.caption))
+                footer: Text(self.settings.executable.stringValue).font(.caption))
         {
-          Picker("Path", selection: self.$settings.executable) {
-            Text("Command Line").tag(Executable.cli)
-            Text("App Store").tag(Executable.app)
-            Text("Custom").tag(Executable.custom)
+          Picker("Location", selection: self.$settings.executable.option) {
+            Text("Command Line").tag(Executable.Options.cli)
+            Text("App Store").tag(Executable.Options.app)
+            Text("Custom").tag(Executable.Options.custom)
           }
-          if self.settings.executable == .custom {
-            TextField("Path", text: self.$settings.executableRaw)
+          if self.settings.executable.option == .custom {
+            TextField("Path", text: self.$settings.executable.rawValue)
           }
         }
       }
