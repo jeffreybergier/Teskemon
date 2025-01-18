@@ -27,7 +27,8 @@ extension Process {
   internal static func status(for services: [Service],
                               on  machines: [Machine],
                               bind: Binding<[Machine.Identifier: [Service: Service.Status]]>,
-                              timeout: Int = 3) async throws
+                              timeout: Int = 5,
+                              batchSize: Int = 8) async throws
   {
     // Update UI to show Processing
     for machine in machines {
@@ -36,19 +37,27 @@ extension Process {
         bind.wrappedValue[machine.id]![service] = .processing
       }
     }
+    
+    // Create a single list of input so that we can batch this
+    let toProcess = machines.flatMap { machine in
+      services.map { service in
+        (machine: machine, service: service)
+      }
+    }
+    
     // Schedule Tasks
-    try await withThrowingTaskGroup(of: (Machine.Identifier, Service, Service.Status).self) { group in
-      for machine in machines {
-        for service in services {
+    for batch in toProcess.batch(into: batchSize) {
+      try await withThrowingTaskGroup(of: (Machine.Identifier, Service, Service.Status).self) { group in
+        for (machine, service) in batch {
           group.addTask {
             let status = try await status(for: service, on: machine, with: timeout)
             return (machine.id, service, status)
           }
+          // Update UI to show Result
+          for try await (id, service, status) in group {
+            bind.wrappedValue[id]![service] = status
+          }
         }
-      }
-      // Update UI to show Result
-      for try await (id, service, status) in group {
-        bind.wrappedValue[id]![service] = status
       }
     }
   }
@@ -82,6 +91,14 @@ extension Process {
       NSLog("[ERROR  ] \(machine.url):\(service.port)")
       NSLog("\(machine.url):\(service.port) - Error")
       return .error
+    }
+  }
+}
+
+extension Array {
+  func batch(into size: Int) -> [[Element]] {
+    stride(from: 0, to: count, by: size).map {
+      Array(self[$0..<Swift.min($0 + size, count)])
     }
   }
 }
