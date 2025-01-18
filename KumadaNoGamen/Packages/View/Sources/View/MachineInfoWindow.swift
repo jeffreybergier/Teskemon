@@ -29,6 +29,7 @@ internal struct MachineInfoWindow: View {
   
   @TableController private var controller
   @SettingsController private var settings
+  @PasswordController private var passwords
 
   private let ids: [Machine.Identifier]
   
@@ -42,10 +43,10 @@ internal struct MachineInfoWindow: View {
         self.machineInfo.tabItem {
           Label("Info", systemImage: "info.circle")
         }.tag(0)
-        self.customNames.tabItem {
+        self.namesTable.tabItem {
           Label("Names", systemImage: "person")
         }.tag(1)
-        self.passwords.tabItem {
+        self.passwordsTable.tabItem {
           Label("Passwords", systemImage: "ellipsis.rectangle")
         }.tag(2)
       }
@@ -64,7 +65,7 @@ internal struct MachineInfoWindow: View {
     Text("Machine Info")
   }
   
-  private var customNames: some View {
+  private var namesTable: some View {
     Table(self.ids) {
       TableColumn("Original Name") { id in
         Text(self.controller.machine(for: id).name)
@@ -78,8 +79,21 @@ internal struct MachineInfoWindow: View {
     }
   }
   
-  private var passwords: some View {
-    Text("Passwords")
+  private var passwordsTable: some View {
+    Table(self.ids) {
+      TableColumn("Name") { id in
+        Text(self.settings.customNames[id] ?? self.controller.machine(for: id).name)
+          .font(.body)
+      }.width(120)
+      TableColumn("Username") { id in
+        TextField("", text: self.passwords.username(for: id))
+          .font(.headline)
+      }
+      TableColumn("Password") { id in
+        TextField("", text: self.passwords.password(for: id))
+          .font(.headline)
+      }
+    }
   }
   
   private func customNameBinding(for id: Machine.Identifier) -> Binding<String> {
