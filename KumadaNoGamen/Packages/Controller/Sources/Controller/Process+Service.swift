@@ -54,10 +54,10 @@ extension Process {
             let status = try await status(for: service, on: machine, with: timeout)
             return (machine.id, service, status)
           }
-          // Update UI to show Result
-          for try await (id, service, status) in group {
-            bind.wrappedValue[id]![service] = status
-          }
+        }
+        // Update UI to show Result
+        for try await (id, service, status) in group {
+          bind.wrappedValue[id]![service] = status
         }
       }
     }
