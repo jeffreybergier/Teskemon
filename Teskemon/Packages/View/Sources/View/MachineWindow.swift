@@ -26,6 +26,7 @@ public struct MachineWindow: View {
   
   @State private var isAwaiting = false
   @TableController private var controller
+  @PresentationController private var presentation
   
   public init() { }
   
@@ -33,7 +34,7 @@ public struct MachineWindow: View {
     NavigationStack {
       MachineTable()
         .navigationTitle(self.controller.tailscale?.currentTailnet?.name ?? "テスケモン")
-        .sheet(items: self.$controller.isShowingInfoPanel,
+        .sheet(items: self.$presentation.isShowingInfoPanel,
                content: { MachineInfoWindow(ids: $0) })
         .toolbar {
           ToolbarItem { self.infoButton     }
@@ -46,9 +47,9 @@ public struct MachineWindow: View {
   
   private var infoButton: some View {
     Button("Machine Info", systemImage: "info.circle") {
-      self.controller.isShowingInfoPanel = self.controller.selection
+      self.presentation.isShowingInfoPanel = self.presentation.selection
     }
-    .disabled(self.controller.selection.isEmpty)
+    .disabled(self.presentation.selection.isEmpty)
   }
   
   private var machineButton: some View {

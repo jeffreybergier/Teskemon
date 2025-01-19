@@ -20,15 +20,14 @@
 
 import Foundation
 
+// TODO: Get rid of this and store everything in PropertyWrapper
 public struct TableModel: Codable, Sendable {
   
   public var tailscale: Tailscale?
-  public var selection = Set<Machine.Identifier>()
   public var machines  = [Machine]()
   public var lookUp    = [Machine.Identifier: Machine]()
   public var users     = [Machine.Identifier: User]()
   public var status    = [Machine.Identifier: [Service: Service.Status]]()
-  public var isShowingInfoPanel = Set<Machine.Identifier>()
   
   public init() {}
   
@@ -52,8 +51,8 @@ public struct TableModel: Codable, Sendable {
     }
   }
   
-  public func selectedMachines() -> [Machine] {
-    let selectedMachines = self.selection.map { self.machine(for: $0) }
+  public func machines(for selection: Set<Machine.Identifier>) -> [Machine] {
+    let selectedMachines = selection.map { self.machine(for: $0) }
     if selectedMachines.isEmpty {
       return Array(self.lookUp.values)
     } else {

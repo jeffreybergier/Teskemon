@@ -25,13 +25,14 @@ import Controller
 internal struct MachineTable: View {
   
   @TableController private var controller
+  @PresentationController private var presentation
   @SettingsController private var settings
   @PasswordController private var passwords
   
   internal var body: some View {
     Table(self.controller.machines,
           children: \.subnetRoutes,
-          selection: self.$controller.selection)
+          selection: self.$presentation.selection)
     {
       
       TableColumn("Online") { machine in

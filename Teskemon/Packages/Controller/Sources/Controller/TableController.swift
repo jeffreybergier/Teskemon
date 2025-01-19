@@ -27,6 +27,7 @@ import Umbrella
 public struct TableController: DynamicProperty {
   
   @SettingsController private var settings
+  @PresentationController private var presentation
   @JSBSceneStorage("ControllerValue") private var model = TableModel()
   
   public init() {}
@@ -55,7 +56,7 @@ public struct TableController: DynamicProperty {
   public func updateServices() async throws {
     NSLog("[START] Controller.updateServices()")
     try await Process.status(for: self.settings.services,
-                             on: self.model.selectedMachines(),
+                             on: self.model.machines(for: self.presentation.selection),
                              bind: self.$model.status,
                              timeout: self.settings.timeout,
                              batchSize: self.settings.batchSize)
