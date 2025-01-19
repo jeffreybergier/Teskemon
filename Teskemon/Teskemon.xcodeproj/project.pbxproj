@@ -15,6 +15,8 @@
 		733173C42D3CD8DD00E1B4F5 /* Controller */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = Controller; path = Packages/Controller; sourceTree = "<group>"; };
 		733173C52D3CD8DD00E1B4F5 /* Model */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = Model; path = Packages/Model; sourceTree = "<group>"; };
 		733173C62D3CD8DD00E1B4F5 /* View */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = View; path = Packages/View; sourceTree = "<group>"; };
+		733173DC2D3CDC5000E1B4F5 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = SOURCE_ROOT; };
+		733173DD2D3CDC5900E1B4F5 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -40,6 +42,8 @@
 		733173A92D3CD81200E1B4F5 = {
 			isa = PBXGroup;
 			children = (
+				733173DD2D3CDC5900E1B4F5 /* LICENSE */,
+				733173DC2D3CDC5000E1B4F5 /* README.md */,
 				733173B42D3CD81200E1B4F5 /* Teskemon */,
 				733173C62D3CD8DD00E1B4F5 /* View */,
 				733173C52D3CD8DD00E1B4F5 /* Model */,
