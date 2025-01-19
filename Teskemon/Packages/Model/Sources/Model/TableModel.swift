@@ -20,6 +20,8 @@
 
 import Foundation
 
+// TODO: Move this into controller package
+
 public struct TableModel: Codable, Sendable {
   
   public var tailscale: Tailscale?

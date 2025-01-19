@@ -44,9 +44,9 @@ public struct SettingsWindow: View {
                 footer: Text(self.settings.executable.stringValue).font(.caption))
         {
           Picker("Location", selection: self.$settings.executable.option) {
-            Text("Command Line").tag(Executable.Options.cli)
-            Text("App Store").tag(Executable.Options.app)
-            Text("Custom").tag(Executable.Options.custom)
+            Text("Command Line").tag(SettingsController.Executable.Options.cli)
+            Text("App Store").tag(SettingsController.Executable.Options.app)
+            Text("Custom").tag(SettingsController.Executable.Options.custom)
           }
           if self.settings.executable.option == .custom {
             TextField("Path", text: self.$settings.executable.rawValue)
