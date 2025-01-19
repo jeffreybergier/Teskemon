@@ -22,7 +22,7 @@ import SwiftUI
 import View
 
 @main
-struct KumadaNoGamenApp: App {
+struct TeskemonApp: App {
   var body: some Scene {
     WindowGroup {
       MachineWindow()
