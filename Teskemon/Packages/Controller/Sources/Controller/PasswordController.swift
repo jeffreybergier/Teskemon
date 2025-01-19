@@ -52,10 +52,21 @@ extension PasswordController {
       case password
     }
     
+    private enum Cache {
+      case knownMissing
+      case available(String)
+      internal var value: String? {
+        switch self {
+        case .knownMissing: return nil
+        case .available(let value): return value
+        }
+      }
+    }
+    
     private let usernameKeychain = KeychainSwift(keyPrefix: "teskemon/username/")
     private let passwordKeychain = KeychainSwift(keyPrefix: "teskemon/password/")
     
-    @Published internal var cache: [Namespace: [Machine.Identifier: String]] = {
+    private var cache: [Namespace: [Machine.Identifier: Cache]] = {
       return [
         .username: .init(),
         .password: .init()
@@ -64,18 +75,26 @@ extension PasswordController {
     
     public subscript (space: Namespace, id: Machine.Identifier) -> String? {
       get {
-        if let cache = self.cache[space]![id] { return cache }
-        return self.keychain(for: space).get(id.rawValue)
+        if let cache = self.cache[space]![id] { return cache.value }
+        if let uncached = self.keychain(for: space).get(id.rawValue) {
+          self.cache[space]![id] = .available(uncached)
+          return uncached
+        } else {
+          self.cache[space]![id] = .knownMissing
+          return nil
+        }
       }
       set {
+        self.objectWillChange.send()
+        
         guard let newValue = newValue?.trimmed else {
-          self.cache[space]!.removeValue(forKey: id)
           self.keychain(for: space).delete(id.rawValue)
+          self.cache[space]![id] = .knownMissing
           return
         }
         
         self.keychain(for: space).set(newValue, forKey: id.rawValue)
-        self.cache[space]![id] = newValue
+        self.cache[space]![id] = .available(newValue)
       }
     }
     
