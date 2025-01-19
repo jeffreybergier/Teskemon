@@ -7,125 +7,125 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		7380FBFC2D33C89F0013D538 /* View in Frameworks */ = {isa = PBXBuildFile; productRef = 7380FBFB2D33C89F0013D538 /* View */; };
+		733173CE2D3CD90D00E1B4F5 /* View in Frameworks */ = {isa = PBXBuildFile; productRef = 733173CD2D3CD90D00E1B4F5 /* View */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		7380FBF92D33C8890013D538 /* View */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = View; path = Packages/View; sourceTree = "<group>"; };
-		7380FBFD2D33C8FA0013D538 /* Controller */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = Controller; path = Packages/Controller; sourceTree = "<group>"; };
-		7380FBFE2D33FA2A0013D538 /* Model */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = Model; path = Packages/Model; sourceTree = "<group>"; };
-		739896AA2D2BFA8400E7C169 /* KumadaNoGamen.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KumadaNoGamen.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		733173B22D3CD81200E1B4F5 /* Teskemon.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Teskemon.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		733173C42D3CD8DD00E1B4F5 /* Controller */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = Controller; path = Packages/Controller; sourceTree = "<group>"; };
+		733173C52D3CD8DD00E1B4F5 /* Model */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = Model; path = Packages/Model; sourceTree = "<group>"; };
+		733173C62D3CD8DD00E1B4F5 /* View */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = View; path = Packages/View; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		739896AC2D2BFA8400E7C169 /* KumadaNoGamen */ = {
+		733173B42D3CD81200E1B4F5 /* Teskemon */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = KumadaNoGamen;
+			path = Teskemon;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		739896A72D2BFA8400E7C169 /* Frameworks */ = {
+		733173AF2D3CD81200E1B4F5 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7380FBFC2D33C89F0013D538 /* View in Frameworks */,
+				733173CE2D3CD90D00E1B4F5 /* View in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		7380FBFA2D33C89F0013D538 /* Frameworks */ = {
+		733173A92D3CD81200E1B4F5 = {
+			isa = PBXGroup;
+			children = (
+				733173B42D3CD81200E1B4F5 /* Teskemon */,
+				733173C62D3CD8DD00E1B4F5 /* View */,
+				733173C52D3CD8DD00E1B4F5 /* Model */,
+				733173C42D3CD8DD00E1B4F5 /* Controller */,
+				733173CC2D3CD90D00E1B4F5 /* Frameworks */,
+				733173B32D3CD81200E1B4F5 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		733173B32D3CD81200E1B4F5 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				733173B22D3CD81200E1B4F5 /* Teskemon.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		733173CC2D3CD90D00E1B4F5 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		739896A12D2BFA8400E7C169 = {
-			isa = PBXGroup;
-			children = (
-				739896AC2D2BFA8400E7C169 /* KumadaNoGamen */,
-				7380FBF92D33C8890013D538 /* View */,
-				7380FBFD2D33C8FA0013D538 /* Controller */,
-				7380FBFE2D33FA2A0013D538 /* Model */,
-				7380FBFA2D33C89F0013D538 /* Frameworks */,
-				739896AB2D2BFA8400E7C169 /* Products */,
-			);
-			sourceTree = "<group>";
-		};
-		739896AB2D2BFA8400E7C169 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				739896AA2D2BFA8400E7C169 /* KumadaNoGamen.app */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		739896A92D2BFA8400E7C169 /* KumadaNoGamen */ = {
+		733173B12D3CD81200E1B4F5 /* Teskemon */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 739896BB2D2BFA8500E7C169 /* Build configuration list for PBXNativeTarget "KumadaNoGamen" */;
+			buildConfigurationList = 733173C12D3CD81400E1B4F5 /* Build configuration list for PBXNativeTarget "Teskemon" */;
 			buildPhases = (
-				739896A62D2BFA8400E7C169 /* Sources */,
-				739896A72D2BFA8400E7C169 /* Frameworks */,
-				739896A82D2BFA8400E7C169 /* Resources */,
+				733173AE2D3CD81200E1B4F5 /* Sources */,
+				733173AF2D3CD81200E1B4F5 /* Frameworks */,
+				733173B02D3CD81200E1B4F5 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				739896AC2D2BFA8400E7C169 /* KumadaNoGamen */,
+				733173B42D3CD81200E1B4F5 /* Teskemon */,
 			);
-			name = KumadaNoGamen;
+			name = Teskemon;
 			packageProductDependencies = (
-				7380FBFB2D33C89F0013D538 /* View */,
+				733173CD2D3CD90D00E1B4F5 /* View */,
 			);
-			productName = KumadaNoGamen;
-			productReference = 739896AA2D2BFA8400E7C169 /* KumadaNoGamen.app */;
+			productName = Teskemon;
+			productReference = 733173B22D3CD81200E1B4F5 /* Teskemon.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		739896A22D2BFA8400E7C169 /* Project object */ = {
+		733173AA2D3CD81200E1B4F5 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1620;
 				LastUpgradeCheck = 1620;
 				TargetAttributes = {
-					739896A92D2BFA8400E7C169 = {
+					733173B12D3CD81200E1B4F5 = {
 						CreatedOnToolsVersion = 16.2;
 					};
 				};
 			};
-			buildConfigurationList = 739896A52D2BFA8400E7C169 /* Build configuration list for PBXProject "KumadaNoGamen" */;
+			buildConfigurationList = 733173AD2D3CD81200E1B4F5 /* Build configuration list for PBXProject "Teskemon" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
 			);
-			mainGroup = 739896A12D2BFA8400E7C169;
+			mainGroup = 733173A92D3CD81200E1B4F5;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 739896AB2D2BFA8400E7C169 /* Products */;
+			productRefGroup = 733173B32D3CD81200E1B4F5 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				739896A92D2BFA8400E7C169 /* KumadaNoGamen */,
+				733173B12D3CD81200E1B4F5 /* Teskemon */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		739896A82D2BFA8400E7C169 /* Resources */ = {
+		733173B02D3CD81200E1B4F5 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -135,7 +135,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		739896A62D2BFA8400E7C169 /* Sources */ = {
+		733173AE2D3CD81200E1B4F5 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -145,7 +145,7 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		739896B92D2BFA8500E7C169 /* Debug */ = {
+		733173BF2D3CD81400E1B4F5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -205,11 +205,10 @@
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
 		};
-		739896BA2D2BFA8500E7C169 /* Release */ = {
+		733173C02D3CD81400E1B4F5 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -261,16 +260,14 @@
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
-				SWIFT_VERSION = 6.0;
 			};
 			name = Release;
 		};
-		739896BC2D2BFA8500E7C169 /* Debug */ = {
+		733173C22D3CD81400E1B4F5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = KumadaNoGamen/KumadaNoGamen.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -283,20 +280,19 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 14.4;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.saturdayapps.KumadaNoGamen;
+				PRODUCT_BUNDLE_IDENTIFIER = com.saturdayapps.Teskemon;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
-		739896BD2D2BFA8500E7C169 /* Release */ = {
+		733173C32D3CD81400E1B4F5 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = KumadaNoGamen/KumadaNoGamen.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -309,31 +305,31 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 14.4;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.saturdayapps.KumadaNoGamen;
+				PRODUCT_BUNDLE_IDENTIFIER = com.saturdayapps.Teskemon;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		739896A52D2BFA8400E7C169 /* Build configuration list for PBXProject "KumadaNoGamen" */ = {
+		733173AD2D3CD81200E1B4F5 /* Build configuration list for PBXProject "Teskemon" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				739896B92D2BFA8500E7C169 /* Debug */,
-				739896BA2D2BFA8500E7C169 /* Release */,
+				733173BF2D3CD81400E1B4F5 /* Debug */,
+				733173C02D3CD81400E1B4F5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		739896BB2D2BFA8500E7C169 /* Build configuration list for PBXNativeTarget "KumadaNoGamen" */ = {
+		733173C12D3CD81400E1B4F5 /* Build configuration list for PBXNativeTarget "Teskemon" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				739896BC2D2BFA8500E7C169 /* Debug */,
-				739896BD2D2BFA8500E7C169 /* Release */,
+				733173C22D3CD81400E1B4F5 /* Debug */,
+				733173C32D3CD81400E1B4F5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -341,11 +337,11 @@
 /* End XCConfigurationList section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		7380FBFB2D33C89F0013D538 /* View */ = {
+		733173CD2D3CD90D00E1B4F5 /* View */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = View;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
-	rootObject = 739896A22D2BFA8400E7C169 /* Project object */;
+	rootObject = 733173AA2D3CD81200E1B4F5 /* Project object */;
 }
