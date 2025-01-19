@@ -90,7 +90,7 @@ internal struct MachineInfoWindow: View {
           .font(.headline)
       }
       TableColumn("Password") { id in
-        TextField("", text: self.passwords.password(for: id))
+        SecureField("", text: self.passwords.password(for: id))
           .font(.headline)
       }
     }

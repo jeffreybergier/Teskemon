@@ -37,7 +37,6 @@ public struct PasswordController: DynamicProperty {
 
     public func username(for id: Machine.Identifier) -> Binding<String> {
       return .init { [usernames] in
-        print("[USER] " + id.rawValue)
         return usernames.get(id.rawValue) ?? ""
       } set: { [usernames] in
         if let newValue = $0.trimmed {
@@ -49,7 +48,6 @@ public struct PasswordController: DynamicProperty {
     }
     public func password(for id: Machine.Identifier) -> Binding<String> {
       return .init { [passwords] in
-        print("[PASS] " + id.rawValue)
         return passwords.get(id.rawValue) ?? ""
       } set: { [passwords] in
         if let newValue = $0.trimmed {

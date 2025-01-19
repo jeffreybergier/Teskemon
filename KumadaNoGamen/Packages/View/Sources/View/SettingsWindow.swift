@@ -53,7 +53,7 @@ public struct SettingsWindow: View {
           }
         }
       }
-      .padding()
+      .scenePadding()
       Section(header: Text("Services").font(.headline)) {
         ZStack(alignment: .bottomTrailing) {
           Table(self.$settings.services) {
