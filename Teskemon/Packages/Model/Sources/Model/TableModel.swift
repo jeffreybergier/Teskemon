@@ -27,6 +27,7 @@ public struct TableModel: Codable, Sendable {
   public var tailscale: Tailscale?
   public var machines  = [Machine]()
   public var users     = [Machine.Identifier: User]()
+  // TODO: Figure out why service status is not reloading on startup
   public var status    = [Machine.Identifier: [Service: Service.Status]]()
   
   // Figure out a way to remove the lookup from this type
