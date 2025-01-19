@@ -52,21 +52,10 @@ extension PasswordController {
       case password
     }
     
-    private enum Cache {
-      case knownMissing
-      case available(String)
-      internal var value: String? {
-        switch self {
-        case .knownMissing: return nil
-        case .available(let value): return value
-        }
-      }
-    }
-    
     private let usernameKeychain = KeychainSwift(keyPrefix: "teskemon/username/")
     private let passwordKeychain = KeychainSwift(keyPrefix: "teskemon/password/")
     
-    private var cache: [Namespace: [Machine.Identifier: Cache]] = {
+    private var cache: [Namespace: [Machine.Identifier: Rumsfeld<String>]] = {
       return [
         .username: .init(),
         .password: .init()
@@ -75,12 +64,12 @@ extension PasswordController {
     
     public subscript (space: Namespace, id: Machine.Identifier) -> String? {
       get {
-        if let cache = self.cache[space]![id] { return cache.value }
+        if let cache = self.cache[space]![id] { return cache.knownValue }
         if let uncached = self.keychain(for: space).get(id.rawValue) {
-          self.cache[space]![id] = .available(uncached)
+          self.cache[space]![id] = .knownKnown(uncached)
           return uncached
         } else {
-          self.cache[space]![id] = .knownMissing
+          self.cache[space]![id] = .knownUnknown
           return nil
         }
       }
@@ -89,12 +78,12 @@ extension PasswordController {
         
         guard let newValue = newValue?.trimmed else {
           self.keychain(for: space).delete(id.rawValue)
-          self.cache[space]![id] = .knownMissing
+          self.cache[space]![id] = .knownUnknown
           return
         }
         
         self.keychain(for: space).set(newValue, forKey: id.rawValue)
-        self.cache[space]![id] = .available(newValue)
+        self.cache[space]![id] = .knownKnown(newValue)
       }
     }
     
@@ -108,6 +97,22 @@ extension PasswordController {
       case .username: return self.usernameKeychain
       case .password: return self.passwordKeychain
       }
+    }
+  }
+}
+
+// TODO: Move this type to Umbrella
+public enum Rumsfeld<T> {
+  case knownKnown(T)
+  case knownUnknown
+  case unknownKnown
+  case unknownUnknown
+  public var knownValue: T? {
+    switch self {
+    case .knownKnown(let value):
+      return value
+    case .knownUnknown, .unknownKnown, .unknownUnknown:
+      return nil
     }
   }
 }

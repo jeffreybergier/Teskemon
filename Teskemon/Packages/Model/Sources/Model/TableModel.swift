@@ -20,14 +20,15 @@
 
 import Foundation
 
-// TODO: Get rid of this and store everything in PropertyWrapper
 public struct TableModel: Codable, Sendable {
   
   public var tailscale: Tailscale?
   public var machines  = [Machine]()
-  public var lookUp    = [Machine.Identifier: Machine]()
   public var users     = [Machine.Identifier: User]()
   public var status    = [Machine.Identifier: [Service: Service.Status]]()
+  
+  // Figure out a way to remove the lookup from this type
+  public var lookUp    = [Machine.Identifier: Machine]()
   
   public init() {}
   
