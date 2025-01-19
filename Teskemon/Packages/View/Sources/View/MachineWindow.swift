@@ -26,13 +26,12 @@ public struct MachineWindow: View {
   
   @State private var isAwaiting = false
   @TableController private var controller
-  @SettingsController private var settings
   
   public init() { }
   
   public var body: some View {
     NavigationStack {
-      MachineTable(model: self.$controller, settingsModel: self.$settings)
+      MachineTable()
         .navigationTitle(self.controller.tailscale?.currentTailnet?.name ?? "テスケモン")
         .sheet(items: self.$controller.isShowingInfoPanel,
                content: { MachineInfoWindow(ids: $0) })

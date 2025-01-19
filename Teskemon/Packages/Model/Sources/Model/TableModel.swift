@@ -40,8 +40,16 @@ public struct TableModel: Codable, Sendable {
     return self.status[id]?[service] ?? .unknown
   }
   
-  public func url(for service: Service, on id: Machine.Identifier) -> URL {
-    return URL(string: "\(service.protocol)://\(self.machine(for: id).url):\(service.port)")!
+  public func url(for service: Service,
+                  on id: Machine.Identifier,
+                  username: String?,
+                  password:String?) -> URL
+  {
+    if let username, let password {
+      return URL(string: "\(service.protocol)://\(username):\(password)@\(self.machine(for: id).url):\(service.port)")!
+    } else {
+      return URL(string: "\(service.protocol)://\(self.machine(for: id).url):\(service.port)")!
+    }
   }
   
   public func selectedMachines() -> [Machine] {

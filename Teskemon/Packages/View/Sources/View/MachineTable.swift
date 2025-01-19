@@ -24,13 +24,14 @@ import Controller
 
 internal struct MachineTable: View {
   
-  @Binding internal var model: TableModel
-  @Binding internal var settingsModel: SettingsModel
+  @TableController private var controller
+  @SettingsController private var settings
+  @PasswordController private var passwords
   
   internal var body: some View {
-    Table(self.model.machines,
+    Table(self.controller.machines,
           children: \.subnetRoutes,
-          selection: self.$model.selection)
+          selection: self.$controller.selection)
     {
       
       TableColumn("Online") { machine in
@@ -49,17 +50,21 @@ internal struct MachineTable: View {
         TableRowName(name: machine.name,
                      url: machine.url,
                      os: machine.os,
-                     customName: self.settingsModel.customNames[machine.id])
+                     customName: self.settings.customNames[machine.id])
       }.width(ideal: 128)
       
       TableColumn("Activity") { machine in
         TableRowActiity(activity: machine.activity)
       }.width(ideal: 96)
       
-      TableColumnForEach(self.settingsModel.services) { service in
+      TableColumnForEach(self.settings.services) { service in
         TableColumn(service.name + String(format: " (%d)", service.port)) { machine in
-          TableRowStatus(status: self.model.status(for: service, on: machine.id),
-                         url: self.model.url(for: service, on: machine.id))
+          TableRowStatus(status: self.controller.status(for: service, on: machine.id),
+                         url: self.controller.url(for: service,
+                                             on: machine.id,
+                                             // TODO: Get passwords working
+                                             username: self.passwords[.username, machine.id],
+                                             password: self.passwords[.password, machine.id]))
         }.width(36)
       }
     }

@@ -86,11 +86,11 @@ internal struct MachineInfoWindow: View {
           .font(.body)
       }.width(120)
       TableColumn("Username") { id in
-        TextField("", text: self.passwords.username(for: id))
+        TextField("", text: self.passwords.binding(.username, id))
           .font(.headline)
       }
       TableColumn("Password") { id in
-        SecureField("", text: self.passwords.password(for: id))
+        SecureField("", text: self.passwords.binding(.password, id))
           .font(.headline)
       }
     }

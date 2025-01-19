@@ -29,43 +29,66 @@ import KeychainSwift
 @propertyWrapper
 public struct PasswordController: DynamicProperty {
   
-  @MainActor
-  public struct Value {
-    
-    internal let usernames: KeychainSwift
-    internal let passwords: KeychainSwift
-
-    public func username(for id: Machine.Identifier) -> Binding<String> {
-      return .init { [usernames] in
-        return usernames.get(id.rawValue) ?? ""
-      } set: { [usernames] in
-        if let newValue = $0.trimmed {
-          usernames.set(newValue, forKey: id.rawValue)
-        } else {
-          usernames.delete(id.rawValue)
-        }
-      }
-    }
-    public func password(for id: Machine.Identifier) -> Binding<String> {
-      return .init { [passwords] in
-        return passwords.get(id.rawValue) ?? ""
-      } set: { [passwords] in
-        if let newValue = $0.trimmed {
-          passwords.set(newValue, forKey: id.rawValue)
-        } else {
-          passwords.delete(id.rawValue)
-        }
-      }
-    }
+  internal static let sharedCache = PasswordController.Value()
+  
+  @ObservedObject private var storage: Value
+  
+  public init() {
+    _storage = .init(initialValue: PasswordController.sharedCache)
   }
   
-  @StateObject private var usernames = ObserveBox(KeychainSwift(keyPrefix: "TeskeMon.Username."))
-  @StateObject private var passwords = ObserveBox(KeychainSwift(keyPrefix: "TeskeMon.Password."))
-  
-  public init() { }
-  
   public var wrappedValue: Value {
-    .init(usernames: self.usernames.value,
-          passwords: self.passwords.value)
+    self.storage
+  }
+}
+
+extension PasswordController {
+  
+  @MainActor
+  public class Value: ObservableObject {
+    
+    public enum Namespace {
+      case username
+      case password
+    }
+    
+    private let usernameKeychain = KeychainSwift(keyPrefix: "teskemon/username/")
+    private let passwordKeychain = KeychainSwift(keyPrefix: "teskemon/password/")
+    
+    @Published internal var cache: [Namespace: [Machine.Identifier: String]] = {
+      return [
+        .username: .init(),
+        .password: .init()
+      ]
+    }()
+    
+    public subscript (space: Namespace, id: Machine.Identifier) -> String? {
+      get {
+        if let cache = self.cache[space]![id] { return cache }
+        return self.keychain(for: space).get(id.rawValue)
+      }
+      set {
+        guard let newValue = newValue?.trimmed else {
+          self.cache[space]!.removeValue(forKey: id)
+          self.keychain(for: space).delete(id.rawValue)
+          return
+        }
+        
+        self.keychain(for: space).set(newValue, forKey: id.rawValue)
+        self.cache[space]![id] = newValue
+      }
+    }
+    
+    public func binding(_ space: Namespace, _ id: Machine.Identifier) -> Binding<String> {
+      return Binding(get: { self[space, id] ?? "" },
+                     set: { self[space, id] = $0.trimmed })
+    }
+    
+    private func keychain(for space: Namespace) -> KeychainSwift {
+      switch space {
+      case .username: return self.usernameKeychain
+      case .password: return self.passwordKeychain
+      }
+    }
   }
 }
