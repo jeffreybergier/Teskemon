@@ -23,9 +23,9 @@ import Model
 
 extension Process {
   @MainActor
-  internal static func tableModel(with executable: String) async throws -> TableModel {
+  internal static func cliOutput(with executable: String) async throws -> TailscaleCLIOutput {
     let data = try await Process.execute(arguments: [executable, "status", "--json"]).stdOut
-    let model = try TableModel(data: data)
+    let model = try TailscaleCLIOutput(data: data)
     return model
   }
 }

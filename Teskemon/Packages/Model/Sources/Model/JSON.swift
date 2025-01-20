@@ -20,6 +20,47 @@
 
 import Foundation
 
+// TODO: Move this into controller package
+
+public struct TailscaleCLIOutput: Sendable {
+  
+  public var tailscale: Tailscale?
+  public var machines:  [Machine]
+  public var users:     [Machine.Identifier: User]
+  // TODO: Move this out of the model
+  public var lookUp:    [Machine.Identifier: Machine]
+  
+  public init(data: Data) throws {
+    let rawModel = try JSONDecoder().decode(JSON.TailscaleCLI.self, from: data)
+    
+    let tailscale = Tailscale(version: rawModel.Version,
+                              versionUpToDate: rawModel.ClientVersion?.runningLatest ?? false,
+                              tunnelingEnabled: rawModel.TUN,
+                              backendState: rawModel.BackendState,
+                              haveNodeKey: rawModel.HaveNodeKey,
+                              health: rawModel.Health,
+                              magicDNSSuffix: rawModel.MagicDNSSuffix,
+                              currentTailnet: rawModel.CurrentTailnet,
+                              selfNodeID: .init(rawValue: rawModel.Self.ID),
+                              selfUserID: .init(rawValue: rawModel.Self.UserID))
+    self.tailscale = tailscale
+    
+    self.machines = {
+      return ((rawModel.Peer.map { Array($0.values) } ?? []) + [rawModel.Self]) // Extract machines from dictionary and also add Self machine to list
+        .sorted { $0.ID < $1.ID }                                    // Sort the IDs in some deterministic way
+        .map { Machine($0, selfID: tailscale.selfNodeID) }           // Conver them into polished models
+    }()
+    
+    self.users = Dictionary<Machine.Identifier, User>(
+      uniqueKeysWithValues: rawModel.User?.map { (.init(rawValue: $0), $1) } ?? []
+    )
+    
+    self.lookUp = Dictionary(uniqueKeysWithValues: self.machines.flatMap { machine in
+      return [(machine.id, machine)] + (machine.subnetRoutes?.map { ($0.id, $0) } ?? [])
+    })
+  }
+}
+
 internal enum JSON {
   
   internal struct TailscaleCLI: Codable, Sendable {

@@ -61,11 +61,10 @@ internal struct MachineTable: View {
       TableColumnForEach(self.settings.services) { service in
         TableColumn(service.name + String(format: " (%d)", service.port)) { machine in
           TableRowStatus(status: self.controller.status(for: service, on: machine.id),
-                         url: self.controller.url(for: service,
-                                             on: machine.id,
-                                             // TODO: Get passwords working
-                                             username: self.passwords[.username, machine.id],
-                                             password: self.passwords[.password, machine.id]))
+                         url:    self.controller.url(for: service,
+                                                     on: machine.id,
+                                                     username: self.passwords[.username, machine.id],
+                                                     password: self.passwords[.password, machine.id]))
         }.width(36)
       }
     }
