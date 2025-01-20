@@ -24,11 +24,10 @@ import Foundation
 
 public struct TailscaleCLIOutput: Sendable {
   
-  public var tailscale: Tailscale?
-  public var machines:  [Machine]
-  public var users:     [Machine.Identifier: User]
-  // TODO: Move this out of the model
-  public var lookUp:    [Machine.Identifier: Machine]
+  public var tailscale:   Tailscale?
+  public var machines:    [Machine]
+  public var users:       [Machine.Identifier: User]
+  public var lookUpCache: [Machine.Identifier: Machine]
   
   public init(data: Data) throws {
     let rawModel = try JSONDecoder().decode(JSON.TailscaleCLI.self, from: data)
@@ -55,7 +54,7 @@ public struct TailscaleCLIOutput: Sendable {
       uniqueKeysWithValues: rawModel.User?.map { (.init(rawValue: $0), $1) } ?? []
     )
     
-    self.lookUp = Dictionary(uniqueKeysWithValues: self.machines.flatMap { machine in
+    self.lookUpCache = Dictionary(uniqueKeysWithValues: self.machines.flatMap { machine in
       return [(machine.id, machine)] + (machine.subnetRoutes?.map { ($0.id, $0) } ?? [])
     })
   }

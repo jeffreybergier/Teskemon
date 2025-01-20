@@ -26,18 +26,30 @@ import Umbrella
 @propertyWrapper
 public struct TableController: DynamicProperty {
   
+  internal class Cache: ObservableObject {
+    internal var cache: [Machine.Identifier: Machine] = [:]
+    internal func fetch(id: Machine.Identifier, onMiss: () -> Machine) -> Machine {
+      if let cachedValue = self.cache[id] { return cachedValue }
+      // TODO: Spend more time troubleshooting cache misses
+      // They should only happen on fresh start
+      // but are happening on reset as well
+      let missedValue = onMiss()
+      self.cache[id] = missedValue
+      return missedValue
+    }
+    internal func reset(_ newValue: [Machine.Identifier: Machine] = [:]) {
+      
+      self.cache = newValue
+    }
+  }
+  
   public struct Value {
     
     public let tailscale: Tailscale?
     public let machines: [Machine]
     public let users: [Machine.Identifier: User]
     public var status: [Machine.Identifier: [Service: Service.Status]]
-    internal let lookUp: [Machine.Identifier: Machine]
-    
-    public func machine(for id: Machine.Identifier) -> Machine {
-      // TODO: Improve lookup
-      return self.lookUp[id]!
-    }
+    internal var cache: Cache
     
     public func status(for service: Service, on id: Machine.Identifier) -> Service.Status {
       return self.status[id]?[service] ?? .unknown
@@ -59,6 +71,20 @@ public struct TableController: DynamicProperty {
       let selectedMachines = selection.map { self.machine(for: $0) }
       return selectedMachines.isEmpty ? self.machines : selectedMachines
     }
+    
+    public func machine(for id: Machine.Identifier) -> Machine {
+      return self.cache.fetch(id: id) { [machines] in
+        for parent in machines {
+          if parent.id == id { return parent }
+          for child in parent.subnetRoutes ?? [] {
+            if child.id == id {
+              return child
+            }
+          }
+        }
+        fatalError()
+      }
+    }
   }
   
   @SettingsController private var settings
@@ -67,9 +93,10 @@ public struct TableController: DynamicProperty {
   @JSBSceneStorage("Controller.Tailscale") private var tailscale: Tailscale? = nil
   @JSBSceneStorage("Controller.Machines")  private var machines = [Machine]()
   @JSBSceneStorage("Controller.Users")     private var users    = [Machine.Identifier: User]()
+  // TODO: Move status out as well
   @JSBSceneStorage("Controller.Status")    private var status   = [Machine.Identifier: [Service: Service.Status]]()
-  // TODO: Remove this look up from scene storage (convert into a cache)
-  @JSBSceneStorage("Controller.LookUp")    private var lookUp   = [Machine.Identifier: Machine]()
+  
+  @StateObject private var cache = Cache()
   
   public init() {}
   
@@ -79,7 +106,7 @@ public struct TableController: DynamicProperty {
             machines:  self.machines,
             users:     self.users,
             status:    self.status,
-            lookUp:    self.lookUp)
+            cache:     self.cache)
     }
     nonmutating set {
       self.status = newValue.status
@@ -91,9 +118,7 @@ public struct TableController: DynamicProperty {
     self.machines  = []
     self.users     = [:]
     self.status    = [:]
-    DispatchQueue.main.async {
-      self.lookUp = [:]
-    }
+    self.cache.reset()
   }
   
   public func updateMachines() async throws {
@@ -102,7 +127,7 @@ public struct TableController: DynamicProperty {
     self.tailscale = output.tailscale
     self.machines  = output.machines
     self.users     = output.users
-    self.lookUp    = output.lookUp
+    self.cache.reset(output.lookUpCache)
     NSLog("[END  ] Controller.updateMachines()")
   }
   
