@@ -53,33 +53,37 @@ public struct MachineWindow: View {
   }
   
   private var machineButton: some View {
-    Button("Update Machines", systemImage: self.isAwaiting ? "progress.indicator" : "desktopcomputer.and.arrow.down") {
-      self.isAwaiting = true
-      Task {
-        try await self._controller.updateMachines()
-        self.isAwaiting = false
-      }
-    }
+    Button("Update Machines",
+           systemImage: self.isAwaiting ? "progress.indicator" : "desktopcomputer.and.arrow.down",
+           action: { self.performAsync(function: self._controller.updateMachines) })
     .disabled(self.isAwaiting)
   }
   
   private var servicesButton: some View {
-    Button("Update Services", systemImage: self.isAwaiting ? "progress.indicator" : "slider.horizontal.2.arrow.trianglehead.counterclockwise") {
-      self.isAwaiting = true
-      Task {
-        try await self._controller.updateServices()
-        self.isAwaiting = false
-      }
-    }
+    Button("Update Services",
+           systemImage: self.isAwaiting ? "progress.indicator" : "slider.horizontal.2.arrow.trianglehead.counterclockwise",
+           action: { self.performAsync(function: self._controller.updateServices) })
     .disabled(self.isAwaiting)
   }
   
   private var resetButton: some View {
-    Button("Reset Data", systemImage: "trash")
-    {
-      self._controller.resetData()
-    }
+    Button("Reset Data",
+           systemImage: "trash",
+           action: { self._controller.resetData() })
     .disabled(self.isAwaiting)
   }
-
+  
+  private func performAsync(function: @escaping (() async throws -> Void)) {
+    self.isAwaiting = true
+    Task {
+      do {
+        try await function()
+        self.isAwaiting = false
+      } catch {
+        // TODO: Show error in UI
+        NSLog(String(describing:error))
+        self.isAwaiting = false
+      }
+    }
+  }
 }
