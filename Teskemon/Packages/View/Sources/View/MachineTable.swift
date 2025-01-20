@@ -68,6 +68,11 @@ internal struct MachineTable: View {
         }.width(36)
       }
     }
+    .safeAreaInset(edge: .bottom) {
+      if let tailscale = self.controller.tailscale {
+        TailscaleOverlay(tailscale: tailscale)
+      }
+    }
   }
 }
 
@@ -233,5 +238,44 @@ internal struct TableRowStatus: View {
     case .offline: return "Netcat: Port not listening"
     case .processing: return "Netcat: Scanning"
     }
+  }
+}
+
+// TODO: Polish up this info view
+internal struct TailscaleOverlay: View {
+  
+  internal let tailscale: Tailscale
+  
+  internal var body: some View {
+    HStack {
+      if let tailnet = tailscale.currentTailnet {
+        VStack {
+          Text(tailnet.name)
+          Text(tailnet.magicDNSSuffix)
+          Text(tailnet.magicDNSEnabled.description)
+        }
+      }
+      VStack {
+        Text(self.tailscale.version)
+        Text(self.tailscale.versionUpToDate.description)
+        Text(self.tailscale.tunnelingEnabled.description)
+        Text(self.tailscale.backendState)
+        Text(self.tailscale.haveNodeKey.description)
+        Text(self.tailscale.magicDNSSuffix)
+      }
+      // TODO: Figure out if its possible to show health stuff
+      // (convert to custom type that is identifiable)
+      /*
+      if !self.tailscale.health.isEmpty {
+        ForEach(self.tailscale.health) {
+          Text($0)
+        }
+      }
+      */
+    }
+    .frame(maxWidth: .infinity)
+    .background(.ultraThinMaterial)
+    .cornerRadius(8)
+    .padding([.bottom, .leading, .trailing], 10)
   }
 }
