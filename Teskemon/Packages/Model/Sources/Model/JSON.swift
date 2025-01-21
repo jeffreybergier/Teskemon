@@ -38,14 +38,15 @@ public struct TailscaleCLIOutput: Sendable {
                               health: rawModel.Health,
                               magicDNSSuffix: rawModel.MagicDNSSuffix,
                               currentTailnet: rawModel.CurrentTailnet,
-                              selfNodeID: .init(rawValue: rawModel.Self.ID),
-                              selfUserID: .init(rawValue: rawModel.Self.UserID))
+                              selfNodeID: rawModel.Self.map { .init(rawValue: $0.ID) },
+                              selfUserID: rawModel.Self.map { .init(rawValue: $0.UserID) })
     self.tailscale = tailscale
     
     self.machines = {
-      return ((rawModel.Peer.map { Array($0.values) } ?? []) + [rawModel.Self]) // Extract machines from dictionary and also add Self machine to list
-        .sorted { $0.ID < $1.ID }                                    // Sort the IDs in some deterministic way
-        .map { Machine($0, selfID: tailscale.selfNodeID) }           // Conver them into polished models
+      return ((rawModel.Peer.map { Array($0.values) } ?? [])
+              + (rawModel.Self.map { [$0] } ?? []))              // Extract machines from dictionary and also add Self machine to list
+              .sorted { $0.ID < $1.ID }                          // Sort the IDs in some deterministic way
+              .map { Machine($0, selfID: tailscale.selfNodeID) } // Conver them into polished models
     }()
     
     self.users = Dictionary<Machine.Identifier, User>(
@@ -67,7 +68,7 @@ internal enum JSON {
     internal let HaveNodeKey: Bool
     internal let AuthURL: String?
     internal let TailscaleIPs: [String]?
-    internal let `Self`: MachineCLI
+    internal let `Self`: MachineCLI?
     internal let Health: [String]
     internal let MagicDNSSuffix: String
     internal let CurrentTailnet: Tailnet?

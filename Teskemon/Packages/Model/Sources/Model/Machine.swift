@@ -34,8 +34,8 @@ public struct Machine: Codable, Sendable, Identifiable {
   public let nodeInfo: NodeInfo?
   
   /// Init for advertised subnets
-  internal init(address: Address, hostName: String, hostID: Machine.Identifier, selfID: Machine.Identifier) {
-    self.id   = .init(rawValue: selfID.rawValue + ":" + address.rawValue)
+  internal init(address: Address, hostName: String, hostID: Machine.Identifier, selfID: Machine.Identifier?) {
+    self.id   = .init(rawValue: (selfID?.rawValue ?? "INVALID") + ":" + address.rawValue)
     self.name = address.rawValue
     self.url  = address.rawValue
     self.os   = nil
@@ -47,12 +47,12 @@ public struct Machine: Codable, Sendable, Identifiable {
   }
   
   /// Init for JSON from the Tailscale CLI
-  internal init(_ model: JSON.MachineCLI, selfID: Machine.Identifier) {
+  internal init(_ model: JSON.MachineCLI, selfID: Machine.Identifier?) {
     self.id       = .init(rawValue: model.ID)
     self.name     = model.HostName
     self.url      = model.DNSName
     self.os       = model.OS
-    self.kind     = model.ID == selfID.rawValue ? .meHost : .remoteHost
+    self.kind     = model.ID == (selfID?.rawValue ?? "INVALID") ? .meHost : .remoteHost
     self.relay    = .relay(model.Relay)
     self.activity = .init(isOnline: model.Online,
                           isActive: model.Active,
@@ -63,9 +63,9 @@ public struct Machine: Codable, Sendable, Identifiable {
     let subnetRoutes: [Machine]? = model.PrimaryRoutes?.flatMap { subnet in
       Subnet(rawValue: subnet).explodeAddresses().map { address in
         Machine(address: address,
-                       hostName: model.HostName,
-                       hostID: .init(rawValue: model.ID),
-                       selfID: selfID)
+                hostName: model.HostName,
+                hostID: .init(rawValue: model.ID),
+                selfID: selfID)
       }
     }
     self.subnetRoutes = (subnetRoutes?.isEmpty ?? true) ? nil : subnetRoutes
@@ -174,8 +174,8 @@ public struct Tailscale: Codable, Sendable {
   public let magicDNSSuffix: String
   public let currentTailnet: Tailnet?
   // Identification
-  public let selfNodeID: Machine.Identifier
-  public let selfUserID: User.Identifier
+  public let selfNodeID: Machine.Identifier?
+  public let selfUserID: User.Identifier?
 }
 
 public struct Tailnet: Codable, Sendable {

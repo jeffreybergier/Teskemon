@@ -56,16 +56,16 @@ internal struct MachineTable: View {
       }.width(ideal: 128)
       
       TableColumn("Activity") { machine in
-        TableRowActiity(activity: machine.activity)
+        TableRowActivity(activity: machine.activity)
       }.width(ideal: 96)
       
       TableColumnForEach(self.settings.services) { service in
         TableColumn(service.name + String(format: " (%d)", service.port)) { machine in
           TableRowStatus(status: self.status[machine.id, service],
                          url:    self.table.url(for: service,
-                                                     on: machine.id,
-                                                     username: self.passwords[.username, machine.id],
-                                                     password: self.passwords[.password, machine.id]))
+                                                on: machine.id,
+                                                username: self.passwords[.username, machine.id],
+                                                password: self.passwords[.password, machine.id]))
         }.width(36)
       }
     }
@@ -89,7 +89,7 @@ internal struct TableRowOnline: View {
         .foregroundStyle(Color(nsColor: .systemGreen).gradient)
     case .some(false):
       Image(systemName: "stop.fill")
-        .foregroundStyle(Color(nsColor: .systemGreen).gradient)
+        .foregroundStyle(Color(nsColor: .systemRed).gradient)
     }
   }
 }
@@ -162,7 +162,7 @@ internal struct TableRowName: View {
   }
 }
 
-internal struct TableRowActiity: View {
+internal struct TableRowActivity: View {
   
   private let byteF = ByteCountFormatter()
   
