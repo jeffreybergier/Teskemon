@@ -25,7 +25,9 @@ import Controller
 public struct MachineWindow: View {
   
   @State private var isAwaiting = false
-  @TableController private var controller
+  @TableController private var table
+  @StatusController private var status
+  @SettingsController private var settings
   @PresentationController private var presentation
   
   public init() { }
@@ -33,7 +35,7 @@ public struct MachineWindow: View {
   public var body: some View {
     NavigationStack {
       MachineTable()
-        .navigationTitle(self.controller.tailscale?.currentTailnet?.name ?? "テスケモン")
+        .navigationTitle(self.table.tailscale?.currentTailnet?.name ?? "テスケモン")
         .sheet(items: self.$presentation.isShowingInfoPanel,
                content: { MachineInfoWindow(ids: $0) })
         .toolbar {
@@ -53,23 +55,30 @@ public struct MachineWindow: View {
   }
   
   private var machineButton: some View {
-    Button("Update Machines",
-           systemImage: self.isAwaiting ? "progress.indicator" : "desktopcomputer.and.arrow.down",
-           action: { self.performAsync(function: self._controller.updateMachines) })
+    Button("Update Machines", systemImage: self.isAwaiting ? "progress.indicator" : "desktopcomputer.and.arrow.down") {
+      self.performAsync { try await self._table.updateMachines(with: self.settings.executable) }
+    }
     .disabled(self.isAwaiting)
   }
   
   private var servicesButton: some View {
-    Button("Update Services",
-           systemImage: self.isAwaiting ? "progress.indicator" : "slider.horizontal.2.arrow.trianglehead.counterclockwise",
-           action: { self.performAsync(function: self._controller.updateServices) })
+    Button("Update Services", systemImage: self.isAwaiting ? "progress.indicator" : "slider.horizontal.2.arrow.trianglehead.counterclockwise")
+    {
+      self.performAsync {
+        try await self._status.updateStatus(for: self.settings.services,
+                                            on: self.table.machines(for: self.presentation.selection),
+                                            timeout: self.settings.timeout,
+                                            batchSize: self.settings.batchSize)
+      }
+    }
     .disabled(self.isAwaiting)
   }
-  
+    
   private var resetButton: some View {
-    Button("Reset Data",
-           systemImage: "trash",
-           action: { self._controller.resetData() })
+    Button("Reset Data", systemImage: "trash") {
+      self._status.resetData()
+      self._table.resetData()
+    }
     .disabled(self.isAwaiting)
   }
   

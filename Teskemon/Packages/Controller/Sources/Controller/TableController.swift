@@ -38,7 +38,6 @@ public struct TableController: DynamicProperty {
       return missedValue
     }
     internal func reset(_ newValue: [Machine.Identifier: Machine] = [:]) {
-      
       self.cache = newValue
     }
   }
@@ -48,12 +47,7 @@ public struct TableController: DynamicProperty {
     public let tailscale: Tailscale?
     public let machines: [Machine]
     public let users: [Machine.Identifier: User]
-    public var status: [Machine.Identifier: [Service: Service.Status]]
     internal var cache: Cache
-    
-    public func status(for service: Service, on id: Machine.Identifier) -> Service.Status {
-      return self.status[id]?[service] ?? .unknown
-    }
     
     public func url(for service: Service,
                     on id: Machine.Identifier,
@@ -61,6 +55,7 @@ public struct TableController: DynamicProperty {
                     password:String?) -> URL
     {
       if let username, let password {
+        // TODO: Switch to using NSURLComponent
         return URL(string: "\(service.protocol)://\(username):\(password)@\(self.machine(for: id).url):\(service.port)")!
       } else {
         return URL(string: "\(service.protocol)://\(self.machine(for: id).url):\(service.port)")!
@@ -87,58 +82,38 @@ public struct TableController: DynamicProperty {
     }
   }
   
-  @SettingsController private var settings
   @PresentationController private var presentation
   
   @JSBSceneStorage("Controller.Tailscale") private var tailscale: Tailscale? = nil
   @JSBSceneStorage("Controller.Machines")  private var machines = [Machine]()
   @JSBSceneStorage("Controller.Users")     private var users    = [Machine.Identifier: User]()
-  // TODO: Move status out as well
-  @JSBSceneStorage("Controller.Status")    private var status   = [Machine.Identifier: [Service: Service.Status]]()
   
   @StateObject private var cache = Cache()
   
   public init() {}
   
   public var wrappedValue: Value {
-    get {
-      .init(tailscale: self.tailscale,
-            machines:  self.machines,
-            users:     self.users,
-            status:    self.status,
-            cache:     self.cache)
-    }
-    nonmutating set {
-      self.status = newValue.status
-    }
+    .init(tailscale: self.tailscale,
+          machines:  self.machines,
+          users:     self.users,
+          cache:     self.cache)
   }
   
   public func resetData() {
     self.tailscale = nil
     self.machines  = []
     self.users     = [:]
-    self.status    = [:]
     self.cache.reset()
   }
   
-  public func updateMachines() async throws {
+  public func updateMachines(with executable: SettingsController.Executable) async throws {
     NSLog("[START] Controller.updateMachines()")
-    let output = try await Process.cliOutput(with: self.settings.executable.stringValue)
+    let output = try await Process.cliOutput(with: executable.stringValue)
     self.tailscale = output.tailscale
     self.machines  = output.machines
     self.users     = output.users
     self.cache.reset(output.lookUpCache)
     NSLog("[END  ] Controller.updateMachines()")
-  }
-  
-  public func updateServices() async throws {
-    NSLog("[START] Controller.updateServices()")
-    try await Process.status(for: self.settings.services,
-                             on: self.wrappedValue.machines(for: self.presentation.selection),
-                             bind: self.$status,
-                             timeout: self.settings.timeout,
-                             batchSize: self.settings.batchSize)
-    NSLog("[END  ] Controller.updateServices()")
   }
 }
 

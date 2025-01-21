@@ -24,13 +24,14 @@ import Controller
 
 internal struct MachineTable: View {
   
-  @TableController private var controller
+  @TableController private var table
+  @StatusController private var status
   @PresentationController private var presentation
   @SettingsController private var settings
   @PasswordController private var passwords
   
   internal var body: some View {
-    Table(self.controller.machines,
+    Table(self.table.machines,
           children: \.subnetRoutes,
           selection: self.$presentation.selection)
     {
@@ -60,8 +61,8 @@ internal struct MachineTable: View {
       
       TableColumnForEach(self.settings.services) { service in
         TableColumn(service.name + String(format: " (%d)", service.port)) { machine in
-          TableRowStatus(status: self.controller.status(for: service, on: machine.id),
-                         url:    self.controller.url(for: service,
+          TableRowStatus(status: self.status[machine.id, service],
+                         url:    self.table.url(for: service,
                                                      on: machine.id,
                                                      username: self.passwords[.username, machine.id],
                                                      password: self.passwords[.password, machine.id]))
@@ -69,7 +70,7 @@ internal struct MachineTable: View {
       }
     }
     .safeAreaInset(edge: .bottom) {
-      if let tailscale = self.controller.tailscale {
+      if let tailscale = self.table.tailscale {
         TailscaleOverlay(tailscale: tailscale)
       }
     }

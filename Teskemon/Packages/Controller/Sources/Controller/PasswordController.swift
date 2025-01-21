@@ -23,8 +23,6 @@ import Umbrella
 import Model
 import KeychainSwift
 
-// TODO: Improve performance with Keychain
-
 @MainActor
 @propertyWrapper
 public struct PasswordController: DynamicProperty {
@@ -105,13 +103,11 @@ extension PasswordController {
 public enum Rumsfeld<T> {
   case knownKnown(T)
   case knownUnknown
-  case unknownKnown
-  case unknownUnknown
   public var knownValue: T? {
     switch self {
     case .knownKnown(let value):
       return value
-    case .knownUnknown, .unknownKnown, .unknownUnknown:
+    case .knownUnknown:
       return nil
     }
   }

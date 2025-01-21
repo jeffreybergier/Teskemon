@@ -20,8 +20,6 @@
 
 import Foundation
 
-// TODO: Move this into controller package
-
 public struct TailscaleCLIOutput: Sendable {
   
   public var tailscale:   Tailscale?
