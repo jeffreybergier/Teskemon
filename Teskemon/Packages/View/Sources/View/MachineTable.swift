@@ -25,15 +25,20 @@ import Controller
 internal struct MachineTable: View {
   
   @TableController private var table
-  @StatusController private var status
-  @PresentationController private var presentation
   @SettingsController private var settings
   @PasswordController private var passwords
+  
+  // TODO: Not sure why these need to be bindings
+  // I should be able to directly use
+  // @PresentationController and @StatusController
+  // They should also allowed to be @State and not @Binding
+  @Binding internal var status: StatusController.Value
+  @Binding internal var selection: Set<Machine.Identifier>
   
   internal var body: some View {
     Table(self.table.machines,
           children: \.subnetRoutes,
-          selection: self.$presentation.selection)
+          selection: self.$selection)
     {
       
       TableColumn("Online") { machine in

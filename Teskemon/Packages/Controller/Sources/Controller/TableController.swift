@@ -64,7 +64,10 @@ public struct TableController: DynamicProperty {
     
     public func machines(for selection: Set<Machine.Identifier>) -> [Machine] {
       let selectedMachines = selection.map { self.machine(for: $0) }
-      return selectedMachines.isEmpty ? self.machines : selectedMachines
+      if !selectedMachines.isEmpty { return selectedMachines }
+      return self.machines.flatMap {
+        return [$0] + ($0.subnetRoutes ?? [])
+      }
     }
     
     public func machine(for id: Machine.Identifier) -> Machine {

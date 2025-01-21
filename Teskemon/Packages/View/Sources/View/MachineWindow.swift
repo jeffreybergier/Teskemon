@@ -34,7 +34,8 @@ public struct MachineWindow: View {
   
   public var body: some View {
     NavigationStack {
-      MachineTable()
+      MachineTable(status: self.$status,
+                   selection: self.$presentation.selection)
         .navigationTitle(self.table.tailscale?.currentTailnet?.name ?? "テスケモン")
         .sheet(items: self.$presentation.isShowingInfoPanel,
                content: { MachineInfoWindow(ids: $0) })
