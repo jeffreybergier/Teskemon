@@ -35,7 +35,7 @@ public struct TailscaleCLIOutput: Sendable {
                               tunnelingEnabled: rawModel.TUN,
                               backendState: rawModel.BackendState,
                               haveNodeKey: rawModel.HaveNodeKey,
-                              health: rawModel.Health,
+                              health: rawModel.Health.map { .init(rawValue: $0) },
                               magicDNSSuffix: rawModel.MagicDNSSuffix,
                               currentTailnet: rawModel.CurrentTailnet,
                               selfNodeID: rawModel.Self.map { .init(rawValue: $0.ID) },

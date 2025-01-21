@@ -169,7 +169,7 @@ public struct Tailscale: Codable, Sendable {
   public let tunnelingEnabled: Bool
   public let backendState: String
   public let haveNodeKey: Bool
-  public let health: [String]
+  public let health: [HealthEntry]
   // Network
   public let magicDNSSuffix: String
   public let currentTailnet: Tailnet?
@@ -187,5 +187,13 @@ public struct Tailnet: Codable, Sendable {
     case name = "Name"
     case magicDNSSuffix = "MagicDNSSuffix"
     case magicDNSEnabled = "MagicDNSEnabled"
+  }
+}
+
+public struct HealthEntry: Codable, RawRepresentable, Identifiable, Sendable, Hashable {
+  public var rawValue: String
+  public var id: String { self.rawValue }
+  public init(rawValue: String) {
+    self.rawValue = rawValue
   }
 }
