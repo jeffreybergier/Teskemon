@@ -107,13 +107,13 @@ public struct TableController: DynamicProperty {
   }
   
   public func updateMachines(with executable: SettingsController.Executable) async throws {
-    NSLog("[START] Controller.updateMachines()")
+    NSLog("[START] TableController.updateMachines()")
     let output = try await Process.cliOutput(with: executable.stringValue)
     self.tailscale = output.tailscale
     self.machines  = output.machines
     self.users     = output.users
     self.cache.reset(output.lookUpCache)
-    NSLog("[END  ] Controller.updateMachines()")
+    NSLog("[END  ] TableController.updateMachines()")
   }
 }
 

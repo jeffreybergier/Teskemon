@@ -29,7 +29,8 @@ public struct StatusController: DynamicProperty {
   public struct Value: Codable {
     internal var status: [Machine.Identifier: [Service: Service.Status]] = [:]
     public subscript(id: Machine.Identifier, service: Service) -> Service.Status {
-      return self.status[id]?[service] ?? .unknown
+      get { self.status[id, default: [:]][service] ?? .unknown }
+      set { self.status[id, default: [:]][service] = newValue }
     }
   }
   
@@ -51,13 +52,13 @@ public struct StatusController: DynamicProperty {
                            timeout: Int,
                            batchSize: Int) async throws
   {
-    NSLog("[START] Controller.updateServices()")
+    NSLog("[START] StatusController.updateStatus()")
     try await Process.status(for: services,
                              on: machines,
-                             bind: self.$status.status,
+                             bind: self.$status,
                              timeout: timeout,
                              batchSize: batchSize)
-    NSLog("[END  ] Controller.updateServices()")
+    NSLog("[END  ] StatusController.updateStatus()")
   }
   
   public func resetData() {

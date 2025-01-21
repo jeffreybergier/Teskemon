@@ -26,15 +26,14 @@ extension Process {
   @MainActor
   internal static func status(for services: [Service],
                               on  machines: [Machine],
-                              bind: Binding<[Machine.Identifier: [Service: Service.Status]]>,
+                              bind: Binding<StatusController.Value>,
                               timeout: Int,
                               batchSize: Int) async throws
   {
     // Update UI to show Processing
     for machine in machines {
-      bind.wrappedValue[machine.id] = [:]
       for service in services {
-        bind.wrappedValue[machine.id]![service] = .processing
+        bind.wrappedValue[machine.id, service] = .processing
       }
     }
     
@@ -57,7 +56,7 @@ extension Process {
         }
         // Update UI to show Result
         for try await (id, service, status) in group {
-          bind.wrappedValue[id]![service] = status
+          bind.wrappedValue[id, service] = status
         }
       }
     }
