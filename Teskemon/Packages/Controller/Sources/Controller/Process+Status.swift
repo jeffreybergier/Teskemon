@@ -30,12 +30,6 @@ extension Process {
                               timeout: Int,
                               batchSize: Int) async throws
   {
-    // Update UI to show Processing
-    for machine in machines {
-      for service in services {
-        bind.wrappedValue[machine.id, service] = .processing
-      }
-    }
     
     // Create a single list of input so that we can batch this
     let toProcess = machines.flatMap { machine in
@@ -48,6 +42,8 @@ extension Process {
     for batch in toProcess.batch(into: batchSize) {
       try await withThrowingTaskGroup(of: (Machine.Identifier, Service, Service.Status).self) { group in
         for (machine, service) in batch {
+          // Mark service as processing
+          bind.wrappedValue[machine.id, service] = .processing
           // Schedule new tasks
           group.addTask {
             let status = try await status(for: service, on: machine, with: timeout)
@@ -66,7 +62,7 @@ extension Process {
   private static func status(for service: Service,
                              on machine: Machine,
                              with timeout: Int)
-                             async throws -> Service.Status
+  async throws -> Service.Status
   {
     let arguments: [String] = [
       "/usr/bin/nc",
