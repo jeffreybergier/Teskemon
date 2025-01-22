@@ -44,24 +44,7 @@ public struct MachineWindow: View {
           ToolbarItem { self.infoButton     }
           ToolbarItem { self.machineButton  }
           ToolbarItem { self.servicesButton }
-          ToolbarItem(placement: .accessoryBar(id: "Status")) { self.resetButton }
-          ToolbarItem(placement: .accessoryBar(id: "Status")) { Spacer() }
-          ToolbarItem(placement: .accessoryBar(id: "Status")) {
-            Menu {
-              Section("Something 1") {
-                Label("Connected", systemImage: "circle.fill")
-                  .foregroundStyle(Color(nsColor: .systemGreen))
-              }
-              Section("Something 1") {
-                Label("Connected", systemImage: "circle.fill")
-                  .foregroundStyle(Color(nsColor: .systemGreen))
-              }
-            } label: {
-              Label("Connected", systemImage: "circle.fill")
-                .foregroundStyle(Color(nsColor: .systemGreen))
-            }
-            .labelStyle(.titleAndIcon)
-          }
+          ToolbarItem { self.statusMenu     }
         }
     }
   }
@@ -92,14 +75,6 @@ public struct MachineWindow: View {
     }
     .disabled(self.isAwaiting)
   }
-    
-  private var resetButton: some View {
-    Button("Reset Data", systemImage: "trash") {
-      self._status.resetData()
-      self._table.resetData()
-    }
-    .disabled(self.isAwaiting)
-  }
   
   private func performAsync(function: @escaping (() async throws -> Void)) {
     self.isAwaiting = true
@@ -113,5 +88,83 @@ public struct MachineWindow: View {
         self.isAwaiting = false
       }
     }
+  }
+  
+  private var statusMenu: some View {
+    Menu {
+      Section("Tailscale") {
+        if self.table.tailscale?.backendState == "Running" {
+          Label(self.table.tailscale?.backendState ?? "–", systemImage: "circle.fill")
+            .font(.headline)
+            .foregroundStyle(Color(nsColor: .systemGreen).gradient, .black.gradient)
+        } else {
+          Label(self.table.tailscale?.backendState ?? "–", systemImage: "stop.fill")
+            .foregroundStyle(Color(nsColor: .systemRed).gradient, .black.gradient)
+        }
+      }
+      Section("Account") {
+        Label(self.table.tailscale?.currentTailnet?.name ?? "–", systemImage: "person.circle")
+      }
+      Section("Domain") {
+        Label(self.table.tailscale?.magicDNSSuffix ?? "–", systemImage: "network")
+      }
+      if self.table.tailscale?.versionUpToDate ?? false {
+        Section("Version – Up to Date") {
+          Label(self.table.tailscale?.version ?? "–", systemImage: "circle.fill")
+            .foregroundStyle(Color(nsColor: .systemGreen).gradient, .black)
+        }
+      } else {
+        Section("Version – Update Available") {
+          Label(self.table.tailscale?.version ?? "–", systemImage: "triangle.fill")
+            .foregroundStyle(Color(nsColor: .systemYellow).gradient, .black)
+        }
+      }
+      Section("MagicDNS") {
+        if self.table.tailscale?.currentTailnet?.magicDNSEnabled ?? false {
+          Label("Enabled", systemImage: "circle.fill")
+            .foregroundStyle(Color(nsColor: .systemGreen).gradient, .black)
+        } else {
+          Label("Disabled", systemImage: "stop.fill")
+            .font(.headline)
+            .foregroundStyle(Color(nsColor: .systemRed).gradient, .black)
+        }
+      }
+      Section("Tunneling") {
+        if self.table.tailscale?.tunnelingEnabled ?? false {
+          Label("Enabled", systemImage: "circle.fill")
+            .foregroundStyle(Color(nsColor: .systemGreen).gradient, .black)
+        } else {
+          Label("Disabled", systemImage: "stop.fill")
+            .foregroundStyle(Color(nsColor: .systemRed).gradient, .black)
+        }
+      }
+      Section("Node Key") {
+        if self.table.tailscale?.haveNodeKey ?? false {
+          Label("Present", systemImage: "circle.fill")
+            .foregroundStyle(Color(nsColor: .systemGreen).gradient, .black)
+        } else {
+          Label("Missing", systemImage: "stop.fill")
+            .foregroundStyle(Color(nsColor: .systemRed).gradient, .black)
+        }
+      }
+      Button("Select this Machine", systemImage: "cursorarrow.rays") {
+        self.presentation.selection = self.table.tailscale?.selfNodeID.map { [$0] } ?? []
+      }
+      Button("Reset Data", systemImage: "trash") {
+        self._status.resetData()
+        self._table.resetData()
+      }
+      .disabled(self.isAwaiting)
+    } label: {
+      if self.table.tailscale?.backendState == "Running" {
+        Label(self.table.tailscale?.backendState ?? "–", systemImage: "circle.fill")
+          .font(.headline)
+          .foregroundStyle(Color(nsColor: .systemGreen).gradient, .black.gradient)
+      } else {
+        Label(self.table.tailscale?.backendState ?? "–", systemImage: "stop.fill")
+          .foregroundStyle(Color(nsColor: .systemRed).gradient, .black.gradient)
+      }
+    }
+    .labelStyle(.titleAndIcon)
   }
 }

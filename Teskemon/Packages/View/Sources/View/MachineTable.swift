@@ -74,11 +74,6 @@ internal struct MachineTable: View {
         }.width(36)
       }
     }
-    .safeAreaInset(edge: .bottom) {
-      if let tailscale = self.table.tailscale {
-        TailscaleOverlay(tailscale: tailscale)
-      }
-    }
   }
 }
 
@@ -243,103 +238,6 @@ internal struct TableRowStatus: View {
     case .online: return "Netcat: Port listening"
     case .offline: return "Netcat: Port not listening"
     case .processing: return "Netcat: Scanning"
-    }
-  }
-}
-
-// TODO: Polish up this info view
-internal struct TailscaleOverlay: View {
-  
-  internal let tailscale: Tailscale
-  
-  internal var body: some View {
-    self.tailnetView
-    .background(.ultraThinMaterial)
-    .cornerRadius(8)
-    .padding([.bottom, .leading, .trailing], 10)
-  }
-  
-  @ViewBuilder private var tailnetView: some View {
-    if let tailnet = tailscale.currentTailnet {
-      VStack {
-        Text("Tailscale")
-          .font(.title2)
-        Grid(alignment: .topLeading) {
-          GridRow(alignment: .lastTextBaseline) {
-            Text("User:")
-              .font(.callout)
-            Text(tailnet.name)
-              .font(.headline)
-          }
-          GridRow(alignment: .lastTextBaseline) {
-            Text("Domain:")
-              .font(.callout)
-            Text(tailnet.magicDNSSuffix)
-              .font(.headline)
-          }
-          GridRow(alignment: .lastTextBaseline) {
-            Text("Version:")
-              .font(.callout)
-            Text(self.tailscale.version)
-              .font(.headline)
-          }
-          GridRow(alignment: .lastTextBaseline) {
-            Text("Status:")
-              .font(.callout)
-            if self.tailscale.backendState == "Running" {
-              Label(self.tailscale.backendState, systemImage: "circle.fill")
-                .font(.headline)
-                .foregroundStyle(Color(nsColor: .systemGreen).gradient)
-            } else {
-              Label(self.tailscale.backendState, systemImage: "stop.fill")
-                .font(.headline)
-                .foregroundStyle(Color(nsColor: .systemRed).gradient)
-            }
-          }
-          GridRow(alignment: .lastTextBaseline) {
-            Text("Update:")
-              .font(.callout)
-            if self.tailscale.versionUpToDate {
-              Label("Up to Date", systemImage: "circle.fill")
-                .font(.headline)
-                .foregroundStyle(Color(nsColor: .systemGreen).gradient)
-            } else {
-              Label("Available", systemImage: "triangle.fill")
-                .font(.headline)
-                .foregroundStyle(Color(nsColor: .systemYellow).gradient)
-            }
-          }
-          GridRow(alignment: .lastTextBaseline) {
-            Text("Magic DNS:")
-              .font(.callout)
-            if tailnet.magicDNSEnabled {
-              Label("Enabled", systemImage: "circle.fill")
-                .font(.headline)
-                .foregroundStyle(Color(nsColor: .systemGreen).gradient)
-            } else {
-              Label("Disabled", systemImage: "stop.fill")
-                .font(.headline)
-                .foregroundStyle(Color(nsColor: .systemRed).gradient)
-            }
-          }
-          GridRow(alignment: .lastTextBaseline) {
-            Text("Tunneling:")
-              .font(.callout)
-            if self.tailscale.tunnelingEnabled {
-              Label("Enabled", systemImage: "circle.fill")
-                .font(.headline)
-                .foregroundStyle(Color(nsColor: .systemGreen).gradient)
-            } else {
-              Label("Disabled", systemImage: "stop.fill")
-                .font(.headline)
-                .foregroundStyle(Color(nsColor: .systemRed).gradient)
-            }
-          }
-        }
-      }
-    } else {
-      Text("Tailscale not running or not connected")
-        .font(.title)
     }
   }
 }
