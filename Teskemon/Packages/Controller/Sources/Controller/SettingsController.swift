@@ -29,8 +29,8 @@ public struct SettingsController: DynamicProperty {
   public struct Value: Codable, Hashable, Sendable {
     
     public var services = Service.default
-    public var timeout = 5
-    public var batchSize = 8
+    public var timeout = 10
+    public var batchSize = 10
     public var executable = Executable()
     public var customNames = [Machine.Identifier: String]()
     
