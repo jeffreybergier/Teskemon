@@ -37,7 +37,7 @@ public struct MachineWindow: View {
       MachineTable(table: self.$table,
                    status: self.$status,
                    selection: self.$presentation.selection)
-        .navigationTitle(self.table.tailscale?.currentTailnet?.name ?? "テスケモン")
+      .navigationTitle("テスケモン" + self.navigationTitleAppendString)
         .sheet(items: self.$presentation.isShowingInfoPanel,
                content: { MachineInfoWindow(ids: $0) })
         .toolbar {
@@ -47,6 +47,11 @@ public struct MachineWindow: View {
           ToolbarItem { self.statusMenu     }
         }
     }
+  }
+  
+  private var navigationTitleAppendString: String {
+    guard let tailscale = self.table.tailscale, let name = tailscale.currentTailnet?.name else { return "" }
+    return "・" + name + "・" + tailscale.magicDNSSuffix
   }
   
   private var infoButton: some View {
