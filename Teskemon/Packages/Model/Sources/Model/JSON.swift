@@ -20,12 +20,23 @@
 
 import Foundation
 
-public struct TailscaleCLIOutput: Sendable {
+public struct TailscaleCLIOutput: Codable, Hashable, Sendable {
   
-  public var tailscale:   Tailscale?
-  public var machines:    [Machine]
-  public var users:       [Machine.Identifier: User]
-  public var lookUpCache: [Machine.Identifier: Machine]
+  public   var tailscale: Tailscale?
+  public   var machines:  [Machine]
+  public   var users:     [Machine.Identifier: User]
+  internal var lookUp:    [Machine.Identifier: Machine]
+  
+  public subscript(id: Machine.Identifier) -> Machine {
+    self.lookUp[id]!
+  }
+  
+  public init() {
+    self.tailscale = nil
+    self.machines  = []
+    self.users     = [:]
+    self.lookUp    = [:]
+  }
   
   public init(data: Data) throws {
     let rawModel = try JSONDecoder().decode(JSON.TailscaleCLI.self, from: data)
@@ -53,9 +64,33 @@ public struct TailscaleCLIOutput: Sendable {
       uniqueKeysWithValues: rawModel.User?.map { (.init(rawValue: $0), $1) } ?? []
     )
     
-    self.lookUpCache = Dictionary(uniqueKeysWithValues: self.machines.flatMap { machine in
+    self.lookUp = Dictionary(uniqueKeysWithValues: self.machines.flatMap { machine in
       return [(machine.id, machine)] + (machine.subnetRoutes?.map { ($0.id, $0) } ?? [])
     })
+  }
+  
+  public func url(for service: Service,
+                  on id: Machine.Identifier,
+                  username: String?,
+                  password:String?) -> URL
+  {
+    
+    let machine = self[id]
+    var components = URLComponents()
+    components.host = machine.url
+    components.port = service.port
+    components.scheme = service.protocol
+    components.user = username
+    components.password = password
+    return components.url!
+  }
+  
+  public func machines(for selection: Set<Machine.Identifier>) -> [Machine] {
+    let selectedMachines = selection.map { self[$0] }
+    if !selectedMachines.isEmpty { return selectedMachines }
+    return self.machines.flatMap {
+      return [$0] + ($0.subnetRoutes ?? [])
+    }
   }
 }
 

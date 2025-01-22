@@ -20,7 +20,7 @@
 
 import Foundation
 
-public struct Machine: Codable, Sendable, Identifiable {
+public struct Machine: Codable, Sendable, Identifiable, Hashable {
   
   // Machine Conformance
   public let id: Identifier
@@ -139,7 +139,7 @@ extension Machine {
   }
 }
 
-public struct User: Codable, Sendable {
+public struct User: Codable, Sendable, Hashable {
   public struct Identifier: Codable, Sendable, Hashable, Identifiable, RawRepresentable {
     public var id: Int { return self.rawValue }
     public let rawValue: Int
@@ -162,7 +162,7 @@ public struct User: Codable, Sendable {
   }
 }
 
-public struct Tailscale: Codable, Sendable {
+public struct Tailscale: Codable, Sendable, Hashable {
   // Status
   public let version: String
   public let versionUpToDate: Bool
@@ -178,7 +178,7 @@ public struct Tailscale: Codable, Sendable {
   public let selfUserID: User.Identifier?
 }
 
-public struct Tailnet: Codable, Sendable {
+public struct Tailnet: Codable, Sendable, Hashable {
   public let name: String
   public let magicDNSSuffix: String
   public let magicDNSEnabled: Bool

@@ -24,7 +24,6 @@ import Controller
 
 internal struct MachineTable: View {
   
-  @TableController private var table
   @SettingsController private var settings
   @PasswordController private var passwords
   
@@ -32,6 +31,7 @@ internal struct MachineTable: View {
   // I should be able to directly use
   // @PresentationController and @StatusController
   // They should also allowed to be @State and not @Binding
+  @Binding internal var table: TableController.Value
   @Binding internal var status: StatusController.Value
   @Binding internal var selection: Set<Machine.Identifier>
   

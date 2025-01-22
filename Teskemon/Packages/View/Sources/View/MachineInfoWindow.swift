@@ -68,12 +68,12 @@ internal struct MachineInfoWindow: View {
   private var namesTable: some View {
     Table(self.ids) {
       TableColumn("Original Name") { id in
-        Text(self.table.machine(for: id).name)
+        Text(self.table[id].name)
           .font(.body)
       }.width(120)
       TableColumn("Custom Name") { id in
         TextField("", text: self.customNameBinding(for: id),
-                    prompt: Text(self.table.machine(for: id).name))
+                    prompt: Text(self.table[id].name))
         .font(.headline)
       }
     }
@@ -82,7 +82,7 @@ internal struct MachineInfoWindow: View {
   private var passwordsTable: some View {
     Table(self.ids) {
       TableColumn("Name") { id in
-        Text(self.settings.customNames[id] ?? self.table.machine(for: id).name)
+        Text(self.settings.customNames[id] ?? self.table[id].name)
           .font(.body)
       }.width(120)
       TableColumn("Username") { id in
