@@ -44,7 +44,24 @@ public struct MachineWindow: View {
           ToolbarItem { self.infoButton     }
           ToolbarItem { self.machineButton  }
           ToolbarItem { self.servicesButton }
-          ToolbarItem { self.resetButton    }
+          ToolbarItem(placement: .accessoryBar(id: "Status")) { self.resetButton }
+          ToolbarItem(placement: .accessoryBar(id: "Status")) { Spacer() }
+          ToolbarItem(placement: .accessoryBar(id: "Status")) {
+            Menu {
+              Section("Something 1") {
+                Label("Connected", systemImage: "circle.fill")
+                  .foregroundStyle(Color(nsColor: .systemGreen))
+              }
+              Section("Something 1") {
+                Label("Connected", systemImage: "circle.fill")
+                  .foregroundStyle(Color(nsColor: .systemGreen))
+              }
+            } label: {
+              Label("Connected", systemImage: "circle.fill")
+                .foregroundStyle(Color(nsColor: .systemGreen))
+            }
+            .labelStyle(.titleAndIcon)
+          }
         }
     }
   }

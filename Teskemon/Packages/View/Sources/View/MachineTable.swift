@@ -253,27 +253,7 @@ internal struct TailscaleOverlay: View {
   internal let tailscale: Tailscale
   
   internal var body: some View {
-    HStack {
-      self.tailnetView
-      VStack {
-        Text(self.tailscale.version)
-        Text(self.tailscale.versionUpToDate.description)
-        Text(self.tailscale.tunnelingEnabled.description)
-        Text(self.tailscale.haveNodeKey.description)
-        Text(self.tailscale.magicDNSSuffix)
-      }
-      // TODO: Figure out if its possible to show health stuff
-      // (convert to custom type that is identifiable)
-      /*
-      if !self.tailscale.health.isEmpty {
-        ForEach(self.tailscale.health) {
-          Text($0)
-        }
-      }
-      */
-      Spacer()
-    }
-    .frame(maxWidth: .infinity)
+    self.tailnetView
     .background(.ultraThinMaterial)
     .cornerRadius(8)
     .padding([.bottom, .leading, .trailing], 10)
@@ -282,7 +262,7 @@ internal struct TailscaleOverlay: View {
   @ViewBuilder private var tailnetView: some View {
     if let tailnet = tailscale.currentTailnet {
       VStack {
-        Text("Tailnet Information")
+        Text("Tailscale")
           .font(.title2)
         Grid(alignment: .topLeading) {
           GridRow(alignment: .lastTextBaseline) {
@@ -292,9 +272,15 @@ internal struct TailscaleOverlay: View {
               .font(.headline)
           }
           GridRow(alignment: .lastTextBaseline) {
-            Text("Name:")
+            Text("Domain:")
               .font(.callout)
             Text(tailnet.magicDNSSuffix)
+              .font(.headline)
+          }
+          GridRow(alignment: .lastTextBaseline) {
+            Text("Version:")
+              .font(.callout)
+            Text(self.tailscale.version)
               .font(.headline)
           }
           GridRow(alignment: .lastTextBaseline) {
@@ -311,43 +297,17 @@ internal struct TailscaleOverlay: View {
             }
           }
           GridRow(alignment: .lastTextBaseline) {
-            Text("Magic DNS:")
+            Text("Update:")
               .font(.callout)
-            if tailnet.magicDNSEnabled {
-              Label("Enabled", systemImage: "circle.fill")
+            if self.tailscale.versionUpToDate {
+              Label("Up to Date", systemImage: "circle.fill")
                 .font(.headline)
                 .foregroundStyle(Color(nsColor: .systemGreen).gradient)
             } else {
-              Label("Disabled", systemImage: "stop.fill")
+              Label("Available", systemImage: "triangle.fill")
                 .font(.headline)
-                .foregroundStyle(Color(nsColor: .systemRed).gradient)
+                .foregroundStyle(Color(nsColor: .systemYellow).gradient)
             }
-          }
-        }
-      }
-    } else {
-      Text("No Tailnet Found")
-        .font(.title)
-    }
-  }
-  
-  @ViewBuilder private var appInfo: some View {
-    if let tailnet = tailscale.currentTailnet {
-      VStack {
-        Text("Tailnet Information")
-          .font(.title2)
-        Grid(alignment: .topLeading) {
-          GridRow(alignment: .lastTextBaseline) {
-            Text("Tailnet:")
-              .font(.callout)
-            Text(tailnet.name)
-              .font(.headline)
-          }
-          GridRow(alignment: .lastTextBaseline) {
-            Text("DNS Suffix:")
-              .font(.callout)
-            Text(tailnet.magicDNSSuffix)
-              .font(.headline)
           }
           GridRow(alignment: .lastTextBaseline) {
             Text("Magic DNS:")
@@ -361,12 +321,24 @@ internal struct TailscaleOverlay: View {
                 .font(.headline)
                 .foregroundStyle(Color(nsColor: .systemRed).gradient)
             }
-            
+          }
+          GridRow(alignment: .lastTextBaseline) {
+            Text("Tunneling:")
+              .font(.callout)
+            if self.tailscale.tunnelingEnabled {
+              Label("Enabled", systemImage: "circle.fill")
+                .font(.headline)
+                .foregroundStyle(Color(nsColor: .systemGreen).gradient)
+            } else {
+              Label("Disabled", systemImage: "stop.fill")
+                .font(.headline)
+                .foregroundStyle(Color(nsColor: .systemRed).gradient)
+            }
           }
         }
       }
     } else {
-      Text("No Tailnet Found")
+      Text("Tailscale not running or not connected")
         .font(.title)
     }
   }
