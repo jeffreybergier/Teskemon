@@ -28,6 +28,7 @@ public struct StatusController: DynamicProperty {
   
   public struct Value: Codable {
     internal var status: [Machine.Identifier: [Service: Service.Status]] = [:]
+    public var isLoading = false
     public subscript(id: Machine.Identifier, service: Service) -> Service.Status {
       get { self.status[id, default: [:]][service] ?? .unknown }
       set { self.status[id, default: [:]][service] = newValue }
@@ -53,6 +54,7 @@ public struct StatusController: DynamicProperty {
                            batchSize: Int) async throws
   {
     NSLog("[START] StatusController.updateStatus()")
+    self.status.isLoading = true
     try await Process.status(for: services,
                              on: machines,
                              bind: self.$status,

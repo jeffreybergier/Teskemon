@@ -42,11 +42,15 @@ public struct TableController: DynamicProperty {
   }
   
   public func resetData() {
-    self.table = .init()
+    self.table.tailscale = nil
+    self.table.machines = []
+    self.table.users = [:]
+    // TODO: Figure out why clearing the cache here crashes it
   }
   
   public func updateMachines(with executable: SettingsController.Executable) async throws {
     NSLog("[START] TableController.updateMachines()")
+    self.table.isLoading = true
     self.table = try await Process.cliOutput(with: executable.stringValue)
     NSLog("[END  ] TableController.updateMachines()")
   }

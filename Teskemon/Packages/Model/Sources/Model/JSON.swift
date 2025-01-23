@@ -25,6 +25,7 @@ public struct TailscaleCLIOutput: Codable, Hashable, Sendable {
   public   var tailscale: Tailscale?
   public   var machines:  [Machine]
   public   var users:     [Machine.Identifier: User]
+  public   var isLoading = false
   internal var lookUp:    [Machine.Identifier: Machine]
   
   public subscript(id: Machine.Identifier) -> Machine {

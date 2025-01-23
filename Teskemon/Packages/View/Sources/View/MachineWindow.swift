@@ -24,11 +24,13 @@ import Controller
 
 public struct MachineWindow: View {
   
-  @State private var isAwaiting = false
   @TableController private var table
   @StatusController private var status
   @SettingsController private var settings
   @PresentationController private var presentation
+  
+  @State private var TEMP_isAutoUpdatingMachines = false
+  @State private var TEMP_isAutoUpdatingServices = false
   
   public init() { }
   
@@ -37,60 +39,108 @@ public struct MachineWindow: View {
       MachineTable(table: self.$table,
                    status: self.$status,
                    selection: self.$presentation.selection)
-      .navigationTitle("テスケモン" + self.navigationTitleAppendString)
+      .navigationTitle("テスケモン")
+      .navigationSubtitle(self.navigationTitleAppendString)
         .sheet(items: self.$presentation.isShowingInfoPanel,
                content: { MachineInfoWindow(ids: $0) })
         .toolbar {
-          ToolbarItem { self.infoButton     }
-          ToolbarItem { self.machineButton  }
-          ToolbarItem { self.servicesButton }
-          ToolbarItem { self.statusMenu     }
+          ToolbarItem { self.appSettings     }
+          ToolbarItem { self.machineSettings }
+          ToolbarItem { self.refreshMenu     }
+          ToolbarItem { self.statusMenu      }
         }
     }
   }
   
   private var navigationTitleAppendString: String {
     guard let tailscale = self.table.tailscale, let name = tailscale.currentTailnet?.name else { return "" }
-    return "・" + name + "・" + tailscale.magicDNSSuffix
+    return name + "・" + tailscale.magicDNSSuffix 
   }
   
-  private var infoButton: some View {
-    Button("Machine Info", systemImage: "info.circle") {
-      self.presentation.isShowingInfoPanel = self.presentation.selection
-    }
-    .disabled(self.presentation.selection.isEmpty)
-  }
-  
-  private var machineButton: some View {
-    Button("Update Machines", systemImage: self.isAwaiting ? "progress.indicator" : "desktopcomputer.and.arrow.down") {
-      self.performAsync { try await self._table.updateMachines(with: self.settings.executable) }
-    }
-    .disabled(self.isAwaiting)
-  }
-  
-  private var servicesButton: some View {
-    Button("Update Services", systemImage: self.isAwaiting ? "progress.indicator" : "slider.horizontal.2.arrow.trianglehead.counterclockwise")
-    {
-      self.performAsync {
-        try await self._status.updateStatus(for: self.settings.services,
-                                            on: self.table.machines(for: self.presentation.selection),
-                                            timeout: self.settings.timeout,
-                                            batchSize: self.settings.batchSize)
+  private var machineSettings: some View {
+    Menu {
+      Section ("\(self.presentation.selection.count) Machine(s) Selected") {
+        Button("Machine Information") {
+          self.presentation.isShowingInfoPanel = self.presentation.selection
+        }
+        Button("Machine Names") {
+          self.presentation.isShowingInfoPanel = self.presentation.selection
+        }
+        Button("Machine Passwords") {
+          self.presentation.isShowingInfoPanel = self.presentation.selection
+        }
       }
+      Button("Deselect All") {
+        self.presentation.selection = []
+      }
+    } label: {
+      Label("Machine Settings", systemImage: "gearshape.2")
+        .labelStyle(.titleAndIcon)
     }
-    .disabled(self.isAwaiting)
+  }
+  
+  private var appSettings: some View {
+    Menu {
+      Button("General") {
+      }
+      Button("Services") {
+      }
+    } label: {
+      Label("App Settings", systemImage: "gearshape")
+        .labelStyle(.titleAndIcon)
+    }
+  }
+  
+  private var refreshMenu: some View {
+    Menu {
+      Section("Machines") {
+        Button("Refresh Machine Info", systemImage: "desktopcomputer") {
+          self.performAsync { try await self._table.updateMachines(with: self.settings.executable) }
+        }
+        Toggle(isOn: self.$TEMP_isAutoUpdatingMachines) {
+          Label("Automatically Refresh",
+                systemImage: self.TEMP_isAutoUpdatingMachines
+                ? "progress.indicator"
+                : "square")
+        }
+      }
+      Section("Services") {
+        Button(self.presentation.selection.isEmpty
+               ? "Refresh All Services"
+               : "Refresh Services for \(self.presentation.selection.count) Machine(s)",
+          systemImage: "network")
+        {
+          self.performAsync {
+            try await self._status.updateStatus(for: self.settings.services,
+                                                on: self.table.machines(for: self.presentation.selection),
+                                                timeout: self.settings.timeout,
+                                                batchSize: self.settings.batchSize)
+          }
+        }
+        Toggle(isOn: self.$TEMP_isAutoUpdatingServices) {
+          Label("Automatically Refresh",
+                systemImage: self.TEMP_isAutoUpdatingServices
+                ? "progress.indicator"
+                : "square")
+        }
+      }
+      Button("Reset Data", systemImage: "trash") {
+        self._status.resetData()
+        self._table.resetData()
+      }
+    } label: {
+      Label("Refresh", systemImage: "arrow.clockwise")
+    }
+    .labelStyle(.titleAndIcon)
   }
   
   private func performAsync(function: @escaping (() async throws -> Void)) {
-    self.isAwaiting = true
     Task {
       do {
         try await function()
-        self.isAwaiting = false
       } catch {
         // TODO: Show error in UI
         NSLog(String(describing:error))
-        self.isAwaiting = false
       }
     }
   }
@@ -155,11 +205,6 @@ public struct MachineWindow: View {
       Button("Select this Machine", systemImage: "cursorarrow.rays") {
         self.presentation.selection = self.table.tailscale?.selfNodeID.map { [$0] } ?? []
       }
-      Button("Reset Data", systemImage: "trash") {
-        self._status.resetData()
-        self._table.resetData()
-      }
-      .disabled(self.isAwaiting)
     } label: {
       if self.table.tailscale?.backendState == "Running" {
         Label(self.table.tailscale?.backendState ?? "–", systemImage: "circle.fill")
