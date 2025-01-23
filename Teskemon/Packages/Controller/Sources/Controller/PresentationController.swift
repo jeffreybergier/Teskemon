@@ -28,7 +28,7 @@ public struct PresentationController: DynamicProperty {
   
   public struct Value: Codable {
     public var selection = Set<Machine.Identifier>()
-    public var isShowingInfoPanel = Set<Machine.Identifier>()
+    public var showInfoPanel: InfoPanelInput?
     public var showsPasswords = false
   }
   
@@ -44,5 +44,16 @@ public struct PresentationController: DynamicProperty {
   public var projectedValue: Binding<Value> {
     return self.$storage
   }
-  
+}
+
+extension PresentationController {
+  public struct InfoPanelInput: Identifiable, Codable {
+    public var id: [Machine.Identifier] { self.selection }
+    public var currentTab: Int
+    public var selection: [Machine.Identifier]
+    public init(tab: Int = 0, _ selection: Set<Machine.Identifier> = []) {
+      self.currentTab = tab
+      self.selection = selection.sorted(by: { $0.rawValue < $1.rawValue })
+    }
+  }
 }

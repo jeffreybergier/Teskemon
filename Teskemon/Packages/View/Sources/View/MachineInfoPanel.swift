@@ -22,19 +22,20 @@ import SwiftUI
 import Model
 import Controller
 
-internal struct MachineInfoWindow: View {
+internal struct MachineInfoPanel: View {
   
-  @SceneStorage("MachineInfoSelectedTab") private var currentTab = 0
   @Environment(\.dismiss) private var dismiss
   
   @TableController private var table
   @SettingsController private var settings
   @PasswordController private var passwords
 
-  private let ids: [Machine.Identifier]
+  @State private var currentTab: Int
+  private let selection: [Machine.Identifier]
   
-  internal init(ids: Set<Machine.Identifier>) {
-    self.ids = ids.sorted(by: { $0.rawValue < $1.rawValue })
+  internal init(_ input: PresentationController.InfoPanelInput) {
+    _currentTab = .init(initialValue: input.currentTab)
+    selection = input.selection
   }
   
   internal var body: some View {
@@ -66,7 +67,7 @@ internal struct MachineInfoWindow: View {
   }
   
   private var namesTable: some View {
-    Table(self.ids) {
+    Table(self.selection) {
       TableColumn("Original Name") { id in
         Text(self.table[id].name)
           .font(.body)
@@ -80,7 +81,7 @@ internal struct MachineInfoWindow: View {
   }
   
   private var passwordsTable: some View {
-    Table(self.ids) {
+    Table(self.selection) {
       TableColumn("Name") { id in
         Text(self.settings.customNames[id] ?? self.table[id].name)
           .font(.body)

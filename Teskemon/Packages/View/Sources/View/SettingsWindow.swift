@@ -28,6 +28,7 @@ public struct SettingsWindow: View {
   
   public init() { }
   
+  // TODO: Change to tab bar
   public var body: some View {
     VStack {
       Form {

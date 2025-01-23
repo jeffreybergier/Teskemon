@@ -41,14 +41,13 @@ public struct MachineWindow: View {
                    selection: self.$presentation.selection)
       .navigationTitle("テスケモン")
       .navigationSubtitle(self.navigationTitleAppendString)
-        .sheet(items: self.$presentation.isShowingInfoPanel,
-               content: { MachineInfoWindow(ids: $0) })
-        .toolbar {
-          ToolbarItem { self.appSettings     }
-          ToolbarItem { self.machineSettings }
-          ToolbarItem { self.refreshMenu     }
-          ToolbarItem { self.statusMenu      }
-        }
+      .sheet(item: self.$presentation.showInfoPanel,
+             content: { MachineInfoPanel($0) })
+      .toolbar {
+        ToolbarItem { self.editMenu }
+        ToolbarItem { self.refreshMenu     }
+        ToolbarItem { self.statusMenu      }
+      }
     }
   }
   
@@ -57,38 +56,28 @@ public struct MachineWindow: View {
     return name + "・" + tailscale.magicDNSSuffix 
   }
   
-  private var machineSettings: some View {
+  private var editMenu: some View {
     Menu {
       Section ("\(self.presentation.selection.count) Machine(s) Selected") {
-        Button("Machine Information") {
-          self.presentation.isShowingInfoPanel = self.presentation.selection
+        Button("Information", systemImage: "info") {
+          self.presentation.showInfoPanel = .init(tab: 0, self.presentation.selection)
         }
-        Button("Machine Names") {
-          self.presentation.isShowingInfoPanel = self.presentation.selection
+        Button("Names", systemImage: "person") {
+          self.presentation.showInfoPanel = .init(tab: 1, self.presentation.selection)
         }
-        Button("Machine Passwords") {
-          self.presentation.isShowingInfoPanel = self.presentation.selection
+        Button("Passwords", systemImage: "lock") {
+          self.presentation.showInfoPanel = .init(tab: 2, self.presentation.selection)
         }
       }
-      Button("Deselect All") {
+      .disabled(self.presentation.selection.isEmpty)
+      Button("Deselect All", systemImage: "cursorarrow.slash") {
         self.presentation.selection = []
       }
+      .disabled(self.presentation.selection.isEmpty)
     } label: {
-      Label("Machine Settings", systemImage: "gearshape.2")
-        .labelStyle(.titleAndIcon)
+      Label("Edit", systemImage: "desktopcomputer")
     }
-  }
-  
-  private var appSettings: some View {
-    Menu {
-      Button("General") {
-      }
-      Button("Services") {
-      }
-    } label: {
-      Label("App Settings", systemImage: "gearshape")
-        .labelStyle(.titleAndIcon)
-    }
+    .labelStyle(.titleAndIcon)
   }
   
   private var refreshMenu: some View {
@@ -132,17 +121,6 @@ public struct MachineWindow: View {
       Label("Refresh", systemImage: "arrow.clockwise")
     }
     .labelStyle(.titleAndIcon)
-  }
-  
-  private func performAsync(function: @escaping (() async throws -> Void)) {
-    Task {
-      do {
-        try await function()
-      } catch {
-        // TODO: Show error in UI
-        NSLog(String(describing:error))
-      }
-    }
   }
   
   private var statusMenu: some View {
@@ -240,5 +218,16 @@ public struct MachineWindow: View {
       }
     }
     .labelStyle(.titleAndIcon)
+  }
+  
+  private func performAsync(function: @escaping (() async throws -> Void)) {
+    Task {
+      do {
+        try await function()
+      } catch {
+        // TODO: Show error in UI
+        NSLog(String(describing:error))
+      }
+    }
   }
 }
