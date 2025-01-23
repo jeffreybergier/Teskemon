@@ -148,13 +148,18 @@ public struct MachineWindow: View {
   private var statusMenu: some View {
     Menu {
       Section("Tailscale") {
-        if self.table.tailscale?.backendState == "Running" {
+        switch (self.table.tailscale?.backendState) {
+        case .some(let value) where value == "Running":
           Label(self.table.tailscale?.backendState ?? "–", systemImage: "circle.fill")
-            .font(.headline)
             .foregroundStyle(Color(nsColor: .systemGreen).gradient, .black.gradient)
-        } else {
-          Label(self.table.tailscale?.backendState ?? "–", systemImage: "stop.fill")
+        case .some(let value) where value == "Stopped":
+          Label(value, systemImage: "stop.fill")
             .foregroundStyle(Color(nsColor: .systemRed).gradient, .black.gradient)
+        case .some(let value):
+          Label(value, systemImage: "triangle.fill")
+            .foregroundStyle(Color(nsColor: .systemYellow).gradient, .black.gradient)
+        case .none:
+          Label("–", systemImage: "triangle.fill")
         }
       }
       Section("Account") {
@@ -163,56 +168,75 @@ public struct MachineWindow: View {
       Section("Domain") {
         Label(self.table.tailscale?.magicDNSSuffix ?? "–", systemImage: "network")
       }
-      if self.table.tailscale?.versionUpToDate ?? false {
+      switch (self.table.tailscale) {
+      case .some(let tailscale) where tailscale.versionUpToDate == true:
         Section("Version – Up to Date") {
-          Label(self.table.tailscale?.version ?? "–", systemImage: "circle.fill")
+          Label(tailscale.version, systemImage: "circle.fill")
             .foregroundStyle(Color(nsColor: .systemGreen).gradient, .black)
         }
-      } else {
+      case .some(let tailscale):
         Section("Version – Update Available") {
-          Label(self.table.tailscale?.version ?? "–", systemImage: "triangle.fill")
+          Label(tailscale.version, systemImage: "triangle.fill")
             .foregroundStyle(Color(nsColor: .systemYellow).gradient, .black)
+        }
+      case .none:
+        Section("Version") {
+          Label("–", systemImage: "triangle.fill")
         }
       }
       Section("MagicDNS") {
-        if self.table.tailscale?.currentTailnet?.magicDNSEnabled ?? false {
+        switch (self.table.tailscale?.currentTailnet?.magicDNSEnabled) {
+        case .some(let magicDNSEnabled) where magicDNSEnabled == true:
           Label("Enabled", systemImage: "circle.fill")
             .foregroundStyle(Color(nsColor: .systemGreen).gradient, .black)
-        } else {
+        case .some(_):
           Label("Disabled", systemImage: "stop.fill")
-            .font(.headline)
             .foregroundStyle(Color(nsColor: .systemRed).gradient, .black)
+        case .none:
+          Label("–", systemImage: "triangle.fill")
         }
       }
       Section("Tunneling") {
-        if self.table.tailscale?.tunnelingEnabled ?? false {
+        switch (self.table.tailscale?.tunnelingEnabled) {
+        case .some(let tunnelingEnabled) where tunnelingEnabled == true:
           Label("Enabled", systemImage: "circle.fill")
             .foregroundStyle(Color(nsColor: .systemGreen).gradient, .black)
-        } else {
+        case .some(_):
           Label("Disabled", systemImage: "stop.fill")
             .foregroundStyle(Color(nsColor: .systemRed).gradient, .black)
+        case .none:
+          Label("–", systemImage: "triangle.fill")
         }
       }
       Section("Node Key") {
-        if self.table.tailscale?.haveNodeKey ?? false {
+        switch (self.table.tailscale?.haveNodeKey) {
+        case .some(let haveNodeKey) where haveNodeKey == true:
           Label("Present", systemImage: "circle.fill")
             .foregroundStyle(Color(nsColor: .systemGreen).gradient, .black)
-        } else {
+        case .some(_):
           Label("Missing", systemImage: "stop.fill")
             .foregroundStyle(Color(nsColor: .systemRed).gradient, .black)
+        case .none:
+          Label("–", systemImage: "triangle.fill")
         }
       }
       Button("Select this Machine", systemImage: "cursorarrow.rays") {
         self.presentation.selection = self.table.tailscale?.selfNodeID.map { [$0] } ?? []
       }
+      .disabled(self.table.tailscale?.selfNodeID == nil)
     } label: {
-      if self.table.tailscale?.backendState == "Running" {
+      switch (self.table.tailscale?.backendState) {
+      case .some(let value) where value == "Running":
         Label(self.table.tailscale?.backendState ?? "–", systemImage: "circle.fill")
-          .font(.headline)
           .foregroundStyle(Color(nsColor: .systemGreen).gradient, .black.gradient)
-      } else {
-        Label(self.table.tailscale?.backendState ?? "–", systemImage: "stop.fill")
+      case .some(let value) where value == "Stopped":
+        Label(value, systemImage: "stop.fill")
           .foregroundStyle(Color(nsColor: .systemRed).gradient, .black.gradient)
+      case .some(let value):
+        Label(value, systemImage: "triangle.fill")
+          .foregroundStyle(Color(nsColor: .systemYellow).gradient, .black.gradient)
+      case .none:
+        Label("No Data", systemImage: "questionmark.square.dashed")
       }
     }
     .labelStyle(.titleAndIcon)
