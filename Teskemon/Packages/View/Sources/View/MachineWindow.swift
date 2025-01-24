@@ -28,6 +28,7 @@ public struct MachineWindow: View {
   @StatusController private var status
   @SettingsController private var settings
   @PresentationController private var presentation
+  @TimerProperty private var timer
   
   @State private var TEMP_isAutoUpdatingMachines = false
   @State private var TEMP_isAutoUpdatingServices = false
@@ -44,14 +45,14 @@ public struct MachineWindow: View {
       MachineTable(table: self.$table,
                    status: self.$status,
                    selection: self.$presentation.selection)
-      .navigationTitle("テスケモン")
+      .navigationTitle("テスケモン・\(self.timer.hasElapsed(seconds: 10))")
       .navigationSubtitle(self.navigationTitleAppendString)
       .sheet(item: self.$presentation.showInfoPanel,
              content: { MachineInfoPanel($0) })
       .toolbar {
-        ToolbarItem { self.editMenu }
-        ToolbarItem { self.refreshMenu     }
-        ToolbarItem { self.statusMenu      }
+        ToolbarItem { self.editMenu    }
+        ToolbarItem { self.refreshMenu }
+        ToolbarItem { self.statusMenu  }
       }
     }
   }
