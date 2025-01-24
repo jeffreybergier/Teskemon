@@ -28,69 +28,92 @@ public struct SettingsWindow: View {
   
   public init() { }
   
-  // TODO: Change to tab bar
   public var body: some View {
-    VStack {
-      Form {
-        Section(header: Text("Netcat").font(.headline)) {
-          TextField("Timeout",
-                    text: self.$settings.timeout.map(get: { $0.description },
-                                                     set: { Int($0) ?? -1 }))
-          TextField("Batch Size",
-                    text: self.$settings.batchSize.map(get: { $0.description },
-                                                       set: { Int($0) ?? -1 }))
+    TabView(selection: self.$settings.currentTab) {
+      self.general.tabItem {
+        Label("General", systemImage: "gear")
+      }.tag(SettingsController.Tab.general)
+      self.services.tabItem {
+        Label("Services", systemImage: "network")
+      }.tag(SettingsController.Tab.services)
+    }
+  }
+  
+  private var general: some View {
+    Form {
+      Section(header: Text("Tailscale").font(.headline),
+              footer: Text(self.settings.executable.stringValue).font(.caption))
+      {
+        Picker("Location", selection: self.$settings.executable.option) {
+          Text("Command Line").tag(SettingsController.Executable.Options.cli)
+          Text("App Store").tag(SettingsController.Executable.Options.app)
+          Text("Custom").tag(SettingsController.Executable.Options.custom)
         }
-        
-        Section(header: Text("Tailscale").font(.headline),
-                footer: Text(self.settings.executable.stringValue).font(.caption))
-        {
-          Picker("Location", selection: self.$settings.executable.option) {
-            Text("Command Line").tag(SettingsController.Executable.Options.cli)
-            Text("App Store").tag(SettingsController.Executable.Options.app)
-            Text("Custom").tag(SettingsController.Executable.Options.custom)
-          }
-          if self.settings.executable.option == .custom {
-            TextField("Path", text: self.$settings.executable.rawValue)
-          }
+        if self.settings.executable.option == .custom {
+          TextField("Path", text: self.$settings.executable.rawValue)
         }
       }
-      .scenePadding()
-      Section(header: Text("Services").font(.headline)) {
-        ZStack(alignment: .bottomTrailing) {
-          Table(self.$settings.services) {
-            TableColumn("Name") { service in
-              TextField("", text: service.name)
-            }
-            TableColumn("Protocol") { service in
-              TextField("", text: service.protocol)
-            }.width(64)
-            TableColumn("Port") { service in
-              TextField("", text: service.port.map(get: { $0.description },
+      Divider().padding([.bottom], 6)
+      Section(header: Text("Machine Refresh").font(.headline)) {
+        Toggle("Automatic", isOn: self.$settings.machineTimer.automatic)
+        TextField("Interval",
+                  text: self.$settings.machineTimer.interval.map(get: { $0.description },
+                                                                 set: { Int($0) ?? -1 }))
+      }
+      Divider().padding([.bottom], 6)
+      Section(header: Text("Service Refresh").font(.headline)) {
+        Toggle("Automatic", isOn: self.$settings.statusTimer.automatic)
+        TextField("Interval",
+                  text: self.$settings.statusTimer.interval.map(get: { $0.description },
+                                                                set: { Int($0) ?? -1 }))
+      }
+      Divider().padding([.bottom], 6)
+      Section(header: Text("Netcat").font(.headline)) {
+        TextField("Timeout",
+                  text: self.$settings.timeout.map(get: { $0.description },
                                                    set: { Int($0) ?? -1 }))
-            }.width(64)
-            TableColumn("") { service in
-              Button("Delete", systemImage: "x.circle") {
-                self.settings.delete(service: service.wrappedValue)
-              }
-              .labelStyle(.iconOnly)
-            }.width(16)
-          }
-          .textFieldStyle(.roundedBorder)
-          .safeAreaInset(edge: .bottom) {
-            HStack {
-              Spacer()
-              Button("Reset", systemImage: "arrow.uturn.left") {
-                self.settings.services = Service.default
-              }
-              Button("Add", systemImage: "plus") {
-                self.settings.services.append(.init())
-              }
-            }.padding([.bottom, .trailing])
-          }
-        }
+        TextField("Batch Size",
+                  text: self.$settings.batchSize.map(get: { $0.description },
+                                                     set: { Int($0) ?? -1 }))
       }
     }
-    .frame(width: 480)
-    .navigationTitle("Settings")
+    .padding()
+    .frame(width: 320)
+  }
+  
+  private var services: some View {
+    ZStack(alignment: .bottomTrailing) {
+      Table(self.$settings.services) {
+        TableColumn("Name") { service in
+          TextField("", text: service.name)
+        }
+        TableColumn("Protocol") { service in
+          TextField("", text: service.protocol)
+        }.width(64)
+        TableColumn("Port") { service in
+          TextField("", text: service.port.map(get: { $0.description },
+                                               set: { Int($0) ?? -1 }))
+        }.width(64)
+        TableColumn("") { service in
+          Button("Delete", systemImage: "x.circle") {
+            self.settings.delete(service: service.wrappedValue)
+          }
+          .labelStyle(.iconOnly)
+        }.width(16)
+      }
+      .textFieldStyle(.roundedBorder)
+      .safeAreaInset(edge: .bottom) {
+        HStack {
+          Spacer()
+          Button("Reset", systemImage: "arrow.uturn.left") {
+            self.settings.services = Service.default
+          }
+          Button("Add", systemImage: "plus") {
+            self.settings.services.append(.init())
+          }
+        }.padding([.bottom, .trailing])
+      }
+    }
+    .frame(width: 480, height: 320)
   }
 }

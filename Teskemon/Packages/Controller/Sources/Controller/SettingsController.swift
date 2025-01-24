@@ -28,7 +28,7 @@ public struct SettingsController: DynamicProperty {
   
   // TODO: Move this to model
   public struct Value: Codable {
-    
+    public var currentTab: Tab = .general
     public var services = Service.default
     public var timeout = 10
     public var batchSize = 10
@@ -41,6 +41,11 @@ public struct SettingsController: DynamicProperty {
       guard let index = self.services.firstIndex(where: { $0.id == service.id }) else { return }
       self.services.remove(at: index)
     }
+  }
+  
+  public enum Tab: Codable {
+    case general
+    case services
   }
   
   public struct Timer: Codable {
