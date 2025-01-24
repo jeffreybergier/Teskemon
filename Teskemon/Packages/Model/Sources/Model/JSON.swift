@@ -36,6 +36,14 @@ public struct TailscaleCLIOutput: Codable, Hashable, Sendable {
     return selection.map { self[$0] }
   }
   
+  public func allMachines() -> [Machine] {
+    return Array(self.lookUp.values)
+  }
+  
+  public func allIdentifiers() -> Set<Machine.Identifier> {
+    return Set(self.lookUp.keys)
+  }
+  
   public init() {
     self.tailscale = nil
     self.machines  = []

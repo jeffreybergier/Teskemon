@@ -50,7 +50,9 @@ public struct TimerProperty: DynamicProperty {
     }
   }
   
-  @StateObject private var timerObject = Object()
+  internal static let sharedTimer = Object()
+  
+  @ObservedObject private var timerObject = TimerProperty.sharedTimer
   
   public init() {}
   

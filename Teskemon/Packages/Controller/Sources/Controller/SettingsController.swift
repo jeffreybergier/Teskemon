@@ -26,29 +26,31 @@ import Model
 @propertyWrapper
 public struct SettingsController: DynamicProperty {
   
-  public struct Value: Codable, Hashable, Sendable {
+  // TODO: Move this to model
+  public struct Value: Codable {
     
     public var services = Service.default
     public var timeout = 10
     public var batchSize = 10
     public var executable = Executable()
     public var customNames = [Machine.Identifier: String]()
-    public var statusRefreshTime: Int = 300
-    public var machineRefreshTime: Int = 10
-    public var statusRefreshAuto = false
-    public var machineRefreshAuto = true
+    public var statusTimer = Timer(automatic: false, interval: 300)
+    public var machineTimer = Timer(automatic: true, interval: 10)
     
     public mutating func delete(service: Service) {
       guard let index = self.services.firstIndex(where: { $0.id == service.id }) else { return }
       self.services.remove(at: index)
     }
-    
-    public init () {}
   }
   
-  public struct Executable: Codable, Hashable, Sendable {
+  public struct Timer: Codable {
+    public var automatic: Bool
+    public var interval: Int
+  }
+  
+  public struct Executable: Codable {
     
-    public enum Options: CaseIterable, Codable, Hashable, Sendable {
+    public enum Options: CaseIterable, Codable {
       case cli
       case app
       case custom

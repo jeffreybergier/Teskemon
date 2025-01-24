@@ -32,7 +32,7 @@ public struct MachineWindow: View {
   
   private var selectionForMenus: Set<Machine.Identifier> {
     return self.presentation.selection.isEmpty
-           ? Set(self.table.lookUp.keys)
+           ? self.table.allIdentifiers()
            : self.presentation.selection
   }
   
@@ -43,14 +43,21 @@ public struct MachineWindow: View {
       MachineTable(table: self.$table,
                    status: self.$status,
                    selection: self.$presentation.selection)
-      .navigationTitle("テスケモン・\(self.timer.hasElapsed(seconds: self.settings.machineRefreshTime))")
+      .navigationTitle("テスケモン・\(self.timer.rawValue)")
       .navigationSubtitle(self.navigationTitleAppendString)
       .sheet(item: self.$presentation.showInfoPanel,
              content: { MachineInfoPanel($0) })
-      .onChange(of: self.timer.hasElapsed(seconds: self.settings.machineRefreshTime)) { _, fired in
-        guard self.settings.machineRefreshAuto, fired else { return }
+      .onChange(of: self.timer.hasElapsed(seconds: self.settings.machineTimer.interval), initial: true) { _, fired in
+        guard self.settings.machineTimer.automatic, fired else { return }
+        self.performAsync { try await self._table.updateMachines(with: self.settings.executable) }
+      }
+      .onChange(of: self.timer.hasElapsed(seconds: self.settings.statusTimer.interval), initial: true) { _, fired in
+        guard self.settings.statusTimer.automatic, fired else { return }
         self.performAsync {
-          try await self._table.updateMachines(with: self.settings.executable)
+          try await self._status.updateStatus(for: self.settings.services,
+                                              on: self.table.allMachines(),
+                                              timeout: self.settings.timeout,
+                                              batchSize: self.settings.batchSize)
         }
       }
       .toolbar {
@@ -98,9 +105,9 @@ public struct MachineWindow: View {
         Button("Refresh Machine Info", systemImage: "desktopcomputer") {
           self.performAsync { try await self._table.updateMachines(with: self.settings.executable) }
         }
-        Toggle(isOn: self.$settings.machineRefreshAuto) {
+        Toggle(isOn: self.$settings.machineTimer.automatic) {
           Label("Automatically Refresh",
-                systemImage: self.settings.machineRefreshAuto
+                systemImage: self.settings.machineTimer.automatic
                              ? "progress.indicator"
                              : "square")
         }
@@ -118,9 +125,9 @@ public struct MachineWindow: View {
                                                 batchSize: self.settings.batchSize)
           }
         }
-        Toggle(isOn: self.$settings.statusRefreshAuto) {
+        Toggle(isOn: self.$settings.statusTimer.automatic) {
           Label("Automatically Refresh",
-                systemImage: self.settings.statusRefreshAuto
+                systemImage: self.settings.statusTimer.automatic
                              ? "progress.indicator"
                              : "square")
         }
