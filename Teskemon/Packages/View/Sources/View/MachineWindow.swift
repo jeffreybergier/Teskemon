@@ -31,6 +31,11 @@ public struct MachineWindow: View {
   
   @State private var TEMP_isAutoUpdatingMachines = false
   @State private var TEMP_isAutoUpdatingServices = false
+  private var selectionForMenus: Set<Machine.Identifier> {
+    return self.presentation.selection.isEmpty
+           ? Set(self.table.lookUp.keys)
+           : self.presentation.selection
+  }
   
   public init() { }
   
@@ -58,18 +63,20 @@ public struct MachineWindow: View {
   
   private var editMenu: some View {
     Menu {
-      Section ("\(self.presentation.selection.count) Machine(s) Selected") {
+      Section (self.presentation.selection.isEmpty
+               ? "Edit All Machines"
+               : "Edit \(self.selectionForMenus.count) Machine(s)")
+      {
         Button("Information", systemImage: "info") {
-          self.presentation.showInfoPanel = .init(tab: 0, self.presentation.selection)
+          self.presentation.showInfoPanel = .init(tab: 0, self.selectionForMenus)
         }
         Button("Names", systemImage: "person") {
-          self.presentation.showInfoPanel = .init(tab: 1, self.presentation.selection)
+          self.presentation.showInfoPanel = .init(tab: 1, self.selectionForMenus)
         }
         Button("Passwords", systemImage: "lock") {
-          self.presentation.showInfoPanel = .init(tab: 2, self.presentation.selection)
+          self.presentation.showInfoPanel = .init(tab: 2, self.selectionForMenus)
         }
       }
-      .disabled(self.presentation.selection.isEmpty)
       Button("Deselect All", systemImage: "cursorarrow.slash") {
         self.presentation.selection = []
       }
@@ -101,7 +108,7 @@ public struct MachineWindow: View {
         {
           self.performAsync {
             try await self._status.updateStatus(for: self.settings.services,
-                                                on: self.table.machines(for: self.presentation.selection),
+                                                on: self.table.machines(for: self.selectionForMenus),
                                                 timeout: self.settings.timeout,
                                                 batchSize: self.settings.batchSize)
           }

@@ -26,10 +26,14 @@ public struct TailscaleCLIOutput: Codable, Hashable, Sendable {
   public   var machines:  [Machine]
   public   var users:     [Machine.Identifier: User]
   public   var isLoading = false
-  internal var lookUp:    [Machine.Identifier: Machine]
+  public   var lookUp:    [Machine.Identifier: Machine]
   
   public subscript(id: Machine.Identifier) -> Machine {
     self.lookUp[id]!
+  }
+  
+  public func machines(for selection: Set<Machine.Identifier>) -> [Machine] {
+    return selection.map { self[$0] }
   }
   
   public init() {
@@ -84,14 +88,6 @@ public struct TailscaleCLIOutput: Codable, Hashable, Sendable {
     components.user = username
     components.password = password
     return components.url!
-  }
-  
-  public func machines(for selection: Set<Machine.Identifier>) -> [Machine] {
-    let selectedMachines = selection.map { self[$0] }
-    if !selectedMachines.isEmpty { return selectedMachines }
-    return self.machines.flatMap {
-      return [$0] + ($0.subnetRoutes ?? [])
-    }
   }
 }
 
