@@ -30,8 +30,6 @@ public struct MachineWindow: View {
   @PresentationController private var presentation
   @TimerProperty private var timer
   
-  @State private var TEMP_isAutoUpdatingMachines = false
-  @State private var TEMP_isAutoUpdatingServices = false
   private var selectionForMenus: Set<Machine.Identifier> {
     return self.presentation.selection.isEmpty
            ? Set(self.table.lookUp.keys)
@@ -45,10 +43,16 @@ public struct MachineWindow: View {
       MachineTable(table: self.$table,
                    status: self.$status,
                    selection: self.$presentation.selection)
-      .navigationTitle("テスケモン・\(self.timer.hasElapsed(seconds: 10))")
+      .navigationTitle("テスケモン・\(self.timer.hasElapsed(seconds: self.settings.machineRefreshTime))")
       .navigationSubtitle(self.navigationTitleAppendString)
       .sheet(item: self.$presentation.showInfoPanel,
              content: { MachineInfoPanel($0) })
+      .onChange(of: self.timer.hasElapsed(seconds: self.settings.machineRefreshTime)) { _, fired in
+        guard self.settings.machineRefreshAuto, fired else { return }
+        self.performAsync {
+          try await self._table.updateMachines(with: self.settings.executable)
+        }
+      }
       .toolbar {
         ToolbarItem { self.editMenu    }
         ToolbarItem { self.refreshMenu }
@@ -94,11 +98,11 @@ public struct MachineWindow: View {
         Button("Refresh Machine Info", systemImage: "desktopcomputer") {
           self.performAsync { try await self._table.updateMachines(with: self.settings.executable) }
         }
-        Toggle(isOn: self.$TEMP_isAutoUpdatingMachines) {
+        Toggle(isOn: self.$settings.machineRefreshAuto) {
           Label("Automatically Refresh",
-                systemImage: self.TEMP_isAutoUpdatingMachines
-                ? "progress.indicator"
-                : "square")
+                systemImage: self.settings.machineRefreshAuto
+                             ? "progress.indicator"
+                             : "square")
         }
       }
       Section("Services") {
@@ -114,11 +118,11 @@ public struct MachineWindow: View {
                                                 batchSize: self.settings.batchSize)
           }
         }
-        Toggle(isOn: self.$TEMP_isAutoUpdatingServices) {
+        Toggle(isOn: self.$settings.statusRefreshAuto) {
           Label("Automatically Refresh",
-                systemImage: self.TEMP_isAutoUpdatingServices
-                ? "progress.indicator"
-                : "square")
+                systemImage: self.settings.statusRefreshAuto
+                             ? "progress.indicator"
+                             : "square")
         }
       }
       Button("Reset Data", systemImage: "trash") {

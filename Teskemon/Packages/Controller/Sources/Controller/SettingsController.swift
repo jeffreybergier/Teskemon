@@ -33,6 +33,10 @@ public struct SettingsController: DynamicProperty {
     public var batchSize = 10
     public var executable = Executable()
     public var customNames = [Machine.Identifier: String]()
+    public var statusRefreshTime: Int = 300
+    public var machineRefreshTime: Int = 10
+    public var statusRefreshAuto = false
+    public var machineRefreshAuto = true
     
     public mutating func delete(service: Service) {
       guard let index = self.services.firstIndex(where: { $0.id == service.id }) else { return }
