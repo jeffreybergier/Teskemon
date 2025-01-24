@@ -22,11 +22,11 @@ import Foundation
 
 public struct TailscaleCLIOutput: Codable, Hashable, Sendable {
   
+  public   var isLoading: Bool
   public   var tailscale: Tailscale?
   public   var machines:  [Machine]
   public   var users:     [Machine.Identifier: User]
-  public   var isLoading = false
-  public   var lookUp:    [Machine.Identifier: Machine]
+  internal var lookUp:    [Machine.Identifier: Machine]
   
   public subscript(id: Machine.Identifier) -> Machine {
     self.lookUp[id]!
@@ -45,6 +45,7 @@ public struct TailscaleCLIOutput: Codable, Hashable, Sendable {
   }
   
   public init() {
+    self.isLoading = false
     self.tailscale = nil
     self.machines  = []
     self.users     = [:]
@@ -53,7 +54,6 @@ public struct TailscaleCLIOutput: Codable, Hashable, Sendable {
   
   public init(data: Data) throws {
     let rawModel = try JSONDecoder().decode(JSON.TailscaleCLI.self, from: data)
-    
     let tailscale = Tailscale(version: rawModel.Version,
                               versionUpToDate: rawModel.ClientVersion?.runningLatest ?? false,
                               tunnelingEnabled: rawModel.TUN,
@@ -64,19 +64,17 @@ public struct TailscaleCLIOutput: Codable, Hashable, Sendable {
                               currentTailnet: rawModel.CurrentTailnet,
                               selfNodeID: rawModel.Self.map { .init(rawValue: $0.ID) },
                               selfUserID: rawModel.Self.map { .init(rawValue: $0.UserID) })
+    self.isLoading = false
     self.tailscale = tailscale
-    
     self.machines = {
       return ((rawModel.Peer.map { Array($0.values) } ?? [])
               + (rawModel.Self.map { [$0] } ?? []))              // Extract machines from dictionary and also add Self machine to list
               .sorted { $0.ID < $1.ID }                          // Sort the IDs in some deterministic way
               .map { Machine($0, selfID: tailscale.selfNodeID) } // Conver them into polished models
     }()
-    
     self.users = Dictionary<Machine.Identifier, User>(
       uniqueKeysWithValues: rawModel.User?.map { (.init(rawValue: $0), $1) } ?? []
     )
-    
     self.lookUp = Dictionary(uniqueKeysWithValues: self.machines.flatMap { machine in
       return [(machine.id, machine)] + (machine.subnetRoutes?.map { ($0.id, $0) } ?? [])
     })

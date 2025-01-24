@@ -49,10 +49,18 @@ public struct TableController: DynamicProperty {
   }
   
   public func updateMachines(with executable: SettingsController.Executable) async throws {
+    guard self.table.isLoading == false else { return }
     NSLog("[START] TableController.updateMachines()")
     self.table.isLoading = true
-    self.table = try await Process.cliOutput(with: executable.stringValue)
-    NSLog("[END  ] TableController.updateMachines()")
+    do {
+      self.table = try await Process.cliOutput(with: executable.stringValue)
+      self.table.isLoading = false
+      NSLog("[END  ] TableController.updateMachines()")
+    } catch {
+      self.table.isLoading = false
+      NSLog("[ERROR] TableController.updateMachines()")
+      throw error
+    }
   }
 }
 

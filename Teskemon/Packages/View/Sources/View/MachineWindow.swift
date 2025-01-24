@@ -43,13 +43,15 @@ public struct MachineWindow: View {
       MachineTable(table: self.$table,
                    status: self.$status,
                    selection: self.$presentation.selection)
-      .navigationTitle("テスケモン・\(self.timer.rawValue)")
+      .navigationTitle("テスケモン")
       .navigationSubtitle(self.navigationTitleAppendString)
       .sheet(item: self.$presentation.showInfoPanel,
              content: { MachineInfoPanel($0) })
       .onChange(of: self.timer.hasElapsed(seconds: self.settings.machineTimer.interval), initial: true) { _, fired in
         guard self.settings.machineTimer.automatic, fired else { return }
-        self.performAsync { try await self._table.updateMachines(with: self.settings.executable) }
+        self.performAsync {
+          try await self._table.updateMachines(with: self.settings.executable)
+        }
       }
       .onChange(of: self.timer.hasElapsed(seconds: self.settings.statusTimer.interval), initial: true) { _, fired in
         guard self.settings.statusTimer.automatic, fired else { return }
@@ -102,20 +104,17 @@ public struct MachineWindow: View {
   private var refreshMenu: some View {
     Menu {
       Section("Machines") {
-        Button("Refresh Machine Info", systemImage: "desktopcomputer") {
-          self.performAsync { try await self._table.updateMachines(with: self.settings.executable) }
+        Button("Refresh", systemImage: "desktopcomputer") {
+          self.performAsync {
+            try await self._table.updateMachines(with: self.settings.executable)
+          }
         }
-        Toggle(isOn: self.$settings.machineTimer.automatic) {
-          Label("Automatically Refresh",
-                systemImage: self.settings.machineTimer.automatic
-                             ? "progress.indicator"
-                             : "square")
-        }
+        Toggle("Automatic Refresh", isOn: self.$settings.machineTimer.automatic)
       }
       Section("Services") {
         Button(self.presentation.selection.isEmpty
-               ? "Refresh All Services"
-               : "Refresh Services for \(self.presentation.selection.count) Machine(s)",
+               ? "Refresh All"
+               : "Refresh \(self.presentation.selection.count) Machine(s)",
           systemImage: "network")
         {
           self.performAsync {
@@ -125,21 +124,19 @@ public struct MachineWindow: View {
                                                 batchSize: self.settings.batchSize)
           }
         }
-        Toggle(isOn: self.$settings.statusTimer.automatic) {
-          Label("Automatically Refresh",
-                systemImage: self.settings.statusTimer.automatic
-                             ? "progress.indicator"
-                             : "square")
-        }
+        Toggle("Automatic Refresh", isOn: self.$settings.statusTimer.automatic)
       }
       Button("Reset Data", systemImage: "trash") {
         self._status.resetData()
         self._table.resetData()
       }
     } label: {
-      Label("Refresh", systemImage: "arrow.clockwise")
+      Label("Refresh", systemImage: self.table.isLoading || self.status.isLoading
+            ? "progress.indicator"
+            : "arrow.clockwise")
     }
     .labelStyle(.titleAndIcon)
+    .disabled(self.table.isLoading || self.status.isLoading)
   }
   
   private var statusMenu: some View {

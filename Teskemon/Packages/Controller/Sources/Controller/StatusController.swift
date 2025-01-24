@@ -53,14 +53,22 @@ public struct StatusController: DynamicProperty {
                            timeout: Int,
                            batchSize: Int) async throws
   {
+    guard self.status.isLoading == false else { return }
     NSLog("[START] StatusController.updateStatus()")
     self.status.isLoading = true
-    try await Process.status(for: services,
-                             on: machines,
-                             bind: self.$status,
-                             timeout: timeout,
-                             batchSize: batchSize)
-    NSLog("[END  ] StatusController.updateStatus()")
+    do {
+      try await Process.status(for: services,
+                               on: machines,
+                               bind: self.$status,
+                               timeout: timeout,
+                               batchSize: batchSize)
+      self.status.isLoading = false
+      NSLog("[END  ] StatusController.updateStatus()")
+    } catch {
+      self.status.isLoading = false
+      NSLog("[ERROR] StatusController.updateStatus()")
+      throw error
+    }
   }
   
   public func resetData() {
