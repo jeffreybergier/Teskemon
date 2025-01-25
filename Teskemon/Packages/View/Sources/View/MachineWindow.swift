@@ -47,8 +47,20 @@ public struct MachineWindow: View {
           ProgressView(value: Double(self.services.progress.completedUnitCount),
                        total: Double(self.services.progress.totalUnitCount))
           .progressViewStyle(.linear)
-          .frame(width: 320)
+          .padding(EdgeInsets(top: 4,
+                              leading: 12,
+                              bottom: 5,
+                              trailing: 12))
+          .background {
+            UnevenRoundedRectangle(bottomLeadingRadius: 4,
+                                   style: .continuous)
+              .fill(.ultraThinMaterial)
+          }
+          .frame(width: 280)
+          .opacity(self.services.isLoading ? 1 : 0)
+          .offset(y: self.services.isLoading ? 0 : -20)
       }
+      .animation(.default, value: self.services.isLoading)
       .navigationTitle("テスケモン")
       .navigationSubtitle(self.navigationTitleAppendString)
       .sheet(item: self.$presentation.showInfoPanel,
