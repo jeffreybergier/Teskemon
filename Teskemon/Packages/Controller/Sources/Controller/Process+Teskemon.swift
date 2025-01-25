@@ -22,7 +22,7 @@ import Foundation
 
 extension Process {
   
-  internal struct Output: Sendable, Codable, Hashable {
+  internal struct Output: Sendable, Codable {
     internal let exitCode: Int
     internal let stdOut: Data
     internal let errOut: Data

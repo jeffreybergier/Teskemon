@@ -32,10 +32,10 @@ public struct SettingsWindow: View {
     TabView(selection: self.$settings.currentTab) {
       self.general.tabItem {
         Label("General", systemImage: "gear")
-      }.tag(SettingsController.Tab.general)
+      }.tag(SettingsTab.general)
       self.services.tabItem {
         Label("Services", systemImage: "network")
-      }.tag(SettingsController.Tab.services)
+      }.tag(SettingsTab.services)
     }
   }
   
@@ -45,9 +45,9 @@ public struct SettingsWindow: View {
               footer: Text(self.settings.executable.stringValue).font(.caption))
       {
         Picker("Location", selection: self.$settings.executable.option) {
-          Text("Command Line").tag(SettingsController.Executable.Options.cli)
-          Text("App Store").tag(SettingsController.Executable.Options.app)
-          Text("Custom").tag(SettingsController.Executable.Options.custom)
+          Text("Command Line").tag(SettingsExecutable.Options.cli)
+          Text("App Store").tag(SettingsExecutable.Options.app)
+          Text("Custom").tag(SettingsExecutable.Options.custom)
         }
         if self.settings.executable.option == .custom {
           TextField("Path", text: self.$settings.executable.rawValue)

@@ -48,12 +48,12 @@ public struct MachineController: DynamicProperty {
     // TODO: Figure out why clearing the cache here crashes it
   }
   
-  public func updateMachines(with executable: SettingsController.Executable) async throws {
+  public func updateMachines(with executable: SettingsExecutable) async throws {
     guard self.storage.isLoading == false else { return }
     NSLog("[START] TableController.updateMachines()")
     self.storage.isLoading = true
     do {
-      self.storage = try await Process.cliOutput(with: executable.stringValue)
+      self.storage = try await Process.machines(with: executable.stringValue)
       self.storage.isLoading = false
       NSLog("[END  ] TableController.updateMachines()")
     } catch {

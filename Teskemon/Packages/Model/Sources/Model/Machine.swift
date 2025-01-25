@@ -58,7 +58,7 @@ extension Machine {
     }
     
     public init(data: Data) throws {
-      let rawModel = try JSONDecoder().decode(JSON.TailscaleCLI.self, from: data)
+      let rawModel = try JSONDecoder().decode(TailscaleCLI.self, from: data)
       let tailscale = Tailscale(version: rawModel.Version,
                                 versionUpToDate: rawModel.ClientVersion?.runningLatest ?? false,
                                 tunnelingEnabled: rawModel.TUN,
@@ -69,13 +69,12 @@ extension Machine {
                                 currentTailnet: rawModel.CurrentTailnet,
                                 selfNodeID: rawModel.Self.map { .init(rawValue: $0.ID) },
                                 selfUserID: rawModel.Self.map { .init(rawValue: $0.UserID) })
-      self.isLoading = false
       self.tailscale = tailscale
       self.machines = {
         return ((rawModel.Peer.map { Array($0.values) } ?? [])
                 + (rawModel.Self.map { [$0] } ?? []))              // Extract machines from dictionary and also add Self machine to list
-                .sorted { $0.ID < $1.ID }                          // Sort the IDs in some deterministic way
-                .map { Machine($0, selfID: tailscale.selfNodeID) } // Conver them into polished models
+        .sorted { $0.ID < $1.ID }                          // Sort the IDs in some deterministic way
+        .map { Machine($0, selfID: tailscale.selfNodeID) } // Conver them into polished models
       }()
       self.users = Dictionary<Machine.Identifier, User>(
         uniqueKeysWithValues: rawModel.User?.map { (.init(rawValue: $0), $1) } ?? []
@@ -103,7 +102,7 @@ extension Machine {
   }
 }
 
-public struct Machine: Codable, Sendable, Identifiable, Hashable {
+public struct Machine: Codable, Sendable, Identifiable {
   
   public let id: Identifier
   public let name: String
@@ -129,7 +128,7 @@ public struct Machine: Codable, Sendable, Identifiable, Hashable {
   }
   
   /// Init for JSON from the Tailscale CLI
-  internal init(_ model: JSON.MachineCLI, selfID: Machine.Identifier?) {
+  internal init(_ model: MachineCLI, selfID: Machine.Identifier?) {
     self.id       = .init(rawValue: model.ID)
     self.name     = model.HostName
     self.url      = model.DNSName
@@ -177,7 +176,7 @@ extension Machine {
     }
   }
   
-  public struct Activity: Codable, Sendable, Hashable {
+  public struct Activity: Codable, Sendable {
     public let isOnline: Bool
     public let isActive: Bool
     public let rxBytes: Int64
@@ -185,11 +184,11 @@ extension Machine {
     public let lastSeen: Date?
   }
   
-  public enum Kind: Codable, Sendable, Hashable {
+  public enum Kind: Codable, Sendable {
     case meHost, remoteHost, meSubnet, remoteSubnet
   }
   
-  public enum Relay: Codable, Sendable, Hashable {
+  public enum Relay: Codable, Sendable {
     case relay(String)
     case route(id: Machine.Identifier, name: String)
     public var displayName: String {
@@ -200,7 +199,7 @@ extension Machine {
     }
   }
   
-  public struct NodeInfo: Codable, Sendable, Hashable {
+  public struct NodeInfo: Codable, Sendable {
     // Information
     public let publicKey: String
     public let keyExpiry: Date?
@@ -221,7 +220,7 @@ extension Machine {
   }
 }
 
-public struct User: Codable, Sendable, Hashable {
+public struct User: Codable, Sendable {
   public struct Identifier: Codable, Sendable, Hashable, Identifiable, RawRepresentable {
     public var id: Int { return self.rawValue }
     public let rawValue: Int
@@ -244,7 +243,7 @@ public struct User: Codable, Sendable, Hashable {
   }
 }
 
-public struct Tailscale: Codable, Sendable, Hashable {
+public struct Tailscale: Codable, Sendable {
   // Status
   public let version: String
   public let versionUpToDate: Bool
@@ -260,7 +259,7 @@ public struct Tailscale: Codable, Sendable, Hashable {
   public let selfUserID: User.Identifier?
 }
 
-public struct Tailnet: Codable, Sendable, Hashable {
+public struct Tailnet: Codable, Sendable {
   public let name: String
   public let magicDNSSuffix: String
   public let magicDNSEnabled: Bool
@@ -272,7 +271,7 @@ public struct Tailnet: Codable, Sendable, Hashable {
   }
 }
 
-public struct HealthEntry: Codable, RawRepresentable, Identifiable, Sendable, Hashable {
+public struct HealthEntry: Codable, RawRepresentable, Identifiable, Sendable {
   public var rawValue: String
   public var id: String { self.rawValue }
   public init(rawValue: String) {

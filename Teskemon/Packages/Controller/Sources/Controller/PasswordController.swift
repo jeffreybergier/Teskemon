@@ -99,11 +99,10 @@ extension PasswordController {
   }
 }
 
-// TODO: Move this type to Umbrella
-public enum Rumsfeld<T> {
+internal enum Rumsfeld<T> {
   case knownKnown(T)
   case knownUnknown
-  public var knownValue: T? {
+  internal var knownValue: T? {
     switch self {
     case .knownKnown(let value):
       return value

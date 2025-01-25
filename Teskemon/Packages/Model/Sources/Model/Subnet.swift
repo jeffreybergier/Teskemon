@@ -20,7 +20,7 @@
 
 import Foundation
 
-public struct Address: Codable, Hashable, Sendable, RawRepresentable {
+public struct Address: Codable, Sendable, RawRepresentable {
   public let rawValue: String
   public init(rawValue: String) {
     self.rawValue = rawValue

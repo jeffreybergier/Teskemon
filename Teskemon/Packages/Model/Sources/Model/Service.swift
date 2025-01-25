@@ -22,7 +22,7 @@ import Foundation
 
 public struct Service: Codable, Sendable, Hashable, Identifiable {
   
-  public enum Status: Codable, Sendable, Hashable {
+  public enum Status: Codable, Sendable {
     case unknown
     case error
     case online

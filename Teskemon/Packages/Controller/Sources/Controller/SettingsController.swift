@@ -26,62 +26,19 @@ import Model
 @propertyWrapper
 public struct SettingsController: DynamicProperty {
   
-  public struct Value: Codable {
-    public var currentTab = Tab.general
-    public var services = Service.default
-    public var timeout = 10
-    public var batchSize = 10
-    public var executable = Executable()
-    public var customNames = [Machine.Identifier: String]()
-    public var statusTimer = Timer(automatic: false, interval: 300)
-    public var machineTimer = Timer(automatic: true, interval: 10)
-    
-    public mutating func delete(service: Service) {
-      guard let index = self.services.firstIndex(where: { $0.id == service.id }) else { return }
-      self.services.remove(at: index)
-    }
-  }
+  public typealias Value = SettingsControllerValue
   
-  public enum Tab: Codable {
-    case general
-    case services
-  }
-  
-  public struct Timer: Codable {
-    public var automatic: Bool
-    public var interval: Int
-  }
-  
-  public struct Executable: Codable {
-    
-    public enum Options: CaseIterable, Codable {
-      case cli
-      case app
-      case custom
-    }
-    
-    public var option: Options = .cli
-    public var rawValue = ""
-    public var stringValue: String {
-      switch self.option {
-      case .cli:    return "/usr/local/bin/tailscale"
-      case .app:    return "/Applications/Tailscale.app/Contents/MacOS/Tailscale"
-      case .custom: return self.rawValue
-      }
-    }
-  }
-  
-  @JSBAppStorage("Settings") private var model = Value()
+  @JSBAppStorage("Settings") private var storage = Value()
   
   public init() { }
   
   public var wrappedValue: Value {
-    get { self.model }
-    nonmutating set { self.model = newValue }
+    get { self.storage }
+    nonmutating set { self.storage = newValue }
   }
   
   public var projectedValue: Binding<Value> {
-    return self.$model
+    return self.$storage
   }
   
 }
