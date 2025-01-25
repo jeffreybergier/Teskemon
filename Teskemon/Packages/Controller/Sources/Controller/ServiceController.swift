@@ -28,17 +28,17 @@ public struct ServiceController: DynamicProperty {
   
   public typealias Value = Service.ControllerValue
   
-  @JSBSceneStorage("Status") private var status = Value()
+  @JSBSceneStorage("Status") private var storage = Value()
   
   public init() { }
   
   public var wrappedValue: Value {
-    get { self.status }
-    nonmutating set { self.status = newValue }
+    get { self.storage }
+    nonmutating set { self.storage = newValue }
   }
   
   public var projectedValue: Binding<Value> {
-    return self.$status
+    return self.$storage
   }
   
   public func updateStatus(for services: [Service],
@@ -46,25 +46,25 @@ public struct ServiceController: DynamicProperty {
                            timeout: Int,
                            batchSize: Int) async throws
   {
-    guard self.status.isLoading == false else { return }
+    guard self.storage.isLoading == false else { return }
     NSLog("[START] StatusController.updateStatus()")
-    self.status.isLoading = true
+    self.storage.isLoading = true
     do {
       try await Process.serviceStatus(for: services,
                                       on: machines,
-                                      bind: self.$status,
+                                      bind: self.$storage,
                                       timeout: timeout,
                                       batchSize: batchSize)
-      self.status.isLoading = false
+      self.storage.isLoading = false
       NSLog("[END  ] StatusController.updateStatus()")
     } catch {
-      self.status.isLoading = false
+      self.storage.isLoading = false
       NSLog("[ERROR] StatusController.updateStatus()")
       throw error
     }
   }
   
   public func resetData() {
-    self.status = Value()
+    self.storage = Value()
   }
 }

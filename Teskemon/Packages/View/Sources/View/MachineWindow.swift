@@ -24,7 +24,7 @@ import Controller
 
 public struct MachineWindow: View {
   
-  @TableController private var table
+  @MachineController private var table
   @ServiceController private var status
   @SettingsController private var settings
   @PresentationController private var presentation

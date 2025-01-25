@@ -23,9 +23,9 @@ import Model
 
 extension Process {
   @MainActor
-  internal static func cliOutput(with executable: String) async throws -> TailscaleCLIOutput {
+  internal static func cliOutput(with executable: String) async throws -> MachineController.Value {
     let data = try await Process.execute(arguments: [executable, "status", "--json"]).stdOut
-    let model = try TailscaleCLIOutput(data: data)
+    let model = try MachineController.Value(data: data)
     return model
   }
 }

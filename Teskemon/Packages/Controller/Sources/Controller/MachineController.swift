@@ -24,40 +24,40 @@ import Umbrella
 
 @MainActor
 @propertyWrapper
-public struct TableController: DynamicProperty {
+public struct MachineController: DynamicProperty {
   
-  public typealias Value = TailscaleCLIOutput
+  public typealias Value = Machine.ControllerValue
   
-  @JSBSceneStorage("Table") private var table = TailscaleCLIOutput()
+  @JSBSceneStorage("Table") private var storage = Value()
 
   public init() {}
   
   public var wrappedValue: Value {
-    get { self.table }
-    nonmutating set { self.table = newValue }
+    get { self.storage }
+    nonmutating set { self.storage = newValue }
   }
   
   public var projectedValue: Binding<Value> {
-    self.$table
+    self.$storage
   }
   
   public func resetData() {
-    self.table.tailscale = nil
-    self.table.machines = []
-    self.table.users = [:]
+    self.storage.tailscale = nil
+    self.storage.machines = []
+    self.storage.users = [:]
     // TODO: Figure out why clearing the cache here crashes it
   }
   
   public func updateMachines(with executable: SettingsController.Executable) async throws {
-    guard self.table.isLoading == false else { return }
+    guard self.storage.isLoading == false else { return }
     NSLog("[START] TableController.updateMachines()")
-    self.table.isLoading = true
+    self.storage.isLoading = true
     do {
-      self.table = try await Process.cliOutput(with: executable.stringValue)
-      self.table.isLoading = false
+      self.storage = try await Process.cliOutput(with: executable.stringValue)
+      self.storage.isLoading = false
       NSLog("[END  ] TableController.updateMachines()")
     } catch {
-      self.table.isLoading = false
+      self.storage.isLoading = false
       NSLog("[ERROR] TableController.updateMachines()")
       throw error
     }

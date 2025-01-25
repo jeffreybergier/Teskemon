@@ -26,7 +26,7 @@ internal struct MachineInfoPanel: View {
   
   @Environment(\.dismiss) private var dismiss
   
-  @TableController private var table
+  @MachineController private var table
   @SettingsController private var settings
   @PasswordController private var passwords
 
