@@ -43,6 +43,12 @@ public struct MachineWindow: View {
       MachineTable(machines: self.$machines,
                    services: self.$services,
                    selection: self.$presentation.selection)
+      .overlay(alignment: .topTrailing) {
+          ProgressView(value: Double(self.services.progress.completedUnitCount),
+                       total: Double(self.services.progress.totalUnitCount))
+          .progressViewStyle(.linear)
+          .frame(width: 320)
+      }
       .navigationTitle("テスケモン")
       .navigationSubtitle(self.navigationTitleAppendString)
       .sheet(item: self.$presentation.showInfoPanel,

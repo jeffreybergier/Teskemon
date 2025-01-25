@@ -54,19 +54,31 @@ public struct Service: Codable, Sendable, Hashable, Identifiable {
 
 extension Service {
   public struct ControllerValue: Codable {
+    public   let progress: Progress = {
+      let progress = Progress(totalUnitCount: 0)
+      progress.completedUnitCount = 0
+      return progress
+    }()
+    
+    public   var isLoading: Bool {
+      self.progress.completedUnitCount != self.progress.totalUnitCount
+    }
+    
     internal var status: [Machine.Identifier: [Service: Service.Status]] = [:]
-    internal var ping: [Machine.Identifier: Status] = [:]
-    public var isLoading = false
+    internal var ping:   [Machine.Identifier: Status] = [:]
+    
     public subscript(id: Machine.Identifier, service: Service) -> Service.Status {
       get { self.status[id, default: [:]][service, default: .unknown] }
       set { self.status[id, default: [:]][service] = newValue }
     }
+    
     public subscript(id: Machine.Identifier) -> Service.Status {
       get { self.ping[id, default: .unknown] }
       set { self.ping[id] = newValue }
     }
+    
     public enum CodingKeys: String, CodingKey {
-      case status
+      case status, ping
     }
     public init() {}
   }

@@ -38,6 +38,9 @@ extension Process {
       }
     }
     
+    let progress = bind.wrappedValue.progress
+    progress.totalUnitCount += Int64(toProcess.count)
+    
     // Schedule Tasks
     for batch in toProcess.batch(into: batchSize) {
       try await withThrowingTaskGroup(of: (Machine.Identifier, Service, Service.Status).self)
@@ -55,6 +58,7 @@ extension Process {
         }
         // Update UI to show Result
         for try await (id, service, status) in group {
+          progress.completedUnitCount += 1
           bind.wrappedValue[id, service] = status
         }
       }
@@ -101,6 +105,9 @@ extension Process {
                                   lossThreshold: Double,
                                   batchSize: Int) async throws
   {
+    let progress = bind.wrappedValue.progress
+    progress.totalUnitCount += Int64(machines.count)
+    
     for batch in machines.batch(into: batchSize) {
       try await withThrowingTaskGroup(of: (Machine.Identifier, Service.Status).self)
       { group in
@@ -115,8 +122,10 @@ extension Process {
             return (machine.id, status)
           }
         }
+        
         // Update UI to show Result
         for try await (id, status) in group {
+          progress.completedUnitCount += 1
           bind.wrappedValue[id] = status
         }
       }

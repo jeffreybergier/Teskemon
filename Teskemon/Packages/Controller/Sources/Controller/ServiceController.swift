@@ -47,8 +47,13 @@ public struct ServiceController: DynamicProperty {
                            batchSize: Int) async throws
   {
     guard self.storage.isLoading == false else { return }
+    let onCompletion: () -> Void = {
+      self.storage.progress.totalUnitCount = 0
+      self.storage.progress.completedUnitCount = 0
+    }
+    
     NSLog("[START] StatusController.updateStatus()")
-    self.storage.isLoading = true
+    onCompletion()
     do {
       // TODO: Move into structure concurrency function
       try await Process.pingStatus(for: machines,
@@ -61,10 +66,10 @@ public struct ServiceController: DynamicProperty {
                                       bind: self.$storage,
                                       timeout: timeout,
                                       batchSize: batchSize)
-      self.storage.isLoading = false
+      onCompletion()
       NSLog("[END  ] StatusController.updateStatus()")
     } catch {
-      self.storage.isLoading = false
+      onCompletion()
       NSLog("[ERROR] StatusController.updateStatus()")
       throw error
     }
