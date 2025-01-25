@@ -32,7 +32,7 @@ internal struct MachineTable: View {
   // @PresentationController and @StatusController
   // They should also allowed to be @State and not @Binding
   @Binding internal var table: TableController.Value
-  @Binding internal var status: StatusController.Value
+  @Binding internal var status: ServiceController.Value
   @Binding internal var selection: Set<Machine.Identifier>
   
   internal var body: some View {

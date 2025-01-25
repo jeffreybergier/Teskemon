@@ -24,16 +24,9 @@ import Model
 
 @MainActor
 @propertyWrapper
-public struct StatusController: DynamicProperty {
+public struct ServiceController: DynamicProperty {
   
-  public struct Value: Codable {
-    internal var status: [Machine.Identifier: [Service: Service.Status]] = [:]
-    public var isLoading = false
-    public subscript(id: Machine.Identifier, service: Service) -> Service.Status {
-      get { self.status[id, default: [:]][service] ?? .unknown }
-      set { self.status[id, default: [:]][service] = newValue }
-    }
-  }
+  public typealias Value = Service.ControllerValue
   
   @JSBSceneStorage("Status") private var status = Value()
   
@@ -57,11 +50,11 @@ public struct StatusController: DynamicProperty {
     NSLog("[START] StatusController.updateStatus()")
     self.status.isLoading = true
     do {
-      try await Process.status(for: services,
-                               on: machines,
-                               bind: self.$status,
-                               timeout: timeout,
-                               batchSize: batchSize)
+      try await Process.serviceStatus(for: services,
+                                      on: machines,
+                                      bind: self.$status,
+                                      timeout: timeout,
+                                      batchSize: batchSize)
       self.status.isLoading = false
       NSLog("[END  ] StatusController.updateStatus()")
     } catch {

@@ -26,9 +26,8 @@ import Model
 @propertyWrapper
 public struct SettingsController: DynamicProperty {
   
-  // TODO: Move this to model
   public struct Value: Codable {
-    public var currentTab: Tab = .general
+    public var currentTab = Tab.general
     public var services = Service.default
     public var timeout = 10
     public var batchSize = 10

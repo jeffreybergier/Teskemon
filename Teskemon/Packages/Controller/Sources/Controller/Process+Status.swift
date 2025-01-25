@@ -24,11 +24,11 @@ import Model
 extension Process {
   
   @MainActor
-  internal static func status(for services: [Service],
-                              on  machines: [Machine],
-                              bind: Binding<StatusController.Value>,
-                              timeout: Int,
-                              batchSize: Int) async throws
+  internal static func serviceStatus(for services: [Service],
+                                     on  machines: [Machine],
+                                     bind: Binding<ServiceController.Value>,
+                                     timeout: Int,
+                                     batchSize: Int) async throws
   {
     
     // Create a single list of input so that we can batch this
@@ -40,13 +40,16 @@ extension Process {
     
     // Schedule Tasks
     for batch in toProcess.batch(into: batchSize) {
-      try await withThrowingTaskGroup(of: (Machine.Identifier, Service, Service.Status).self) { group in
+      try await withThrowingTaskGroup(of: (Machine.Identifier, Service, Service.Status).self)
+      { group in
         for (machine, service) in batch {
           // Mark service as processing
           bind.wrappedValue[machine.id, service] = .processing
           // Schedule new tasks
           group.addTask {
-            let status = try await status(for: service, on: machine, with: timeout)
+            let status = try await serviceStatus(for: service,
+                                                 on: machine,
+                                                 with: timeout)
             return (machine.id, service, status)
           }
         }
@@ -58,9 +61,9 @@ extension Process {
     }
   }
   
-  private static func status(for service: Service,
-                             on machine: Machine,
-                             with timeout: Int)
+  private static func serviceStatus(for service: Service,
+                                    on machine: Machine,
+                                    with timeout: Int)
   async throws -> Service.Status
   {
     // TODO: Switch to tailscale netcat

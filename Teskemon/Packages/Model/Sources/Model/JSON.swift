@@ -20,13 +20,17 @@
 
 import Foundation
 
-public struct TailscaleCLIOutput: Codable, Hashable, Sendable {
+public struct TailscaleCLIOutput: Codable {
   
-  public   var isLoading: Bool
+  public   var isLoading: Bool = false
   public   var tailscale: Tailscale?
   public   var machines:  [Machine]
   public   var users:     [Machine.Identifier: User]
   internal var lookUp:    [Machine.Identifier: Machine]
+  
+  public enum CodingKeys: String, CodingKey {
+    case tailscale, machines, users, lookUp
+  }
   
   public subscript(id: Machine.Identifier) -> Machine {
     self.lookUp[id]!

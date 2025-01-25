@@ -51,3 +51,18 @@ public struct Service: Codable, Sendable, Hashable, Identifiable {
     self.port = port
   }
 }
+
+extension Service {
+  public struct ControllerValue: Codable {
+    internal var status: [Machine.Identifier: [Service: Service.Status]] = [:]
+    public var isLoading = false
+    public subscript(id: Machine.Identifier, service: Service) -> Service.Status {
+      get { self.status[id, default: [:]][service] ?? .unknown }
+      set { self.status[id, default: [:]][service] = newValue }
+    }
+    public enum CodingKeys: String, CodingKey {
+      case status
+    }
+    public init() {}
+  }
+}
