@@ -50,6 +50,12 @@ public struct ServiceController: DynamicProperty {
     NSLog("[START] StatusController.updateStatus()")
     self.storage.isLoading = true
     do {
+      // TODO: Move into structure concurrency function
+      try await Process.pingStatus(for: machines,
+                                   bind: self.$storage,
+                                   pingCount: 12,
+                                   lossThreshold: 30,
+                                   batchSize: batchSize)
       try await Process.serviceStatus(for: services,
                                       on: machines,
                                       bind: self.$storage,

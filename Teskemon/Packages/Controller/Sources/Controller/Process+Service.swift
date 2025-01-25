@@ -93,6 +93,72 @@ extension Process {
       return .error
     }
   }
+  
+  @MainActor
+  internal static func pingStatus(for  machines: [Machine],
+                                  bind: Binding<ServiceController.Value>,
+                                  pingCount: Int,
+                                  lossThreshold: Double,
+                                  batchSize: Int) async throws
+  {
+    for batch in machines.batch(into: batchSize) {
+      try await withThrowingTaskGroup(of: (Machine.Identifier, Service.Status).self)
+      { group in
+        for machine in batch {
+          // Mark service as processing
+          bind.wrappedValue[machine.id] = .processing
+          // Schedule new tasks
+          group.addTask {
+            let status = try await pingStatus(for: machine,
+                                              pingCount: pingCount,
+                                              lossThreshold: lossThreshold)
+            return (machine.id, status)
+          }
+        }
+        // Update UI to show Result
+        for try await (id, status) in group {
+          bind.wrappedValue[id] = status
+        }
+      }
+    }
+  }
+  
+  private static func pingStatus(for machine: Machine,
+                                 pingCount: Int,
+                                 lossThreshold: Double)
+                                 async throws -> Service.Status
+  {
+    
+    /* Example ping output
+     - 0 : "PING 192.168.0.104 (192.168.0.104): 56 data bytes"
+     - 1 : "Request timeout for icmp_seq 0"
+     - 2 : "Request timeout for icmp_seq 1"
+     - 3 : "Request timeout for icmp_seq 2"
+     - 4 : "64 bytes from 192.168.0.104: icmp_seq=0 ttl=64 time=3098.041 ms"
+     - 5 : "64 bytes from 192.168.0.104: icmp_seq=1 ttl=64 time=3092.916 ms"
+     - 6 : "64 bytes from 192.168.0.104: icmp_seq=2 ttl=64 time=3057.906 ms"
+     - 7 : "64 bytes from 192.168.0.104: icmp_seq=3 ttl=64 time=3049.467 ms"
+     - 8 : "64 bytes from 192.168.0.104: icmp_seq=4 ttl=64 time=3091.692 ms"
+     - 9 : "Request timeout for icmp_seq 8"
+     - 10 : "Request timeout for icmp_seq 9"
+     - 11 : "Request timeout for icmp_seq 10"
+     - 12 : "--- 192.168.0.104 ping statistics ---"
+     - 13 : "12 packets transmitted, 5 packets received, 58.3% packet loss"   <--- Select this row
+     - 14 : "round-trip min/avg/max/stddev = 3049.467/3078.004/3098.041/20.147 ms"
+     */
+    let arguments: [String] = [
+      "/sbin/ping",
+      "-c \(pingCount)",
+      machine.url,
+    ]
+    let output = try await Process.execute(arguments: arguments)
+    let outputString = String(data: output.stdOut, encoding: .utf8) ?? ""
+    // "12 packets transmitted, 5 packets received, 58.3% packet loss"
+    let regex = try Regex(#", (\d+\.\d+)% packet loss"#)
+    let matchString = outputString.firstMatch(of: regex)?.output.last?.substring ?? ""
+    let matchNumber = Double(matchString) ?? 100
+    return matchNumber > lossThreshold ? .offline : .online
+  }
 }
 
 extension Array {
