@@ -94,7 +94,7 @@ extension Machine {
       var components = URLComponents()
       components.host = machine.url
       components.port = service.port
-      components.scheme = service.protocol
+      components.scheme = service.scheme
       components.user = username
       components.password = password
       return components.url!

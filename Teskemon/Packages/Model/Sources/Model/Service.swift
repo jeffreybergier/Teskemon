@@ -32,22 +32,22 @@ public struct Service: Codable, Sendable, Hashable, Identifiable {
   
   public static let `default`: [Service] = {
     return [
-      Service(name: "AFP", protocol: "afp", port: 548),
-      Service(name: "SSH", protocol: "ssh", port: 22),
-      Service(name: "SMB", protocol: "smb", port: 445),
-      Service(name: "RDP", protocol: "rdp", port: 3389),
-      Service(name: "VNC", protocol: "vnc", port: 5900),
+      Service(name: "AFP", scheme: "afp", port: 548),
+      Service(name: "SSH", scheme: "ssh", port: 22),
+      Service(name: "SMB", scheme: "smb", port: 445),
+      Service(name: "RDP", scheme: "rdp", port: 3389),
+      Service(name: "VNC", scheme: "vnc", port: 5900),
     ]
   }()
   
   public var name: String
-  public var `protocol`: String
+  public var scheme: String
   public var port: Int
   public var id: Int = Int.random(in: 0...10_000)
   
-  public init(name: String = "", protocol: String = "", port: Int = 0) {
+  public init(name: String = "", scheme: String = "", port: Int = 0) {
     self.name = name
-    self.protocol = `protocol`
+    self.scheme = scheme
     self.port = port
   }
 }
@@ -55,10 +55,15 @@ public struct Service: Codable, Sendable, Hashable, Identifiable {
 extension Service {
   public struct ControllerValue: Codable {
     internal var status: [Machine.Identifier: [Service: Service.Status]] = [:]
+    internal var ping: [Machine.Identifier: Status] = [:]
     public var isLoading = false
     public subscript(id: Machine.Identifier, service: Service) -> Service.Status {
-      get { self.status[id, default: [:]][service] ?? .unknown }
+      get { self.status[id, default: [:]][service, default: .unknown] }
       set { self.status[id, default: [:]][service] = newValue }
+    }
+    public subscript(id: Machine.Identifier) -> Service.Status {
+      get { self.ping[id, default: .unknown] }
+      set { self.ping[id] = newValue }
     }
     public enum CodingKeys: String, CodingKey {
       case status

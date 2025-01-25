@@ -88,7 +88,7 @@ public struct SettingsWindow: View {
           TextField("", text: service.name)
         }
         TableColumn("Protocol") { service in
-          TextField("", text: service.protocol)
+          TextField("", text: service.scheme)
         }.width(64)
         TableColumn("Port") { service in
           TextField("", text: service.port.map(get: { $0.description },

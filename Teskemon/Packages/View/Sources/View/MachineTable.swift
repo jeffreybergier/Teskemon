@@ -64,6 +64,10 @@ internal struct MachineTable: View {
         TableRowActivity(activity: machine.activity)
       }.width(ideal: 96)
       
+      TableColumn("Ping") { machine in
+        TableRowPing(status: self.services[machine.id])
+      }.width(24)
+      
       TableColumnForEach(self.settings.services) { service in
         TableColumn(service.name + String(format: " (%d)", service.port)) { machine in
           TableRowStatus(status: self.services[machine.id, service],
@@ -192,6 +196,46 @@ internal struct TableRowActivity: View {
       Image(systemName: "circle.dotted")
         .font(.headline)
         .foregroundStyle(Color(nsColor: .systemGray).gradient)
+    }
+  }
+}
+
+internal struct TableRowPing: View {
+  
+  internal let status: Service.Status
+  
+  internal var body: some View {
+    Label {
+      Text(self.help)
+    } icon: {
+      switch self.status {
+      case .online:
+        Image(systemName: "circle.fill")
+          .foregroundStyle(Color(nsColor: .systemGreen).gradient)
+      case .offline:
+        Image(systemName: "stop.fill")
+          .foregroundStyle(Color(nsColor: .systemRed).gradient)
+      case .error:
+        Image(systemName: "exclamationmark.triangle.fill")
+          .foregroundStyle(Color(nsColor: .systemYellow).gradient)
+      case .unknown:
+        Image(systemName: "questionmark.diamond.fill")
+          .foregroundStyle(Color(nsColor: .systemGray).gradient)
+      case .processing:
+        Image(systemName: "progress.indicator")
+      }
+    }
+    .labelStyle(.iconOnly)
+    .help(self.help)
+  }
+  
+  private var help: String {
+    switch self.status {
+    case .unknown: return "Ping: Not yet run"
+    case .error: return "Ping: Timeout"
+    case .online: return "Ping: Machine Online"
+    case .offline: return "Ping: Machine Offline"
+    case .processing: return "Pinging"
     }
   }
 }
