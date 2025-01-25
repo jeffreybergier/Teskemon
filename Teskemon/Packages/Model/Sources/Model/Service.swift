@@ -53,7 +53,7 @@ public struct Service: Codable, Sendable, Hashable, Identifiable {
 }
 
 extension Service {
-  public struct ControllerValue: Codable {
+  public struct ControllerValue: Codable, Sendable {
     public   let progress: Progress = {
       let progress = Progress(totalUnitCount: 0)
       progress.completedUnitCount = 0

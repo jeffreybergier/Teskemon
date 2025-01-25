@@ -24,6 +24,40 @@ import Model
 extension Process {
   
   @MainActor
+  internal static func allStatus(services: [Service],
+                                 machines: [Machine],
+                                 netcatTimeout: Int,
+                                 pingCount: Int,
+                                 pingLossThreshold: Double,
+                                 batchSize: Int,
+                                 bind: Binding<ServiceController.Value>)
+                                 async throws
+  {
+    let progress = bind.wrappedValue.progress
+    progress.totalUnitCount += 2
+    try await withThrowingTaskGroup(of: Void.self) { group in
+      group.addTask {
+        try await self.pingStatus(for: machines,
+                                  bind: bind,
+                                  pingCount: pingCount,
+                                  lossThreshold: pingLossThreshold,
+                                  batchSize: batchSize/2)
+      }
+      group.addTask {
+        try await self.serviceStatus(for: services,
+                                     on: machines,
+                                     bind: bind,
+                                     timeout: netcatTimeout,
+                                     batchSize: batchSize/2)
+      }
+      for try await _ in group {
+        progress.completedUnitCount += 1
+        return ()
+      }
+    }
+  }
+  
+  @MainActor
   internal static func serviceStatus(for services: [Service],
                                      on  machines: [Machine],
                                      bind: Binding<ServiceController.Value>,
@@ -68,7 +102,7 @@ extension Process {
   private static func serviceStatus(for service: Service,
                                     on machine: Machine,
                                     with timeout: Int)
-  async throws -> Service.Status
+                                    async throws -> Service.Status
   {
     // TODO: Switch to tailscale netcat
     // TODO: Add support for tailscale ping
