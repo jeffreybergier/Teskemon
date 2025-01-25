@@ -103,20 +103,17 @@ public struct MachineWindow: View {
   
   private var refreshMenu: some View {
     Menu {
-      Section("Machines") {
-        Button("Refresh", systemImage: "desktopcomputer") {
+      Section (self.presentation.selection.isEmpty
+               ? "Refresh All Machines"
+               : "Refresh \(self.selectionForMenus.count) Machine(s)")
+      {
+        Button("Machines", systemImage: "person.2.arrow.trianglehead.counterclockwise") {
           self.performAsync {
             try await self._machines.updateMachines(with: self.settings.executable)
           }
         }
-        Toggle("Automatic Refresh", isOn: self.$settings.machineTimer.automatic)
-      }
-      Section("Services") {
-        Button(self.presentation.selection.isEmpty
-               ? "Refresh All"
-               : "Refresh \(self.presentation.selection.count) Machine(s)",
-          systemImage: "network")
-        {
+        .disabled(self.isAwaitingRefresh)
+        Button("Services", systemImage: "slider.horizontal.2.arrow.trianglehead.counterclockwise") {
           self.performAsync {
             try await self._services.updateStatus(for: self.settings.services,
                                                 on: self.machines.machines(for: self.selectionForMenus),
@@ -124,19 +121,39 @@ public struct MachineWindow: View {
                                                 batchSize: self.settings.batchSize)
           }
         }
-        Toggle("Automatic Refresh", isOn: self.$settings.statusTimer.automatic)
+        .disabled(self.isAwaitingRefresh)
       }
-      Button("Reset Data", systemImage: "trash") {
+      Section("Automatic Refresh") {
+        Toggle(isOn: self.$settings.machineTimer.automatic) {
+          Label("Machines", systemImage: self.settings.machineTimer.automatic
+                                         ? "autostartstop"
+                                         : "autostartstop.slash")
+        }
+        Toggle(isOn: self.$settings.statusTimer.automatic) {
+          Label("Services", systemImage: self.settings.statusTimer.automatic
+                                         ? "autostartstop"
+                                         : "autostartstop.slash")
+        }
+      }
+      Button("Deselect All", systemImage: "cursorarrow.slash") {
+        self.presentation.selection = []
+      }
+      .disabled(self.presentation.selection.isEmpty)
+      Button("Clear Cache", systemImage: "trash") {
         self._services.resetData()
         self._machines.resetData()
       }
+      .disabled(self.isAwaitingRefresh)
     } label: {
-      Label("Refresh", systemImage: self.machines.isLoading || self.services.isLoading
-            ? "progress.indicator"
-            : "arrow.clockwise")
+      Label("Refresh", systemImage: self.isAwaitingRefresh
+                                    ? "progress.indicator"
+                                    : "arrow.clockwise")
     }
     .labelStyle(.titleAndIcon)
-    .disabled(self.machines.isLoading || self.services.isLoading)
+  }
+  
+  private var isAwaitingRefresh: Bool {
+    self.machines.isLoading || self.services.isLoading
   }
   
   private var statusMenu: some View {
