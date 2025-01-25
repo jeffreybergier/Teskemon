@@ -1,5 +1,5 @@
 //
-//  Created by Jeffrey Bergier on 2025/01/19.
+//  Created by Jeffrey Bergier on 2025/01/25.
 //  Copyright © 2025 Saturday Apps.
 //
 //  This file is part of Teskemon, a macOS App.
@@ -18,26 +18,21 @@
 //  along with Teskemon.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-import SwiftUI
-import Umbrella
-import Model
+import Foundation
 
-@MainActor
-@propertyWrapper
-public struct PresentationController: DynamicProperty {
-  
-  public typealias Value = PresentationControllerValue
-  
-  @JSBSceneStorage("Presentation") private var storage = Value()
-  
+public struct PresentationControllerValue: Codable {
+  public var selection = Set<Machine.Identifier>()
+  public var showInfoPanel: PresentationInfoPanelInput?
+  public var showsPasswords = false
   public init() { }
-  
-  public var wrappedValue: Value {
-    get { self.storage }
-    nonmutating set { self.storage = newValue }
-  }
-  
-  public var projectedValue: Binding<Value> {
-    return self.$storage
+}
+
+public struct PresentationInfoPanelInput: Identifiable, Codable {
+  public var id: [Machine.Identifier] { self.selection }
+  public var currentTab: Int
+  public var selection: [Machine.Identifier]
+  public init(tab: Int = 0, _ selection: Set<Machine.Identifier> = []) {
+    self.currentTab = tab
+    self.selection = selection.sorted(by: { $0.rawValue < $1.rawValue })
   }
 }

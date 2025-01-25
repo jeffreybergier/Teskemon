@@ -24,15 +24,15 @@ import Controller
 
 public struct MachineWindow: View {
   
-  @MachineController private var table
-  @ServiceController private var status
+  @MachineController  private var machines
+  @ServiceController  private var services
   @SettingsController private var settings
   @PresentationController private var presentation
   @TimerProperty private var timer
   
   private var selectionForMenus: Set<Machine.Identifier> {
     return self.presentation.selection.isEmpty
-           ? self.table.allIdentifiers()
+           ? self.machines.allIdentifiers()
            : self.presentation.selection
   }
   
@@ -40,24 +40,24 @@ public struct MachineWindow: View {
   
   public var body: some View {
     NavigationStack {
-      MachineTable(table: self.$table,
-                   status: self.$status,
+      MachineTable(machines: self.$machines,
+                   services: self.$services,
                    selection: self.$presentation.selection)
       .navigationTitle("テスケモン")
       .navigationSubtitle(self.navigationTitleAppendString)
       .sheet(item: self.$presentation.showInfoPanel,
-             content: { MachineInfoPanel($0) })
+             content: { InfoSheet($0) })
       .onChange(of: self.timer.hasElapsed(seconds: self.settings.machineTimer.interval), initial: true) { _, fired in
         guard self.settings.machineTimer.automatic, fired else { return }
         self.performAsync {
-          try await self._table.updateMachines(with: self.settings.executable)
+          try await self._machines.updateMachines(with: self.settings.executable)
         }
       }
       .onChange(of: self.timer.hasElapsed(seconds: self.settings.statusTimer.interval), initial: true) { _, fired in
         guard self.settings.statusTimer.automatic, fired else { return }
         self.performAsync {
-          try await self._status.updateStatus(for: self.settings.services,
-                                              on: self.table.allMachines(),
+          try await self._services.updateStatus(for: self.settings.services,
+                                              on: self.machines.allMachines(),
                                               timeout: self.settings.timeout,
                                               batchSize: self.settings.batchSize)
         }
@@ -71,7 +71,7 @@ public struct MachineWindow: View {
   }
   
   private var navigationTitleAppendString: String {
-    guard let tailscale = self.table.tailscale, let name = tailscale.currentTailnet?.name else { return "" }
+    guard let tailscale = self.machines.tailscale, let name = tailscale.currentTailnet?.name else { return "" }
     return name + "・" + tailscale.magicDNSSuffix 
   }
   
@@ -106,7 +106,7 @@ public struct MachineWindow: View {
       Section("Machines") {
         Button("Refresh", systemImage: "desktopcomputer") {
           self.performAsync {
-            try await self._table.updateMachines(with: self.settings.executable)
+            try await self._machines.updateMachines(with: self.settings.executable)
           }
         }
         Toggle("Automatic Refresh", isOn: self.$settings.machineTimer.automatic)
@@ -118,8 +118,8 @@ public struct MachineWindow: View {
           systemImage: "network")
         {
           self.performAsync {
-            try await self._status.updateStatus(for: self.settings.services,
-                                                on: self.table.machines(for: self.selectionForMenus),
+            try await self._services.updateStatus(for: self.settings.services,
+                                                on: self.machines.machines(for: self.selectionForMenus),
                                                 timeout: self.settings.timeout,
                                                 batchSize: self.settings.batchSize)
           }
@@ -127,24 +127,24 @@ public struct MachineWindow: View {
         Toggle("Automatic Refresh", isOn: self.$settings.statusTimer.automatic)
       }
       Button("Reset Data", systemImage: "trash") {
-        self._status.resetData()
-        self._table.resetData()
+        self._services.resetData()
+        self._machines.resetData()
       }
     } label: {
-      Label("Refresh", systemImage: self.table.isLoading || self.status.isLoading
+      Label("Refresh", systemImage: self.machines.isLoading || self.services.isLoading
             ? "progress.indicator"
             : "arrow.clockwise")
     }
     .labelStyle(.titleAndIcon)
-    .disabled(self.table.isLoading || self.status.isLoading)
+    .disabled(self.machines.isLoading || self.services.isLoading)
   }
   
   private var statusMenu: some View {
     Menu {
       Section("Tailscale") {
-        switch (self.table.tailscale?.backendState) {
+        switch (self.machines.tailscale?.backendState) {
         case .some(let value) where value == "Running":
-          Label(self.table.tailscale?.backendState ?? "–", systemImage: "circle.fill")
+          Label(self.machines.tailscale?.backendState ?? "–", systemImage: "circle.fill")
             .foregroundStyle(Color(nsColor: .systemGreen).gradient, .black.gradient)
         case .some(let value) where value == "Stopped":
           Label(value, systemImage: "stop.fill")
@@ -157,12 +157,12 @@ public struct MachineWindow: View {
         }
       }
       Section("Account") {
-        Label(self.table.tailscale?.currentTailnet?.name ?? "–", systemImage: "person.circle")
+        Label(self.machines.tailscale?.currentTailnet?.name ?? "–", systemImage: "person.circle")
       }
       Section("Domain") {
-        Label(self.table.tailscale?.magicDNSSuffix ?? "–", systemImage: "network")
+        Label(self.machines.tailscale?.magicDNSSuffix ?? "–", systemImage: "network")
       }
-      switch (self.table.tailscale) {
+      switch (self.machines.tailscale) {
       case .some(let tailscale) where tailscale.versionUpToDate == true:
         Section("Version – Up to Date") {
           Label(tailscale.version, systemImage: "circle.fill")
@@ -179,7 +179,7 @@ public struct MachineWindow: View {
         }
       }
       Section("MagicDNS") {
-        switch (self.table.tailscale?.currentTailnet?.magicDNSEnabled) {
+        switch (self.machines.tailscale?.currentTailnet?.magicDNSEnabled) {
         case .some(let magicDNSEnabled) where magicDNSEnabled == true:
           Label("Enabled", systemImage: "circle.fill")
             .foregroundStyle(Color(nsColor: .systemGreen).gradient, .black)
@@ -191,7 +191,7 @@ public struct MachineWindow: View {
         }
       }
       Section("Tunneling") {
-        switch (self.table.tailscale?.tunnelingEnabled) {
+        switch (self.machines.tailscale?.tunnelingEnabled) {
         case .some(let tunnelingEnabled) where tunnelingEnabled == true:
           Label("Enabled", systemImage: "circle.fill")
             .foregroundStyle(Color(nsColor: .systemGreen).gradient, .black)
@@ -203,7 +203,7 @@ public struct MachineWindow: View {
         }
       }
       Section("Node Key") {
-        switch (self.table.tailscale?.haveNodeKey) {
+        switch (self.machines.tailscale?.haveNodeKey) {
         case .some(let haveNodeKey) where haveNodeKey == true:
           Label("Present", systemImage: "circle.fill")
             .foregroundStyle(Color(nsColor: .systemGreen).gradient, .black)
@@ -215,13 +215,13 @@ public struct MachineWindow: View {
         }
       }
       Button("Select this Machine", systemImage: "cursorarrow.rays") {
-        self.presentation.selection = self.table.tailscale?.selfNodeID.map { [$0] } ?? []
+        self.presentation.selection = self.machines.tailscale?.selfNodeID.map { [$0] } ?? []
       }
-      .disabled(self.table.tailscale?.selfNodeID == nil)
+      .disabled(self.machines.tailscale?.selfNodeID == nil)
     } label: {
-      switch (self.table.tailscale?.backendState) {
+      switch (self.machines.tailscale?.backendState) {
       case .some(let value) where value == "Running":
-        Label(self.table.tailscale?.backendState ?? "–", systemImage: "circle.fill")
+        Label(self.machines.tailscale?.backendState ?? "–", systemImage: "circle.fill")
           .foregroundStyle(Color(nsColor: .systemGreen).gradient, .black.gradient)
       case .some(let value) where value == "Stopped":
         Label(value, systemImage: "stop.fill")

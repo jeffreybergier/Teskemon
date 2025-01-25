@@ -52,11 +52,11 @@ public struct TimerProperty: DynamicProperty {
   
   internal static let sharedTimer = Object()
   
-  @ObservedObject private var timerObject = TimerProperty.sharedTimer
+  @ObservedObject private var storage = TimerProperty.sharedTimer
   
   public init() {}
   
   public var wrappedValue: Value {
-    return self.timerObject.value
+    return self.storage.value
   }
 }

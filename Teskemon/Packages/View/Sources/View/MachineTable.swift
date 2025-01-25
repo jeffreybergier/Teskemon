@@ -31,12 +31,12 @@ internal struct MachineTable: View {
   // I should be able to directly use
   // @PresentationController and @StatusController
   // They should also allowed to be @State and not @Binding
-  @Binding internal var table: MachineController.Value
-  @Binding internal var status: ServiceController.Value
+  @Binding internal var machines: MachineController.Value
+  @Binding internal var services: ServiceController.Value
   @Binding internal var selection: Set<Machine.Identifier>
   
   internal var body: some View {
-    Table(self.table.machines,
+    Table(self.machines.machines,
           children: \.subnetRoutes,
           selection: self.$selection)
     {
@@ -66,8 +66,8 @@ internal struct MachineTable: View {
       
       TableColumnForEach(self.settings.services) { service in
         TableColumn(service.name + String(format: " (%d)", service.port)) { machine in
-          TableRowStatus(status: self.status[machine.id, service],
-                         url:    self.table.url(for: service,
+          TableRowStatus(status: self.services[machine.id, service],
+                         url:    self.machines.url(for: service,
                                                 on: machine.id,
                                                 username: self.passwords[.username, machine.id],
                                                 password: self.passwords[.password, machine.id]))

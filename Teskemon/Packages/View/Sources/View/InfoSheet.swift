@@ -22,18 +22,18 @@ import SwiftUI
 import Model
 import Controller
 
-internal struct MachineInfoPanel: View {
+internal struct InfoSheet: View {
   
   @Environment(\.dismiss) private var dismiss
   
-  @MachineController private var table
+  @MachineController  private var machines
   @SettingsController private var settings
   @PasswordController private var passwords
 
   @State private var currentTab: Int
   private let selection: [Machine.Identifier]
   
-  internal init(_ input: PresentationController.InfoPanelInput) {
+  internal init(_ input: PresentationInfoPanelInput) {
     _currentTab = .init(initialValue: input.currentTab)
     selection = input.selection
   }
@@ -69,12 +69,12 @@ internal struct MachineInfoPanel: View {
   private var namesTable: some View {
     Table(self.selection) {
       TableColumn("Original Name") { id in
-        Text(self.table[id].name)
+        Text(self.machines[id].name)
           .font(.body)
       }.width(120)
       TableColumn("Custom Name") { id in
         TextField("", text: self.customNameBinding(for: id),
-                    prompt: Text(self.table[id].name))
+                    prompt: Text(self.machines[id].name))
         .font(.headline)
       }
     }
@@ -83,7 +83,7 @@ internal struct MachineInfoPanel: View {
   private var passwordsTable: some View {
     Table(self.selection) {
       TableColumn("Name") { id in
-        Text(self.settings.customNames[id] ?? self.table[id].name)
+        Text(self.settings.customNames[id] ?? self.machines[id].name)
           .font(.body)
       }.width(120)
       TableColumn("Username") { id in

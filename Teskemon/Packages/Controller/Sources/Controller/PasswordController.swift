@@ -55,8 +55,8 @@ extension PasswordController {
     
     private var cache: [Namespace: [Machine.Identifier: Rumsfeld<String>]] = {
       return [
-        .username: .init(),
-        .password: .init()
+        .username: [:],
+        .password: [:]
       ]
     }()
     
