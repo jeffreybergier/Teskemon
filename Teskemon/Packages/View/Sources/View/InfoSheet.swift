@@ -42,13 +42,13 @@ internal struct InfoSheet: View {
     NavigationStack {
       TabView(selection: self.$currentTab) {
         self.machineInfo.tabItem {
-          Label("Info", systemImage: "info.circle")
+          Label.info
         }.tag(0)
         self.namesTable.tabItem {
-          Label("Names", systemImage: "person")
+          Label.names
         }.tag(1)
         self.passwordsTable.tabItem {
-          Label("Passwords", systemImage: "ellipsis.rectangle")
+          Label.passwords
         }.tag(2)
       }
       .frame(width: 480, height: 320)

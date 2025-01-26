@@ -115,7 +115,7 @@ public struct MachineWindow: View {
       }
       .disabled(self.presentation.selection.isEmpty)
     } label: {
-      Label("Edit", systemImage: "desktopcomputer")
+      Label.edit
     }
     .labelStyle(.titleAndIcon)
   }
@@ -144,14 +144,14 @@ public struct MachineWindow: View {
       }
       Section("Automatic Refresh") {
         Toggle(isOn: self.$settings.machineTimer.automatic) {
-          Label("Machines", systemImage: self.settings.machineTimer.automatic
-                                         ? "autostartstop"
-                                         : "autostartstop.slash")
+          self.settings.machineTimer.automatic
+              ? Label.machinesRefreshOn
+              : Label.machinesRefreshOff
         }
         Toggle(isOn: self.$settings.statusTimer.automatic) {
-          Label("Services", systemImage: self.settings.statusTimer.automatic
-                                         ? "autostartstop"
-                                         : "autostartstop.slash")
+          self.settings.statusTimer.automatic
+              ? Label.servicesRefreshOn
+              : Label.servicesRefreshOff
         }
       }
       Button("Deselect All", systemImage: "cursorarrow.slash") {
@@ -191,74 +191,63 @@ public struct MachineWindow: View {
       Section("Tailscale") {
         switch (self.machines.tailscale?.backendState) {
         case .some(let value) where value == "Running":
-          Label(self.machines.tailscale?.backendState ?? "–", systemImage: "circle.fill")
-            .foregroundStyle(Color(nsColor: .systemGreen).gradient, .black.gradient)
+          Label.statusEnabled(self.machines.tailscale?.backendState)
         case .some(let value) where value == "Stopped":
-          Label(value, systemImage: "stop.fill")
-            .foregroundStyle(Color(nsColor: .systemRed).gradient, .black.gradient)
+          Label.statusDisabled(value)
         case .some(let value):
-          Label(value, systemImage: "triangle.fill")
-            .foregroundStyle(Color(nsColor: .systemYellow).gradient, .black.gradient)
+          Label.statusUnknown(value)
         case .none:
-          Label("–", systemImage: "triangle.fill")
+          Label.statusUnknown
         }
       }
       Section("Account") {
-        Label(self.machines.tailscale?.currentTailnet?.name ?? "–", systemImage: "person.circle")
+        Label.personCircle(self.machines.tailscale?.currentTailnet?.name)
       }
       Section("Domain") {
-        Label(self.machines.tailscale?.magicDNSSuffix ?? "–", systemImage: "network")
+        Label.network(self.machines.tailscale?.magicDNSSuffix)
       }
       switch (self.machines.tailscale) {
       case .some(let tailscale) where tailscale.versionUpToDate == true:
         Section("Version – Up to Date") {
-          Label(tailscale.version, systemImage: "circle.fill")
-            .foregroundStyle(Color(nsColor: .systemGreen).gradient, .black)
+          Label.statusEnabled(tailscale.version)
         }
       case .some(let tailscale):
         Section("Version – Update Available") {
-          Label(tailscale.version, systemImage: "triangle.fill")
-            .foregroundStyle(Color(nsColor: .systemYellow).gradient, .black)
+          Label.statusUnknown(tailscale.version)
         }
       case .none:
         Section("Version") {
-          Label("–", systemImage: "triangle.fill")
+          Label.statusUnknown
         }
       }
       Section("MagicDNS") {
         switch (self.machines.tailscale?.currentTailnet?.magicDNSEnabled) {
         case .some(let magicDNSEnabled) where magicDNSEnabled == true:
-          Label("Enabled", systemImage: "circle.fill")
-            .foregroundStyle(Color(nsColor: .systemGreen).gradient, .black)
+          Label.statusEnabled
         case .some(_):
-          Label("Disabled", systemImage: "stop.fill")
-            .foregroundStyle(Color(nsColor: .systemRed).gradient, .black)
+          Label.statusDisabled
         case .none:
-          Label("–", systemImage: "triangle.fill")
+          Label.statusUnknown
         }
       }
       Section("Tunneling") {
         switch (self.machines.tailscale?.tunnelingEnabled) {
         case .some(let tunnelingEnabled) where tunnelingEnabled == true:
-          Label("Enabled", systemImage: "circle.fill")
-            .foregroundStyle(Color(nsColor: .systemGreen).gradient, .black)
+          Label.statusEnabled
         case .some(_):
-          Label("Disabled", systemImage: "stop.fill")
-            .foregroundStyle(Color(nsColor: .systemRed).gradient, .black)
+          Label.statusDisabled
         case .none:
-          Label("–", systemImage: "triangle.fill")
+          Label.statusUnknown
         }
       }
       Section("Node Key") {
         switch (self.machines.tailscale?.haveNodeKey) {
         case .some(let haveNodeKey) where haveNodeKey == true:
-          Label("Present", systemImage: "circle.fill")
-            .foregroundStyle(Color(nsColor: .systemGreen).gradient, .black)
+          Label.statusEnabled("Present")
         case .some(_):
-          Label("Missing", systemImage: "stop.fill")
-            .foregroundStyle(Color(nsColor: .systemRed).gradient, .black)
+          Label.statusDisabled("Missing")
         case .none:
-          Label("–", systemImage: "triangle.fill")
+          Label.statusUnknown
         }
       }
       Button("Select this Machine", systemImage: "cursorarrow.rays") {
@@ -268,16 +257,13 @@ public struct MachineWindow: View {
     } label: {
       switch (self.machines.tailscale?.backendState) {
       case .some(let value) where value == "Running":
-        Label(self.machines.tailscale?.backendState ?? "–", systemImage: "circle.fill")
-          .foregroundStyle(Color(nsColor: .systemGreen).gradient, .black.gradient)
+        Label.statusEnabled(value)
       case .some(let value) where value == "Stopped":
-        Label(value, systemImage: "stop.fill")
-          .foregroundStyle(Color(nsColor: .systemRed).gradient, .black.gradient)
+        Label.statusDisabled(value)
       case .some(let value):
-        Label(value, systemImage: "triangle.fill")
-          .foregroundStyle(Color(nsColor: .systemYellow).gradient, .black.gradient)
+        Label.statusUnknown(value)
       case .none:
-        Label("No Data", systemImage: "questionmark.square.dashed")
+        Label.noData
       }
     }
     .labelStyle(.titleAndIcon)
