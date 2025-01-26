@@ -39,7 +39,7 @@ public struct TimerProperty: DynamicProperty {
     }
   }
   
-  public struct Value: RawRepresentable, Identifiable {
+  public struct Value: RawRepresentable, Identifiable, Equatable {
     public var rawValue: Int
     public var id: Int { self.rawValue }
     public init(rawValue: Int) {
@@ -47,6 +47,12 @@ public struct TimerProperty: DynamicProperty {
     }
     public func hasElapsed(seconds: Int) -> Bool {
       return self.rawValue % seconds == 0
+    }
+    public func numerator(for denominator: Int) -> Double {
+      return Double(1*(self.rawValue % denominator))
+    }
+    public func percentage(of denominator: Int) -> Double {
+      return self.numerator(for: denominator) / Double(denominator)
     }
   }
   

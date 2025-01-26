@@ -61,6 +61,7 @@ public struct MachineWindow: View {
           .offset(y: self.services.isLoading ? 0 : -20)
       }
       .animation(.default, value: self.services.isLoading)
+      .animation(.default, value: self.settings.statusTimer.automatic)
       .navigationTitle("テスケモン")
       .navigationSubtitle(self.navigationTitleAppendString)
       .sheet(item: self.$presentation.showInfoPanel,
@@ -163,9 +164,20 @@ public struct MachineWindow: View {
       }
       .disabled(self.isAwaitingRefresh)
     } label: {
-      Label("Refresh", systemImage: self.isAwaitingRefresh
-                                    ? "progress.indicator"
-                                    : "arrow.clockwise")
+      Label {
+        Text("Refresh")
+      } icon: {
+        switch (self.isAwaitingRefresh, self.settings.statusTimer.automatic) {
+        case (true, _):
+          Image(systemName: "progress.indicator")
+        case (false, false):
+          Image(systemName: "arrow.clockwise")
+        case (false, true):
+          Image(systemName: "autostartstop")
+        }
+      }
+
+
     }
     .labelStyle(.titleAndIcon)
   }
