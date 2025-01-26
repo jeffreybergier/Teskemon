@@ -52,27 +52,27 @@ internal struct InfoSheet: View {
         }.tag(2)
       }
       .frame(width: 480, height: 320)
-      .navigationTitle("Machine Info")
+      .navigationTitle(.machineInfo)
       .padding([.top])
       .toolbar {
         ToolbarItem(placement: .confirmationAction) {
-          Button("Done", action: self.dismiss.callAsFunction)
+          Button(.done, action: self.dismiss.callAsFunction)
         }
       }
     }
   }
   
   private var machineInfo: some View {
-    Text("Machine Info")
+    Text(.machineInfo)
   }
   
   private var namesTable: some View {
     Table(self.selection) {
-      TableColumn("Original Name") { id in
+      TableColumn(.nameOriginal) { id in
         Text(self.machines[id].name)
           .font(.body)
       }.width(120)
-      TableColumn("Custom Name") { id in
+      TableColumn(.nameCustom) { id in
         TextField("", text: self.customNameBinding(for: id),
                     prompt: Text(self.machines[id].name))
         .font(.headline)
@@ -82,15 +82,15 @@ internal struct InfoSheet: View {
   
   private var passwordsTable: some View {
     Table(self.selection) {
-      TableColumn("Name") { id in
+      TableColumn(.name) { id in
         Text(self.settings.customNames[id] ?? self.machines[id].name)
           .font(.body)
       }.width(120)
-      TableColumn("Username") { id in
+      TableColumn(.username) { id in
         TextField("", text: self.passwords.binding(.username, id))
           .font(.headline)
       }
-      TableColumn("Password") { id in
+      TableColumn(.password) { id in
         SecureField("", text: self.passwords.binding(.password, id))
           .font(.headline)
       }

@@ -40,22 +40,74 @@ extension Label<Text, Image> {
     Label(text ?? "–", systemImage: "circle.fill")
       .foregroundStyle(Color(nsColor: .systemGreen).gradient, .black.gradient)
   }
+  internal static func statusEnabled(_ text: LocalizedStringKey) -> some View {
+    Label(text, systemImage: "circle.fill")
+      .foregroundStyle(Color(nsColor: .systemGreen).gradient, .black.gradient)
+  }
   internal static let statusDisabled: some View = Label("Disabled", systemImage: "stop.fill")
                                                        .foregroundStyle(Color(nsColor: .systemRed).gradient, .black)
   internal static func statusDisabled(_ text: String?) -> some View {
     Label(text ?? "–", systemImage: "stop.fill")
       .foregroundStyle(Color(nsColor: .systemRed).gradient, .black.gradient)
   }
-  internal static let statusUnknown = Label("–", systemImage: "triangle.fill")
+  internal static func statusDisabled(_ text: LocalizedStringKey) -> some View {
+    Label(text, systemImage: "stop.fill")
+      .foregroundStyle(Color(nsColor: .systemRed).gradient, .black.gradient)
+  }
+  internal static let statusUnknown = Label("–", systemImage: "questionmark.diamond.fill")
   internal static func statusUnknown(_ text: String?) -> some View {
-    Label(text ?? "–", systemImage: "triangle.fill")
-      .foregroundStyle(Color(nsColor: .systemYellow).gradient, .black.gradient)
+    Label(text ?? "–", systemImage: "questionmark.diamond.fill")
+      .foregroundStyle(Color(nsColor: .systemGray).gradient)
+  }
+  internal static func statusUnknown(_ text: LocalizedStringKey) -> some View {
+    Label(text, systemImage: "questionmark.diamond.fill")
+      .foregroundStyle(Color(nsColor: .systemGray).gradient)
+  }
+  internal static func statusProcessing(_ text: LocalizedStringKey) -> some View {
+    Label(text, systemImage: "progress.indicator")
+  }
+  internal static func statusError(_ text: LocalizedStringKey) -> some View {
+    Label(text, systemImage: "exclamationmark.triangle.fill")
+      .foregroundStyle(Color(nsColor: .systemYellow).gradient)
   }
   internal static func personCircle(_ text: String?) -> Self {
     Label(text ?? "–", systemImage: "person.circle")
   }
   internal static func network(_ text: String?) -> Self {
     Label(text ?? "–", systemImage: "network")
+  }
+}
+
+@MainActor
+extension LocalizedStringKey {
+  static let appName:      LocalizedStringKey = "テスケモン"
+  static let open:         LocalizedStringKey = "Open"
+  static let done:         LocalizedStringKey = "Done"
+  static let machineInfo:  LocalizedStringKey = "Machine Info"
+  static let info:         LocalizedStringKey = "Information"
+  static let name:         LocalizedStringKey = "Name"
+  static let names:        LocalizedStringKey = "Names"
+  static let nameOriginal: LocalizedStringKey = "Original Name"
+  static let nameCustom:   LocalizedStringKey = "Custom Name"
+  static let username:     LocalizedStringKey = "Username"
+  static let password:     LocalizedStringKey = "Password"
+  static let passwords:    LocalizedStringKey = "Passwords"
+  static let online:       LocalizedStringKey = "Online"
+  static let kind:         LocalizedStringKey = "Kind"
+  static let relay:        LocalizedStringKey = "Relay"
+  static let machine:      LocalizedStringKey = "Machine"
+  static let machines:     LocalizedStringKey = "Machines"
+  static let services:     LocalizedStringKey = "Services"
+  static let activity:     LocalizedStringKey = "Activity"
+  static let ping:         LocalizedStringKey = "Ping"
+  static let deselect:     LocalizedStringKey = "Deselect All"
+  static let clearCache:   LocalizedStringKey = "Clear Cache"
+  static let refresh:      LocalizedStringKey = "Refresh"
+  static let refreshAuto:  LocalizedStringKey = "Automatic Refresh"
+  static let selected:     LocalizedStringKey = "Selected Machines: All"
+  static func selected(_ count: Int) -> LocalizedStringKey {
+    guard count > 0 else { return selected }
+    return "Selected Machines: \(count)"
   }
 }
 

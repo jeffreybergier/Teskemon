@@ -62,7 +62,7 @@ public struct MachineWindow: View {
       }
       .animation(.default, value: self.services.isLoading)
       .animation(.default, value: self.settings.statusTimer.automatic)
-      .navigationTitle("テスケモン")
+      .navigationTitle(.appName)
       .navigationSubtitle(self.navigationTitleAppendString)
       .sheet(item: self.$presentation.showInfoPanel,
              content: { InfoSheet($0) })
@@ -96,21 +96,18 @@ public struct MachineWindow: View {
   
   private var editMenu: some View {
     Menu {
-      Section (self.presentation.selection.isEmpty
-               ? "Edit All Machines"
-               : "Edit \(self.selectionForMenus.count) Machine(s)")
-      {
-        Button("Information", systemImage: "info") {
+      Section(.selected(self.presentation.selection.count)) {
+        Button(.info, systemImage: "info") {
           self.presentation.showInfoPanel = .init(tab: 0, self.selectionForMenus)
         }
-        Button("Names", systemImage: "person") {
+        Button(.names, systemImage: "person") {
           self.presentation.showInfoPanel = .init(tab: 1, self.selectionForMenus)
         }
-        Button("Passwords", systemImage: "lock") {
+        Button(.passwords, systemImage: "lock") {
           self.presentation.showInfoPanel = .init(tab: 2, self.selectionForMenus)
         }
       }
-      Button("Deselect All", systemImage: "cursorarrow.slash") {
+      Button(.deselect, systemImage: "cursorarrow.slash") {
         self.presentation.selection = []
       }
       .disabled(self.presentation.selection.isEmpty)
@@ -122,17 +119,14 @@ public struct MachineWindow: View {
   
   private var refreshMenu: some View {
     Menu {
-      Section (self.presentation.selection.isEmpty
-               ? "Refresh All Machines"
-               : "Refresh \(self.selectionForMenus.count) Machine(s)")
-      {
-        Button("Machines", systemImage: "person.2.arrow.trianglehead.counterclockwise") {
+      Section(.selected(self.presentation.selection.count)) {
+        Button(.machines, systemImage: "person.2.arrow.trianglehead.counterclockwise") {
           self.performAsync {
             try await self._machines.updateMachines(with: self.settings.executable)
           }
         }
         .disabled(self.isAwaitingRefresh)
-        Button("Services", systemImage: "slider.horizontal.2.arrow.trianglehead.counterclockwise") {
+        Button(.services, systemImage: "slider.horizontal.2.arrow.trianglehead.counterclockwise") {
           self.performAsync {
             try await self._services.updateStatus(for: self.settings.services,
                                                 on: self.machines.machines(for: self.selectionForMenus),
@@ -142,7 +136,7 @@ public struct MachineWindow: View {
         }
         .disabled(self.isAwaitingRefresh)
       }
-      Section("Automatic Refresh") {
+      Section(.refreshAuto) {
         Toggle(isOn: self.$settings.machineTimer.automatic) {
           self.settings.machineTimer.automatic
               ? Label.machinesRefreshOn
@@ -154,18 +148,18 @@ public struct MachineWindow: View {
               : Label.servicesRefreshOff
         }
       }
-      Button("Deselect All", systemImage: "cursorarrow.slash") {
+      Button(.deselect, systemImage: "cursorarrow.slash") {
         self.presentation.selection = []
       }
       .disabled(self.presentation.selection.isEmpty)
-      Button("Clear Cache", systemImage: "trash") {
+      Button(.clearCache, systemImage: "trash") {
         self._services.resetData()
         self._machines.resetData()
       }
       .disabled(self.isAwaitingRefresh)
     } label: {
       Label {
-        Text("Refresh")
+        Text(.refresh)
       } icon: {
         switch (self.isAwaitingRefresh, self.settings.statusTimer.automatic) {
         case (true, _):

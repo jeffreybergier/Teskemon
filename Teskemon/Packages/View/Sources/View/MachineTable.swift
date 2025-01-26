@@ -41,30 +41,30 @@ internal struct MachineTable: View {
           selection: self.$selection)
     {
       
-      TableColumn("Online") { machine in
+      TableColumn(.online) { machine in
         TableRowOnline(isOnline: machine.activity?.isOnline)
       }.width(36)
       
-      TableColumn("Kind") { machine in
+      TableColumn(.kind) { machine in
         TableRowKind(kind: machine.kind)
       }.width(24)
       
-      TableColumn("Relay") { machine in
+      TableColumn(.relay) { machine in
         TableRowRelay(relay: machine.relay)
       }.width(ideal: 48)
       
-      TableColumn("Machine") { machine in
+      TableColumn(.machine) { machine in
         TableRowName(name: machine.name,
                      url: machine.url,
                      os: machine.os,
                      customName: self.settings.customNames[machine.id])
       }.width(ideal: 128)
       
-      TableColumn("Activity") { machine in
+      TableColumn(.activity) { machine in
         TableRowActivity(activity: machine.activity)
       }.width(ideal: 96)
       
-      TableColumn("Ping") { machine in
+      TableColumn(.ping) { machine in
         TableRowPing(status: self.services[machine.id])
       }.width(24)
       
@@ -249,28 +249,20 @@ internal struct TableRowStatus: View {
     Button {
       NSWorkspace.shared.open(self.url)
     } label: {
-      Label {
-        Text("Open")
-      } icon: {
-        switch self.status {
-        case .online:
-          Image(systemName: "circle.fill")
-            .foregroundStyle(Color(nsColor: .systemGreen).gradient)
-        case .offline:
-          Image(systemName: "stop.fill")
-            .foregroundStyle(Color(nsColor: .systemRed).gradient)
-        case .error:
-          Image(systemName: "exclamationmark.triangle.fill")
-            .foregroundStyle(Color(nsColor: .systemYellow).gradient)
-        case .unknown:
-          Image(systemName: "questionmark.diamond.fill")
-            .foregroundStyle(Color(nsColor: .systemGray).gradient)
-        case .processing:
-          Image(systemName: "progress.indicator")
-        }
+      switch self.status {
+      case .online:
+        Label.statusEnabled(.open)
+      case .offline:
+        Label.statusDisabled(.open)
+      case .error:
+        Label.statusError(.open)
+      case .unknown:
+        Label.statusUnknown(.open)
+      case .processing:
+        Label.statusProcessing(.open)
       }
-      .labelStyle(.iconOnly)
     }
+    .labelStyle(.iconOnly)
     .buttonStyle(.bordered)
     .help(self.help)
   }
