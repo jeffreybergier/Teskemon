@@ -69,7 +69,7 @@ internal struct MachineTable: View {
       }.width(24)
       
       TableColumnForEach(self.settings.services) { service in
-        TableColumn(service.name + String(format: " (%d)", service.port)) { machine in
+        TableColumn(String(format: "%@ (%d)", service.name, service.port)) { machine in
           TableRowStatus(status: self.services[machine.id, service],
                          url:    self.machines.url(for: service,
                                                 on: machine.id,
@@ -108,16 +108,12 @@ internal struct TableRowKind: View {
       .help(self.help)
   }
   
-  private var help: String {
+  private var help: LocalizedStringKey {
     switch self.kind {
-    case .meHost:
-      return "This Node"
-    case .remoteHost:
-      return "Peer Node"
-    case .meSubnet:
-      return "Route Advertised by this Node"
-    case .remoteSubnet:
-      return "Route Advertised by Peer Node"
+    case .meHost:       return .helpNodeMe
+    case .remoteHost:   return .helpNodeRemote
+    case .meSubnet:     return .helpNodeSubnetMe
+    case .remoteSubnet: return .helpNodeSubnetRemote
     }
   }
   
@@ -229,13 +225,13 @@ internal struct TableRowPing: View {
     .help(self.help)
   }
   
-  private var help: String {
+  private var help: LocalizedStringKey {
     switch self.status {
-    case .unknown: return "Ping: Not yet run"
-    case .error: return "Ping: Timeout"
-    case .online: return "Ping: Machine Online"
-    case .offline: return "Ping: Machine Offline"
-    case .processing: return "Pinging"
+    case .unknown:    return .helpPingUnknown
+    case .error:      return .helpPingError
+    case .online:     return .helpPingOnline
+    case .offline:    return .helpPingOffline
+    case .processing: return .helpPingProcessing
     }
   }
 }

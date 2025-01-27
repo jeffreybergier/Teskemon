@@ -182,7 +182,7 @@ public struct MachineWindow: View {
   
   private var statusMenu: some View {
     Menu {
-      Section("Tailscale") {
+      Section(.tailscale) {
         switch (self.machines.tailscale?.backendState) {
         case .some(let value) where value == "Running":
           Label.statusEnabled(self.machines.tailscale?.backendState)
@@ -194,27 +194,27 @@ public struct MachineWindow: View {
           Label.statusUnknown
         }
       }
-      Section("Account") {
+      Section(.account) {
         Label.personCircle(self.machines.tailscale?.currentTailnet?.name)
       }
-      Section("Domain") {
+      Section(.domain) {
         Label.network(self.machines.tailscale?.magicDNSSuffix)
       }
       switch (self.machines.tailscale) {
       case .some(let tailscale) where tailscale.versionUpToDate == true:
-        Section("Version – Up to Date") {
+        Section(.versionNew) {
           Label.statusEnabled(tailscale.version)
         }
       case .some(let tailscale):
-        Section("Version – Update Available") {
+        Section(.versionOld) {
           Label.statusUnknown(tailscale.version)
         }
       case .none:
-        Section("Version") {
+        Section(.version) {
           Label.statusUnknown
         }
       }
-      Section("MagicDNS") {
+      Section(.magicDNS) {
         switch (self.machines.tailscale?.currentTailnet?.magicDNSEnabled) {
         case .some(let magicDNSEnabled) where magicDNSEnabled == true:
           Label.statusEnabled
@@ -224,7 +224,7 @@ public struct MachineWindow: View {
           Label.statusUnknown
         }
       }
-      Section("Tunneling") {
+      Section(.tunneling) {
         switch (self.machines.tailscale?.tunnelingEnabled) {
         case .some(let tunnelingEnabled) where tunnelingEnabled == true:
           Label.statusEnabled
@@ -234,17 +234,17 @@ public struct MachineWindow: View {
           Label.statusUnknown
         }
       }
-      Section("Node Key") {
+      Section(.nodeKey) {
         switch (self.machines.tailscale?.haveNodeKey) {
         case .some(let haveNodeKey) where haveNodeKey == true:
-          Label.statusEnabled("Present")
+          Label.statusEnabled(.present)
         case .some(_):
-          Label.statusDisabled("Missing")
+          Label.statusDisabled(.missing)
         case .none:
           Label.statusUnknown
         }
       }
-      Button("Select this Machine", systemImage: "cursorarrow.rays") {
+      Button(.verbSelectThisMachine, systemImage: "cursorarrow.rays") {
         self.presentation.selection = self.machines.tailscale?.selfNodeID.map { [$0] } ?? []
       }
       .disabled(self.machines.tailscale?.selfNodeID == nil)

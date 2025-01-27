@@ -81,9 +81,19 @@ extension Label<Text, Image> {
 @MainActor
 extension LocalizedStringKey {
   static let appName:      LocalizedStringKey = "テスケモン"
+  static let tailscale:    LocalizedStringKey = "Tailscale"
+  static let netcat:       LocalizedStringKey = "Netcat"
+  static let magicDNS:     LocalizedStringKey = "MagicDNS"
+  static let tunneling:    LocalizedStringKey = "Tunneling"
+  static let nodeKey:      LocalizedStringKey = "Node Key"
   static let open:         LocalizedStringKey = "Open"
   static let done:         LocalizedStringKey = "Done"
+  static let add:          LocalizedStringKey = "Add"
+  static let delete:       LocalizedStringKey = "Delete"
+  static let reset:        LocalizedStringKey = "Reset"
   static let machineInfo:  LocalizedStringKey = "Machine Info"
+  static let machineRefresh:LocalizedStringKey = "Machine Refresh"
+  static let serviceRefresh:LocalizedStringKey = "Service Refresh"
   static let info:         LocalizedStringKey = "Information"
   static let name:         LocalizedStringKey = "Name"
   static let names:        LocalizedStringKey = "Names"
@@ -99,16 +109,52 @@ extension LocalizedStringKey {
   static let machines:     LocalizedStringKey = "Machines"
   static let services:     LocalizedStringKey = "Services"
   static let activity:     LocalizedStringKey = "Activity"
+  static let scheme:       LocalizedStringKey = "Scheme"
+  static let port:         LocalizedStringKey = "Port"
   static let ping:         LocalizedStringKey = "Ping"
   static let deselect:     LocalizedStringKey = "Deselect All"
   static let clearCache:   LocalizedStringKey = "Clear Cache"
   static let refresh:      LocalizedStringKey = "Refresh"
   static let refreshAuto:  LocalizedStringKey = "Automatic Refresh"
   static let selected:     LocalizedStringKey = "Selected Machines: All"
+  static let account:      LocalizedStringKey = "Account"
+  static let domain:       LocalizedStringKey = "Domain"
+  static let enabled:      LocalizedStringKey = "Enabled"
+  static let disabled:     LocalizedStringKey = "Disabled"
+  static let present:      LocalizedStringKey = "Present"
+  static let missing:      LocalizedStringKey = "Missing"
+  static let version:      LocalizedStringKey = "Version"
+  static let versionNew:   LocalizedStringKey = "Version – Up to Date"
+  static let versionOld:   LocalizedStringKey = "Version – Update Available"
+  static let timeout:      LocalizedStringKey = "Timeout"
+  static let batchSize:    LocalizedStringKey = "Batch Size"
+  static let automatic:    LocalizedStringKey = "Automatic"
+  static let interval:     LocalizedStringKey = "Interval"
+  static let location:     LocalizedStringKey = "Location"
+  static let path:         LocalizedStringKey = "Path"
+  static let commandLine:  LocalizedStringKey = "Command Line"
+  static let appStore:     LocalizedStringKey = "App Store"
+  static let custom:       LocalizedStringKey = "Custom"
   static func selected(_ count: Int) -> LocalizedStringKey {
     guard count > 0 else { return selected }
     return "Selected Machines: \(count)"
   }
+  
+  // MARK: Verbs
+  static let verbSelectThisMachine: LocalizedStringKey = "Select this Machine"
+  
+  // MARK: Help
+  static let helpNodeMe:           LocalizedStringKey = "This Node"
+  static let helpNodeRemote:       LocalizedStringKey = "Peer Node"
+  static let helpNodeSubnetMe:     LocalizedStringKey = "Route Advertised by This Node"
+  static let helpNodeSubnetRemote: LocalizedStringKey = "Route Advertised by Peer Node"
+  static let helpPingUnknown:      LocalizedStringKey = "Ping: Not yet run"
+  static let helpPingError:        LocalizedStringKey = "Ping: Timeout"
+  static let helpPingOnline:       LocalizedStringKey = "Ping: Machine Online"
+  static let helpPingOffline:      LocalizedStringKey = "Ping: Machine Offline"
+  static let helpPingProcessing:   LocalizedStringKey = "Pinging"
+
+
 }
 
 

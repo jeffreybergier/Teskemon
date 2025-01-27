@@ -41,38 +41,38 @@ public struct SettingsWindow: View {
   
   private var general: some View {
     Form {
-      Section(header: Text("Tailscale").font(.headline),
+      Section(header: Text(.tailscale).font(.headline),
               footer: Text(self.settings.executable.stringValue).font(.caption))
       {
-        Picker("Location", selection: self.$settings.executable.option) {
-          Text("Command Line").tag(SettingsExecutable.Options.cli)
-          Text("App Store").tag(SettingsExecutable.Options.app)
-          Text("Custom").tag(SettingsExecutable.Options.custom)
+        Picker(.location, selection: self.$settings.executable.option) {
+          Text(.commandLine).tag(SettingsExecutable.Options.cli)
+          Text(.appStore).tag(SettingsExecutable.Options.app)
+          Text(.custom).tag(SettingsExecutable.Options.custom)
         }
         if self.settings.executable.option == .custom {
-          TextField("Path", text: self.$settings.executable.rawValue)
+          TextField(.path, text: self.$settings.executable.rawValue)
         }
       }
       Divider().padding([.bottom], 6)
-      Section(header: Text("Machine Refresh").font(.headline)) {
-        Toggle("Automatic", isOn: self.$settings.machineTimer.automatic)
-        TextField("Interval",
+      Section(header: Text(.machineRefresh).font(.headline)) {
+        Toggle(.automatic, isOn: self.$settings.machineTimer.automatic)
+        TextField(.interval,
                   text: self.$settings.machineTimer.interval.map(get: { $0.description },
                                                                  set: { Int($0) ?? -1 }))
       }
       Divider().padding([.bottom], 6)
-      Section(header: Text("Service Refresh").font(.headline)) {
-        Toggle("Automatic", isOn: self.$settings.statusTimer.automatic)
-        TextField("Interval",
+      Section(header: Text(.serviceRefresh).font(.headline)) {
+        Toggle(.automatic, isOn: self.$settings.statusTimer.automatic)
+        TextField(.interval,
                   text: self.$settings.statusTimer.interval.map(get: { $0.description },
                                                                 set: { Int($0) ?? -1 }))
       }
       Divider().padding([.bottom], 6)
-      Section(header: Text("Netcat").font(.headline)) {
-        TextField("Timeout",
+      Section(header: Text(.netcat).font(.headline)) {
+        TextField(.timeout,
                   text: self.$settings.timeout.map(get: { $0.description },
                                                    set: { Int($0) ?? -1 }))
-        TextField("Batch Size",
+        TextField(.batchSize,
                   text: self.$settings.batchSize.map(get: { $0.description },
                                                      set: { Int($0) ?? -1 }))
       }
@@ -84,18 +84,18 @@ public struct SettingsWindow: View {
   private var services: some View {
     ZStack(alignment: .bottomTrailing) {
       Table(self.$settings.services) {
-        TableColumn("Name") { service in
+        TableColumn(.name) { service in
           TextField("", text: service.name)
         }
-        TableColumn("Protocol") { service in
+        TableColumn(.scheme) { service in
           TextField("", text: service.scheme)
         }.width(64)
-        TableColumn("Port") { service in
+        TableColumn(.port) { service in
           TextField("", text: service.port.map(get: { $0.description },
                                                set: { Int($0) ?? -1 }))
         }.width(64)
         TableColumn("") { service in
-          Button("Delete", systemImage: "x.circle") {
+          Button(.delete, systemImage: "x.circle") {
             self.settings.delete(service: service.wrappedValue)
           }
           .labelStyle(.iconOnly)
@@ -105,10 +105,10 @@ public struct SettingsWindow: View {
       .safeAreaInset(edge: .bottom) {
         HStack {
           Spacer()
-          Button("Reset", systemImage: "arrow.uturn.left") {
+          Button(.reset, systemImage: "arrow.uturn.left") {
             self.settings.services = Service.default
           }
-          Button("Add", systemImage: "plus") {
+          Button(.add, systemImage: "plus") {
             self.settings.services.append(.init())
           }
         }.padding([.bottom, .trailing])
