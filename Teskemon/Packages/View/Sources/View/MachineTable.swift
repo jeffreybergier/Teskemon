@@ -43,7 +43,7 @@ internal struct MachineTable: View {
       
       TableColumn(.online) { machine in
         TableRowOnline(isOnline: machine.activity?.isOnline)
-      }.width(36)
+      }.width(24)
       
       TableColumn(.kind) { machine in
         TableRowKind(kind: machine.kind)
@@ -86,13 +86,12 @@ internal struct TableRowOnline: View {
   internal var body: some View {
     switch self.isOnline {
     case .none:
-      Image(systemName: "circle.dotted")
-        .foregroundStyle(Color(nsColor: .systemGray))
+      EmptyView()
     case .some(true):
-      Image(systemName: "circle.fill")
+      Image(systemName: .imageStatusOnline)
         .foregroundStyle(Color(nsColor: .systemGreen).gradient)
     case .some(false):
-      Image(systemName: "stop.fill")
+      Image(systemName: .imageStatusOffline)
         .foregroundStyle(Color(nsColor: .systemRed).gradient)
     }
   }
@@ -120,13 +119,13 @@ internal struct TableRowKind: View {
   private var systemImage: String {
     switch self.kind {
     case .meHost:
-      return "person.crop.rectangle"
+      return .imageNodeMe
     case .remoteHost:
-      return "rectangle"
+      return .imageNodeRemote
     case .meSubnet:
-      return "person.crop.rectangle.stack"
+      return .imageNodeMeSubnet
     case .remoteSubnet:
-      return "rectangle.stack"
+      return .imageNodeRemoteSubnet
     }
   }
 }
@@ -164,6 +163,8 @@ internal struct TableRowName: View {
 
 internal struct TableRowActivity: View {
   
+  @TimerProperty private var timer
+  
   private let byteF = ByteCountFormatter()
   
   internal let activity: Machine.Activity?
@@ -172,7 +173,7 @@ internal struct TableRowActivity: View {
       self.indicator
       if let activity {
         HStack(spacing: 4) {
-          Image(systemName: "chevron.up.chevron.down")
+          Image(systemName: .imageActivityUpDown)
             .font(.headline)
           VStack(alignment: .leading, spacing: 0) {
             Text(byteF.string(fromByteCount: activity.txBytes))
@@ -184,12 +185,16 @@ internal struct TableRowActivity: View {
   }
   
   @ViewBuilder private var indicator: some View {
-    if let activity {
-      // TODO: Add animations for progress indicator
-      Image(systemName: activity.isActive ? "progress.indicator" : "pause.circle")
+    switch activity?.isActive {
+    case .some(true):
+      Image(systemName: .imageActivityActive,
+            variableValue: self.timer.percentage(of: 10))
         .font(.headline)
-    } else {
-      Image(systemName: "circle.dotted")
+    case .some(false):
+      Image(systemName: .imageActivityInactive)
+        .font(.headline)
+    case .none:
+      Image(systemName: .imageActivityUnknown)
         .font(.headline)
         .foregroundStyle(Color(nsColor: .systemGray).gradient)
     }
@@ -206,19 +211,19 @@ internal struct TableRowPing: View {
     } icon: {
       switch self.status {
       case .online:
-        Image(systemName: "circle.fill")
+        Image(systemName: .imageStatusOnline)
           .foregroundStyle(Color(nsColor: .systemGreen).gradient)
       case .offline:
-        Image(systemName: "stop.fill")
+        Image(systemName: .imageStatusOffline)
           .foregroundStyle(Color(nsColor: .systemRed).gradient)
       case .error:
-        Image(systemName: "exclamationmark.triangle.fill")
+        Image(systemName: .imageStatusError)
           .foregroundStyle(Color(nsColor: .systemYellow).gradient)
       case .unknown:
-        Image(systemName: "questionmark.diamond.fill")
+        Image(systemName: .imageStatusUnknown)
           .foregroundStyle(Color(nsColor: .systemGray).gradient)
       case .processing:
-        Image(systemName: "progress.indicator")
+        Image(systemName: .imageStatusProcessing)
       }
     }
     .labelStyle(.iconOnly)
@@ -263,13 +268,13 @@ internal struct TableRowStatus: View {
     .help(self.help)
   }
   
-  private var help: String {
+  private var help: LocalizedStringKey {
     switch self.status {
-    case .unknown: return "Netcat: Not yet scanned"
-    case .error: return "Netcat: Timeout"
-    case .online: return "Netcat: Port listening"
-    case .offline: return "Netcat: Port not listening"
-    case .processing: return "Netcat: Scanning"
+    case .unknown:    return .helpNetcatUnknown
+    case .error:      return .helpNetcatError
+    case .online:     return .helpNetcatOnline
+    case .offline:    return .helpNetcatOffline
+    case .processing: return .helpNetcatProcessing
     }
   }
 }

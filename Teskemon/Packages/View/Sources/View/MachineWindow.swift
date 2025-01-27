@@ -97,17 +97,17 @@ public struct MachineWindow: View {
   private var editMenu: some View {
     Menu {
       Section(.selected(self.presentation.selection.count)) {
-        Button(.info, systemImage: "info") {
+        Button(.info, systemImage: .imageInfo) {
           self.presentation.showInfoPanel = .init(tab: 0, self.selectionForMenus)
         }
-        Button(.names, systemImage: "person") {
+        Button(.names, systemImage: .imagePerson) {
           self.presentation.showInfoPanel = .init(tab: 1, self.selectionForMenus)
         }
-        Button(.passwords, systemImage: "lock") {
+        Button(.passwords, systemImage: .imageLock) {
           self.presentation.showInfoPanel = .init(tab: 2, self.selectionForMenus)
         }
       }
-      Button(.deselect, systemImage: "cursorarrow.slash") {
+      Button(.deselect, systemImage: .imageDeselect) {
         self.presentation.selection = []
       }
       .disabled(self.presentation.selection.isEmpty)
@@ -120,13 +120,13 @@ public struct MachineWindow: View {
   private var refreshMenu: some View {
     Menu {
       Section(.selected(self.presentation.selection.count)) {
-        Button(.machines, systemImage: "person.2.arrow.trianglehead.counterclockwise") {
+        Button(.machines, systemImage: .imageRefreshMachines) {
           self.performAsync {
             try await self._machines.updateMachines(with: self.settings.executable)
           }
         }
         .disabled(self.isAwaitingRefresh)
-        Button(.services, systemImage: "slider.horizontal.2.arrow.trianglehead.counterclockwise") {
+        Button(.services, systemImage: .imageRefreshServices) {
           self.performAsync {
             try await self._services.updateStatus(for: self.settings.services,
                                                 on: self.machines.machines(for: self.selectionForMenus),
@@ -148,11 +148,11 @@ public struct MachineWindow: View {
               : Label.servicesRefreshOff
         }
       }
-      Button(.deselect, systemImage: "cursorarrow.slash") {
+      Button(.deselect, systemImage: .imageDeselect) {
         self.presentation.selection = []
       }
       .disabled(self.presentation.selection.isEmpty)
-      Button(.clearCache, systemImage: "trash") {
+      Button(.clearCache, systemImage: .imageTrash) {
         self._services.resetData()
         self._machines.resetData()
       }
@@ -163,11 +163,12 @@ public struct MachineWindow: View {
       } icon: {
         switch (self.isAwaitingRefresh, self.settings.statusTimer.automatic) {
         case (true, _):
-          Image(systemName: "progress.indicator")
+          Image(systemName: .imageStatusProcessing,
+                variableValue: self.timer.percentage(of: 10))
         case (false, false):
-          Image(systemName: "arrow.clockwise")
+          Image(systemName: .imageRefresh)
         case (false, true):
-          Image(systemName: "autostartstop")
+          Image(systemName: .imageRefreshAuto)
         }
       }
 
@@ -244,7 +245,7 @@ public struct MachineWindow: View {
           Label.statusUnknown
         }
       }
-      Button(.verbSelectThisMachine, systemImage: "cursorarrow.rays") {
+      Button(.verbSelectThisMachine, systemImage: .imageSelect) {
         self.presentation.selection = self.machines.tailscale?.selfNodeID.map { [$0] } ?? []
       }
       .disabled(self.machines.tailscale?.selfNodeID == nil)

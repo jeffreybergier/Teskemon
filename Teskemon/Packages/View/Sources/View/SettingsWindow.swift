@@ -95,7 +95,7 @@ public struct SettingsWindow: View {
                                                set: { Int($0) ?? -1 }))
         }.width(64)
         TableColumn("") { service in
-          Button(.delete, systemImage: "x.circle") {
+          Button(.delete, systemImage: .imageDelete) {
             self.settings.delete(service: service.wrappedValue)
           }
           .labelStyle(.iconOnly)
@@ -105,10 +105,10 @@ public struct SettingsWindow: View {
       .safeAreaInset(edge: .bottom) {
         HStack {
           Spacer()
-          Button(.reset, systemImage: "arrow.uturn.left") {
+          Button(.reset, systemImage: .imageReset) {
             self.settings.services = Service.default
           }
-          Button(.add, systemImage: "plus") {
+          Button(.add, systemImage: .imageAdd) {
             self.settings.services.append(.init())
           }
         }.padding([.bottom, .trailing])

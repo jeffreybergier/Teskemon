@@ -153,8 +153,39 @@ extension LocalizedStringKey {
   static let helpPingOnline:       LocalizedStringKey = "Ping: Machine Online"
   static let helpPingOffline:      LocalizedStringKey = "Ping: Machine Offline"
   static let helpPingProcessing:   LocalizedStringKey = "Pinging"
-
-
+  static let helpNetcatUnknown:    LocalizedStringKey = "Netcat: Not yet scanned"
+  static let helpNetcatError:      LocalizedStringKey = "Netcat: Timeout"
+  static let helpNetcatOnline:     LocalizedStringKey = "Netcat: Port listening"
+  static let helpNetcatOffline:    LocalizedStringKey = "Netcat: Port not listening"
+  static let helpNetcatProcessing: LocalizedStringKey = "Netcat: Scanning"
 }
 
+extension String {
+  static let imageInfo             = "info"
+  static let imagePerson           = "person"
+  static let imageLock             = "lock"
+  static let imageTrash            = "trash"
+  static let imageAdd              = "plus"
+  static let imageDelete           = "x.circle"
+  static let imageReset            = "arrow.uturn.left"
+  static let imageSelect           = "cursorarrow.rays"
+  static let imageDeselect         = "cursorarrow.slash"
+  static let imageRefresh          = "arrow.clockwise"
+  static let imageRefreshAuto      = "autostartstop"
+  static let imageRefreshMachines  = "person.2.arrow.trianglehead.counterclockwise"
+  static let imageRefreshServices  = "slider.horizontal.2.arrow.trianglehead.counterclockwise"
+  static let imageStatusOnline     = "circle.fill"
+  static let imageStatusOffline    = "stop.fill"
+  static let imageStatusUnknown    = "questionmark.diamond.fill"
+  static let imageStatusError      = "exclamationmark.triangle.fill"
+  static let imageStatusProcessing = "progress.indicator"
+  static let imageActivityActive   = "progress.indicator"
+  static let imageActivityInactive = "pause.circle"
+  static let imageActivityUnknown  = "circle.dotted"
+  static let imageActivityUpDown   = "chevron.up.chevron.down"
+  static let imageNodeMe           = "person.crop.rectangle"
+  static let imageNodeRemote       = "rectangle"
+  static let imageNodeMeSubnet     = "person.crop.rectangle.stack"
+  static let imageNodeRemoteSubnet = "rectangle.stack"
+}
 
