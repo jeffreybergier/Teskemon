@@ -72,7 +72,7 @@ extension Machine {
       self.tailscale = tailscale
       self.machines = {
         return ((rawModel.Peer.map { Array($0.values) } ?? [])
-                + (rawModel.Self.map { [$0] } ?? []))              // Extract machines from dictionary and also add Self machine to list
+                + (rawModel.Self.map { [$0] } ?? []))      // Extract machines from dictionary and also add Self machine to list
         .sorted { $0.ID < $1.ID }                          // Sort the IDs in some deterministic way
         .map { Machine($0, selfID: tailscale.selfNodeID) } // Conver them into polished models
       }()

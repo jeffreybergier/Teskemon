@@ -39,6 +39,7 @@ public struct SettingsWindow: View {
     }
   }
   
+  // TODO: Add settings for Ping
   private var general: some View {
     Form {
       Section(header: Text(.tailscale).font(.headline),

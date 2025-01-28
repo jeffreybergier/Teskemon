@@ -30,5 +30,6 @@ struct TeskemonApp: App {
     Settings {
       SettingsWindow()
     }
+    // TODO: Add custom view for about screen
   }
 }

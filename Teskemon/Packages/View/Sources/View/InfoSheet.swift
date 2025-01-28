@@ -63,6 +63,7 @@ internal struct InfoSheet: View {
   }
   
   private var machineInfo: some View {
+    // TODO: Add machine info view
     Text(.machineInfo)
   }
   
