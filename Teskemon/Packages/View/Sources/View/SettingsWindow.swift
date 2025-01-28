@@ -31,10 +31,10 @@ public struct SettingsWindow: View {
   public var body: some View {
     TabView(selection: self.$settings.currentTab) {
       self.general.tabItem {
-        Label.settingsGeneral
+        Label(.general, systemImage: .imageSettings)
       }.tag(SettingsTab.general)
       self.services.tabItem {
-        Label.settingsServices
+        Label(.services, systemImage: .imageServices)
       }.tag(SettingsTab.services)
     }
   }

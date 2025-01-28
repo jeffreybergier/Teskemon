@@ -203,6 +203,7 @@ internal struct TableRowActivity: View {
 
 internal struct TableRowPing: View {
   
+  @TimerProperty private var timer
   internal let status: Service.Status
   
   internal var body: some View {
@@ -223,7 +224,8 @@ internal struct TableRowPing: View {
         Image(systemName: .imageStatusUnknown)
           .foregroundStyle(Color(nsColor: .systemGray).gradient)
       case .processing:
-        Image(systemName: .imageStatusProcessing)
+        Image(systemName: .imageStatusProcessing,
+              variableValue: self.timer.percentage(of: 10))
       }
     }
     .labelStyle(.iconOnly)
@@ -243,6 +245,8 @@ internal struct TableRowPing: View {
 
 internal struct TableRowStatus: View {
   
+  @TimerProperty private var timer
+  
   internal let status: Service.Status
   internal let url: URL
   
@@ -250,22 +254,37 @@ internal struct TableRowStatus: View {
     Button {
       NSWorkspace.shared.open(self.url)
     } label: {
-      switch self.status {
-      case .online:
-        Label.statusEnabled(.open)
-      case .offline:
-        Label.statusDisabled(.open)
-      case .error:
-        Label.statusError(.open)
-      case .unknown:
-        Label.statusUnknown(.open)
-      case .processing:
-        Label.statusProcessing(.open)
+      Label {
+        Text(.open)
+      } icon: {
+        self.image.foregroundStyle(self.color)
       }
     }
     .labelStyle(.iconOnly)
     .buttonStyle(.bordered)
     .help(self.help)
+  }
+  
+  private var image: Image {
+    switch self.status {
+    case .unknown: Image(systemName: .imageStatusUnknown)
+    case .error:   Image(systemName: .imageStatusError)
+    case .online:  Image(systemName: .imageStatusOnline)
+    case .offline: Image(systemName: .imageStatusOffline)
+    case .processing:
+      Image(systemName: .imageStatusProcessing,
+            variableValue: self.timer.percentage(of: 10))
+    }
+  }
+  
+  private var color: AnyGradient {
+    switch self.status {
+    case .unknown:    return Color.statusUnknown
+    case .error:      return Color.statusError
+    case .online:     return Color.statusOnline
+    case .offline:    return Color.statusOffline
+    case .processing: return Color.statusProcessing
+    }
   }
   
   private var help: LocalizedStringKey {

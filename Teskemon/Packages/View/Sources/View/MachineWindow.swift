@@ -97,22 +97,22 @@ public struct MachineWindow: View {
   private var editMenu: some View {
     Menu {
       Section(.selected(self.presentation.selection.count)) {
-        Button(.info, systemImage: .imageInfo) {
+        Button(.information, systemImage: .imageInfo) {
           self.presentation.showInfoPanel = .init(tab: 0, self.selectionForMenus)
         }
         Button(.names, systemImage: .imagePerson) {
           self.presentation.showInfoPanel = .init(tab: 1, self.selectionForMenus)
         }
-        Button(.passwords, systemImage: .imageLock) {
+        Button(.passwords, systemImage: .imagePasswords) {
           self.presentation.showInfoPanel = .init(tab: 2, self.selectionForMenus)
         }
       }
-      Button(.deselect, systemImage: .imageDeselect) {
+      Button(.verbDeselectAll, systemImage: .imageDeselect) {
         self.presentation.selection = []
       }
       .disabled(self.presentation.selection.isEmpty)
     } label: {
-      Label.edit
+      Label(.edit, systemImage: .imageMachine)
     }
     .labelStyle(.titleAndIcon)
   }
@@ -139,16 +139,16 @@ public struct MachineWindow: View {
       Section(.refreshAuto) {
         Toggle(isOn: self.$settings.machineTimer.automatic) {
           self.settings.machineTimer.automatic
-              ? Label.machinesRefreshOn
-              : Label.machinesRefreshOff
+              ? Label(.machines, systemImage: .imageRefreshAutoOn)
+              : Label(.machines, systemImage: .imageRefreshAutoOff)
         }
         Toggle(isOn: self.$settings.statusTimer.automatic) {
           self.settings.statusTimer.automatic
-              ? Label.servicesRefreshOn
-              : Label.servicesRefreshOff
+              ? Label(.services, systemImage: .imageRefreshAutoOn)
+              : Label(.services, systemImage: .imageRefreshAutoOff)
         }
       }
-      Button(.deselect, systemImage: .imageDeselect) {
+      Button(.verbDeselectAll, systemImage: .imageDeselect) {
         self.presentation.selection = []
       }
       .disabled(self.presentation.selection.isEmpty)
@@ -168,7 +168,7 @@ public struct MachineWindow: View {
         case (false, false):
           Image(systemName: .imageRefresh)
         case (false, true):
-          Image(systemName: .imageRefreshAuto)
+          Image(systemName: .imageRefreshAutoOn)
         }
       }
 
@@ -186,63 +186,76 @@ public struct MachineWindow: View {
       Section(.tailscale) {
         switch (self.machines.tailscale?.backendState) {
         case .some(let value) where value == "Running":
-          Label.statusEnabled(self.machines.tailscale?.backendState)
+          Label(value, systemImage: .imageStatusOnline)
+            .foregroundStyle(Color.statusOnline, Color.HACK_showColorInMenus)
         case .some(let value) where value == "Stopped":
-          Label.statusDisabled(value)
+          Label(value, systemImage: .imageStatusOffline)
+            .foregroundStyle(Color.statusOffline, Color.HACK_showColorInMenus)
         case .some(let value):
-          Label.statusUnknown(value)
+          Label(value, systemImage: .imageStatusUnknown)
+            .foregroundStyle(Color.statusUnknown, Color.HACK_showColorInMenus)
         case .none:
-          Label.statusUnknown
+          Label(.noValue, systemImage: .imageStatusUnknown)
         }
       }
       Section(.account) {
-        Label.personCircle(self.machines.tailscale?.currentTailnet?.name)
+        Label(self.machines.tailscale?.currentTailnet?.name ?? .noValue,
+              systemImage: .imagePerson)
       }
       Section(.domain) {
-        Label.network(self.machines.tailscale?.magicDNSSuffix)
+        Label(self.machines.tailscale?.magicDNSSuffix ?? .noValue,
+              systemImage: .imageNetwork)
       }
       switch (self.machines.tailscale) {
       case .some(let tailscale) where tailscale.versionUpToDate == true:
         Section(.versionNew) {
-          Label.statusEnabled(tailscale.version)
+          Label(tailscale.version, systemImage: .imageStatusOnline)
+            .foregroundStyle(Color.statusOnline, Color.HACK_showColorInMenus)
         }
       case .some(let tailscale):
         Section(.versionOld) {
-          Label.statusUnknown(tailscale.version)
+          Label(tailscale.version, systemImage: .imageStatusUnknown)
+            .foregroundStyle(Color.statusUnknown, Color.HACK_showColorInMenus)
         }
       case .none:
         Section(.version) {
-          Label.statusUnknown
+          Label(.noValue, systemImage: .imageStatusUnknown)
         }
       }
       Section(.magicDNS) {
         switch (self.machines.tailscale?.currentTailnet?.magicDNSEnabled) {
         case .some(let magicDNSEnabled) where magicDNSEnabled == true:
-          Label.statusEnabled
+          Label(.enabled, systemImage: .imageStatusOnline)
+            .foregroundStyle(Color.statusOnline, Color.HACK_showColorInMenus)
         case .some(_):
-          Label.statusDisabled
+          Label(.disabled, systemImage: .imageStatusOffline)
+            .foregroundStyle(Color.statusOffline, Color.HACK_showColorInMenus)
         case .none:
-          Label.statusUnknown
+          Label(.noValue, systemImage: .imageStatusUnknown)
         }
       }
       Section(.tunneling) {
         switch (self.machines.tailscale?.tunnelingEnabled) {
         case .some(let tunnelingEnabled) where tunnelingEnabled == true:
-          Label.statusEnabled
+          Label(.enabled, systemImage: .imageStatusOnline)
+            .foregroundStyle(Color.statusOnline, Color.HACK_showColorInMenus)
         case .some(_):
-          Label.statusDisabled
+          Label(.disabled, systemImage: .imageStatusOffline)
+            .foregroundStyle(Color.statusOffline, Color.HACK_showColorInMenus)
         case .none:
-          Label.statusUnknown
+          Label(.noValue, systemImage: .imageStatusUnknown)
         }
       }
       Section(.nodeKey) {
         switch (self.machines.tailscale?.haveNodeKey) {
         case .some(let haveNodeKey) where haveNodeKey == true:
-          Label.statusEnabled(.present)
+          Label(.present, systemImage: .imageStatusOnline)
+            .foregroundStyle(Color.statusOnline, Color.HACK_showColorInMenus)
         case .some(_):
-          Label.statusDisabled(.missing)
+          Label(.missing, systemImage: .imageStatusOffline)
+            .foregroundStyle(Color.statusOffline, Color.HACK_showColorInMenus)
         case .none:
-          Label.statusUnknown
+          Label(.noValue, systemImage: .imageStatusUnknown)
         }
       }
       Button(.verbSelectThisMachine, systemImage: .imageSelect) {
@@ -252,13 +265,16 @@ public struct MachineWindow: View {
     } label: {
       switch (self.machines.tailscale?.backendState) {
       case .some(let value) where value == "Running":
-        Label.statusEnabled(value)
+        Label(value, systemImage: .imageStatusOnline)
+          .foregroundStyle(Color.statusOnline, Color.HACK_showColorInMenus)
       case .some(let value) where value == "Stopped":
-        Label.statusDisabled(value)
+        Label(value, systemImage: .imageStatusOffline)
+          .foregroundStyle(Color.statusOffline, Color.HACK_showColorInMenus)
       case .some(let value):
-        Label.statusUnknown(value)
+        Label(value, systemImage: .imageStatusUnknown)
+          .foregroundStyle(Color.statusUnknown, Color.HACK_showColorInMenus)
       case .none:
-        Label.noData
+        Label(.noData, systemImage: .imageStatusNoData)
       }
     }
     .labelStyle(.titleAndIcon)

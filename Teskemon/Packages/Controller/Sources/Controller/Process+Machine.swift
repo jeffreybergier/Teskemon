@@ -24,6 +24,12 @@ import Model
 extension Process {
   @MainActor
   internal static func machines(with executable: String) async throws -> MachineController.Value {
+    // TODO: Add error handling here
+    /* (lldb) po String(data: errOut, encoding:.utf8)
+     ▿ Optional<String>
+       - some : "env: /usr/local/bin/tailscale: No such file or directory\n"
+     Message from debugger: killed
+     */
     let data = try await Process.execute(arguments: [executable, "status", "--json"]).stdOut
     let model = try MachineController.Value(data: data)
     return model
