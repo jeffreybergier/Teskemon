@@ -145,7 +145,7 @@ extension String {
 
 extension Color {
   static let statusOnline     = Color(nsColor: .systemGreen ).gradient
-  static let statusOffline    = Color(nsColor: .systemRed  ).gradient
+  static let statusOffline    = Color(nsColor: .systemRed   ).gradient
   static let statusError      = Color(nsColor: .systemYellow).gradient
   static let statusUnknown    = Color(nsColor: .systemGray  ).gradient
   static let statusProcessing = Color(nsColor: .textColor   ).gradient
