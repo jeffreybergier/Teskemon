@@ -104,8 +104,6 @@ extension Process {
                                     with timeout: Int)
                                     async throws -> Service.Status
   {
-    // TODO: Switch to tailscale netcat
-    // TODO: Add support for tailscale ping
     let arguments: [String] = [
       "/usr/bin/nc",
       "-zv",
