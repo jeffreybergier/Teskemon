@@ -28,7 +28,9 @@ public struct MachineWindow: View {
   @ServiceController  private var services
   @SettingsController private var settings
   @PresentationController private var presentation
-  @TimerProperty private var timer
+  @TimerProperty2(interval: SettingsController.rawValue.machineTimer.interval) private var machineTimer
+  @TimerProperty2(interval: SettingsController.rawValue.statusTimer.interval) private var statusTimer
+  
   
   private var selectionForMenus: Set<Machine.Identifier> {
     return self.presentation.selection.isEmpty
@@ -66,14 +68,14 @@ public struct MachineWindow: View {
       .navigationSubtitle(self.navigationTitleAppendString)
       .sheet(item: self.$presentation.showInfoPanel,
              content: { InfoSheet($0) })
-      .onChange(of: self.timer.hasElapsed(seconds: self.settings.machineTimer.interval), initial: true) { _, fired in
-        guard self.settings.machineTimer.automatic, fired else { return }
+      .onChange(of: self.machineTimer.fireCount, initial: true) { _, _ in
+        guard self.settings.machineTimer.automatic else { return }
         self.performAsync {
           try await self._machines.updateMachines(with: self.settings.executable)
         }
       }
-      .onChange(of: self.timer.hasElapsed(seconds: self.settings.statusTimer.interval), initial: true) { _, fired in
-        guard self.settings.statusTimer.automatic, fired else { return }
+      .onChange(of: self.statusTimer.fireCount, initial: true) { _, _ in
+        guard self.settings.statusTimer.automatic else { return }
         self.performAsync {
           try await self._services.updateStatus(for: self.settings.services,
                                               on: self.machines.allMachines(),
@@ -164,7 +166,7 @@ public struct MachineWindow: View {
         switch (self.isAwaitingRefresh, self.settings.statusTimer.automatic) {
         case (true, _):
           Image(systemName: .imageStatusProcessing,
-                variableValue: self.timer.percentage(of: 10))
+                variableValue: self.machineTimer.percentage(of: 10))
         case (false, false):
           Image(systemName: .imageRefresh)
         case (false, true):

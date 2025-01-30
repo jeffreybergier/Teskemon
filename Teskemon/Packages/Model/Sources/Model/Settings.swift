@@ -45,7 +45,7 @@ public enum SettingsTab: Codable {
 
 public struct SettingsTimer: Codable {
   public var automatic: Bool
-  public var interval: Int
+  public var interval: TimeInterval
 }
 
 public struct SettingsExecutable: Codable {

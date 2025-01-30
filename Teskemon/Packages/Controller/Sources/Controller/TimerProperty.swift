@@ -71,3 +71,55 @@ public struct TimerProperty: DynamicProperty {
     return self.storage.value
   }
 }
+
+@MainActor
+@propertyWrapper
+public struct TimerProperty2: DynamicProperty {
+    
+  internal class Object: ObservableObject {
+    @Published internal var value: Value
+    internal var timer: Timer?
+    @objc private func timerFired(_ timer: Timer) {
+      self.value.fireCount += 1
+    }
+    internal init(interval: TimeInterval) {
+      self.value = Value(interval: interval)
+      self.timer = Timer.scheduledTimer(timeInterval: interval,
+                                        target: self,
+                                        selector: #selector(timerFired(_:)),
+                                        userInfo: nil,
+                                        repeats: true)
+    }
+  }
+  
+  public struct Value: Equatable {
+    public var fireCount: Int = 0
+    public let interval: TimeInterval
+    internal init(interval: TimeInterval) {
+      self.interval = interval
+    }
+    public func numerator(for denominator: Int) -> Double {
+      return Double(1*(self.fireCount % denominator))
+    }
+    public func percentage(of denominator: Int) -> Double {
+      return self.numerator(for: denominator) / Double(denominator)
+    }
+  }
+  
+  private static var timers = [TimeInterval: Object]()
+  
+  @ObservedObject private var timer: Object
+  
+  public init(interval: TimeInterval) {
+    var timer: Object! = TimerProperty2.timers[interval]
+    if timer == nil {
+      timer = Object(interval: interval)
+      TimerProperty2.timers[interval] = timer
+    }
+    _timer = .init(wrappedValue: timer)
+  }
+  
+  public var wrappedValue: Value {
+    return self.timer.value
+  }
+}

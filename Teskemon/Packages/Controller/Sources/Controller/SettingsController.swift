@@ -28,6 +28,13 @@ public struct SettingsController: DynamicProperty {
   
   public typealias Value = SettingsControllerValue
   
+  public static var rawValue: Value {
+    let valueString = UserDefaults.standard.string(forKey: "Settings") ?? ""
+    let valueData = Data(base64Encoded: valueString) ?? .init()
+    let value = try? PropertyListDecoder().decode(Value.self, from: valueData)
+    return value ?? .init()
+  }
+  
   @JSBAppStorage("Settings") private var storage = Value()
   
   public init() { }
