@@ -77,14 +77,36 @@ public struct TimerProperty: DynamicProperty {
 public struct TimerProperty2: DynamicProperty {
     
   internal class Object: ObservableObject {
-    @Published internal var value: Value
+    
+    @Published internal var value: Value {
+      didSet {
+        guard self.value.isRunning else {
+          self.timer?.invalidate()
+          self.timer = nil
+          return
+        }
+        let configureTimer = { [self] in
+          self.timer = Timer.scheduledTimer(timeInterval: self.value.interval,
+                                            target: self,
+                                            selector: #selector(timerFired(_:)),
+                                            userInfo: nil,
+                                            repeats: true)
+        }
+        guard let timer else { configureTimer(); return }
+        guard timer.timeInterval == self.value.interval else { configureTimer(); return }
+      }
+    }
+    
     internal var timer: Timer?
+    
     @objc private func timerFired(_ timer: Timer) {
       self.value.fireCount += 1
     }
-    internal init(interval: TimeInterval) {
-      self.value = Value(interval: interval)
-      self.timer = Timer.scheduledTimer(timeInterval: interval,
+    
+    internal init(key: Key, isRunning: Bool) {
+      self.value = Value(identifier: key.identifier, interval: key.interval, isRunning: isRunning)
+      guard isRunning else { return }
+      self.timer = Timer.scheduledTimer(timeInterval: key.interval,
                                         target: self,
                                         selector: #selector(timerFired(_:)),
                                         userInfo: nil,
@@ -92,34 +114,55 @@ public struct TimerProperty2: DynamicProperty {
     }
   }
   
-  public struct Value: Equatable {
-    public var fireCount: Int = 0
+  public struct Key: Hashable {
+    public let identifier: String
     public let interval: TimeInterval
-    internal init(interval: TimeInterval) {
+  }
+  
+  public struct Value: Equatable {
+    
+    public let identifier: String
+    public var fireCount: Int = 0
+    public var interval: TimeInterval
+    // TODO: Change to runningRetain count
+    // to allow for += 1 -=1 for async tasks
+    public var isRunning: Bool
+    
+    internal init(identifier: String, interval: TimeInterval, isRunning: Bool) {
+      self.identifier = identifier
       self.interval = interval
+      self.isRunning = isRunning
     }
+    
     public func numerator(for denominator: Int) -> Double {
       return Double(1*(self.fireCount % denominator))
     }
+    
     public func percentage(of denominator: Int) -> Double {
       return self.numerator(for: denominator) / Double(denominator)
     }
   }
   
-  private static var timers = [TimeInterval: Object]()
+  private static var timers = [Key: Object]()
   
   @ObservedObject private var timer: Object
   
-  public init(interval: TimeInterval) {
-    var timer: Object! = TimerProperty2.timers[interval]
+  public init(identifier: String, interval: TimeInterval, isRunning: Bool = true) {
+    let key = Key(identifier: identifier, interval: interval)
+    var timer: Object! = TimerProperty2.timers[key]
     if timer == nil {
-      timer = Object(interval: interval)
-      TimerProperty2.timers[interval] = timer
+      timer = Object(key: key, isRunning: isRunning)
+      TimerProperty2.timers[key] = timer
     }
     _timer = .init(wrappedValue: timer)
   }
   
   public var wrappedValue: Value {
-    return self.timer.value
+    get {
+      return self.timer.value
+    }
+    nonmutating set {
+      self.timer.value = newValue
+    }
   }
 }

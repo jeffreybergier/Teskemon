@@ -28,8 +28,16 @@ public struct MachineWindow: View {
   @ServiceController  private var services
   @SettingsController private var settings
   @PresentationController private var presentation
-  @TimerProperty2(interval: SettingsController.rawValue.machineTimer.interval) private var machineTimer
-  @TimerProperty2(interval: SettingsController.rawValue.statusTimer.interval) private var statusTimer
+  @TimerProperty2(identifier: "MachineWindow",
+                  interval: SettingsController.rawValue.machineTimer.interval)
+                  private var machineTimer
+  @TimerProperty2(identifier: "MachineWindow",
+                  interval: SettingsController.rawValue.statusTimer.interval)
+                  private var statusTimer
+  @TimerProperty2(identifier: "MachineWindow",
+                  interval: 0.5,
+                  isRunning: false)
+                  private var UITimer
   
   
   private var selectionForMenus: Set<Machine.Identifier> {
@@ -82,6 +90,12 @@ public struct MachineWindow: View {
                                               timeout: self.settings.timeout,
                                               batchSize: self.settings.batchSize)
         }
+      }
+      .onChange(of: self.settings.statusTimer.automatic, initial: true) { _, newValue in
+        self.statusTimer.isRunning = newValue
+      }
+      .onChange(of: self.settings.statusTimer.automatic, initial: true) { _, newValue in
+        self.statusTimer.isRunning = newValue
       }
       .toolbar {
         ToolbarItem { self.editMenu    }
@@ -166,7 +180,7 @@ public struct MachineWindow: View {
         switch (self.isAwaitingRefresh, self.settings.statusTimer.automatic) {
         case (true, _):
           Image(systemName: .imageStatusProcessing,
-                variableValue: self.machineTimer.percentage(of: 10))
+                variableValue: self.UITimer.percentage(of: 10))
         case (false, false):
           Image(systemName: .imageRefresh)
         case (false, true):
@@ -285,6 +299,7 @@ public struct MachineWindow: View {
   private func performAsync(function: @escaping (() async throws -> Void)) {
     Task {
       do {
+        self.UITimer.isRunning = true
         try await function()
       } catch {
         // TODO: Show error in UI
