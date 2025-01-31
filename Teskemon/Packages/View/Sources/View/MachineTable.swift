@@ -27,12 +27,11 @@ internal struct MachineTable: View {
   @SettingsController private var settings
   @PasswordController private var passwords
   
-  // TODO: Not sure why these need to be bindings
-  // I should be able to directly use
-  // @PresentationController and @StatusController
-  // They should also allowed to be @State and not @Binding
-  @Binding internal var machines: MachineController.Value
-  @Binding internal var services: ServiceController.Value
+  // TODO: Not sure why these need to be manually passed in
+  // I should be able to use the property wrappers directly,
+  // but data was not updating
+  internal let machines: MachineController.Value
+  internal let services: ServiceController.Value
   @Binding internal var selection: Set<Machine.Identifier>
   
   internal var body: some View {

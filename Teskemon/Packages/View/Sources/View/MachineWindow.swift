@@ -50,8 +50,8 @@ public struct MachineWindow: View {
   
   public var body: some View {
     NavigationStack {
-      MachineTable(machines: self.$machines,
-                   services: self.$services,
+      MachineTable(machines: self.machines,
+                   services: self.services,
                    selection: self.$presentation.selection)
       .overlay(alignment: .topTrailing) {
           ProgressView(value: Double(self.services.progress.completedUnitCount),
