@@ -24,8 +24,13 @@ import Controller
 
 internal struct MachineTable: View {
   
+  @Environment(\.appearsActive) private var appearsActive
+  
   @SettingsController private var settings
   @PasswordController private var passwords
+  @TimerProperty(identifier: "MachineTable",
+                 interval: 1.0)
+                 private var activityColumnTimer
   
   // TODO: Not sure why these need to be manually passed in
   // I should be able to use the property wrappers directly,
@@ -62,7 +67,7 @@ internal struct MachineTable: View {
       
       TableColumn(.activity) { machine in
         TableRowActivity(activity: machine.activity,
-                         spinnerValue: self.spinnerValue)
+                         spinnerValue: self.activityColumnTimer.percentage(of: 10))
       }.width(ideal: 96)
       
       TableColumn(.ping) { machine in
@@ -80,6 +85,9 @@ internal struct MachineTable: View {
                          spinnerValue: self.spinnerValue)
         }.width(36)
       }
+    }
+    .onChange(of: self.appearsActive, initial: true) { _, newValue in
+      newValue ? self.activityColumnTimer.retain() : self.activityColumnTimer.release()
     }
   }
 }
