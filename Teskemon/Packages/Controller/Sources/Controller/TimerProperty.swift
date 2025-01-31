@@ -28,44 +28,6 @@ import SwiftUI
 @MainActor
 @propertyWrapper
 public struct TimerProperty: DynamicProperty {
-    
-  internal class Object: ObservableObject {
-    
-    @Published internal var value: Value {
-      didSet {
-        guard self.value.isRunning else {
-          self.timer?.invalidate()
-          self.timer = nil
-          return
-        }
-        let configureTimer = { [self] in
-          self.timer = Timer.scheduledTimer(timeInterval: self.value.interval,
-                                            target: self,
-                                            selector: #selector(timerFired(_:)),
-                                            userInfo: nil,
-                                            repeats: true)
-        }
-        guard let timer else { configureTimer(); return }
-        guard timer.timeInterval == self.value.interval else { configureTimer(); return }
-      }
-    }
-    
-    internal var timer: Timer?
-    
-    @objc private func timerFired(_ timer: Timer) {
-      self.value.fireCount += 1
-    }
-    
-    internal init(key: Key, isRunning: Bool) {
-      self.value = Value(identifier: key.identifier, interval: key.interval, isRunning: isRunning)
-      guard isRunning else { return }
-      self.timer = Timer.scheduledTimer(timeInterval: key.interval,
-                                        target: self,
-                                        selector: #selector(timerFired(_:)),
-                                        userInfo: nil,
-                                        repeats: true)
-    }
-  }
   
   public struct Key: Hashable {
     public let identifier: String
@@ -74,17 +36,25 @@ public struct TimerProperty: DynamicProperty {
   
   public struct Value: Equatable {
     
-    public let identifier: String
-    public var fireCount: Int = 0
-    public var interval: TimeInterval
-    // TODO: Change to runningRetain count
-    // to allow for += 1 -=1 for async tasks
-    public var isRunning: Bool
+    public               let identifier: String
+    public internal(set) var fireCount: Int = 0
+    public               var interval: TimeInterval
+    private              var retainCount: UInt = 0
     
-    internal init(identifier: String, interval: TimeInterval, isRunning: Bool) {
+    public mutating func retain() {
+      self.retainCount += 1
+    }
+    public mutating func release() {
+      guard self.retainCount > 0 else { return }
+      self.retainCount -= 1
+    }
+    public var isRunning: Bool {
+      self.retainCount > 0
+    }
+    
+    internal init(identifier: String, interval: TimeInterval) {
       self.identifier = identifier
       self.interval = interval
-      self.isRunning = isRunning
     }
     
     public func numerator(for denominator: Int) -> Double {
@@ -96,15 +66,15 @@ public struct TimerProperty: DynamicProperty {
     }
   }
   
-  private static var timers = [Key: Object]()
+  private static var timers = [Key: TimerBox]()
   
-  @ObservedObject private var timer: Object
+  @ObservedObject private var timer: TimerBox
   
-  public init(identifier: String, interval: TimeInterval, isRunning: Bool = true) {
+  public init(identifier: String, interval: TimeInterval) {
     let key = Key(identifier: identifier, interval: interval)
-    var timer: Object! = TimerProperty.timers[key]
+    var timer: TimerBox! = TimerProperty.timers[key]
     if timer == nil {
-      timer = Object(key: key, isRunning: isRunning)
+      timer = TimerBox(key: key)
       TimerProperty.timers[key] = timer
     }
     _timer = .init(wrappedValue: timer)
@@ -117,5 +87,37 @@ public struct TimerProperty: DynamicProperty {
     nonmutating set {
       self.timer.value = newValue
     }
+  }
+}
+
+fileprivate class TimerBox: ObservableObject {
+  
+  @Published internal var value: TimerProperty.Value {
+    didSet {
+      guard self.value.isRunning else {
+        self.timer?.invalidate()
+        self.timer = nil
+        return
+      }
+      let configureTimer = { [self] in
+        self.timer = Timer.scheduledTimer(timeInterval: self.value.interval,
+                                          target: self,
+                                          selector: #selector(timerFired(_:)),
+                                          userInfo: nil,
+                                          repeats: true)
+      }
+      guard let timer else { configureTimer(); return }
+      guard timer.timeInterval == self.value.interval else { configureTimer(); return }
+    }
+  }
+  
+  internal var timer: Timer?
+  
+  @objc private func timerFired(_ timer: Timer) {
+    self.value.fireCount += 1
+  }
+  
+  internal init(key: TimerProperty.Key) {
+    self.value = TimerProperty.Value(identifier: key.identifier, interval: key.interval)
   }
 }

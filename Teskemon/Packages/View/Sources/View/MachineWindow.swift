@@ -35,8 +35,7 @@ public struct MachineWindow: View {
                  interval: SettingsController.rawValue.statusTimer.interval)
                  private var statusTimer
   @TimerProperty(identifier: "MachineWindow",
-                 interval: 0.5,
-                 isRunning: false)
+                 interval: 0.5)
                  private var spinnerTimer
   
   
@@ -93,10 +92,10 @@ public struct MachineWindow: View {
         }
       }
       .onChange(of: self.settings.statusTimer.automatic, initial: true) { _, newValue in
-        self.statusTimer.isRunning = newValue
+        newValue ? self.statusTimer.retain() : self.statusTimer.release()
       }
-      .onChange(of: self.settings.statusTimer.automatic, initial: true) { _, newValue in
-        self.statusTimer.isRunning = newValue
+      .onChange(of: self.settings.machineTimer.automatic, initial: true) { _, newValue in
+        newValue ? self.machineTimer.retain() : self.machineTimer.release()
       }
       .toolbar {
         ToolbarItem { self.editMenu    }
@@ -300,11 +299,13 @@ public struct MachineWindow: View {
   private func performAsync(function: @escaping (() async throws -> Void)) {
     Task {
       do {
-        self.spinnerTimer.isRunning = true
+        self.spinnerTimer.retain()
         try await function()
+        self.spinnerTimer.release()
       } catch {
         // TODO: Show error in UI
         NSLog(String(describing:error))
+        self.spinnerTimer.release()
       }
     }
   }
