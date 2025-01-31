@@ -28,16 +28,16 @@ public struct MachineWindow: View {
   @ServiceController  private var services
   @SettingsController private var settings
   @PresentationController private var presentation
-  @TimerProperty2(identifier: "MachineWindow",
-                  interval: SettingsController.rawValue.machineTimer.interval)
-                  private var machineTimer
-  @TimerProperty2(identifier: "MachineWindow",
-                  interval: SettingsController.rawValue.statusTimer.interval)
-                  private var statusTimer
-  @TimerProperty2(identifier: "MachineWindow",
-                  interval: 0.5,
-                  isRunning: false)
-                  private var UITimer
+  @TimerProperty(identifier: "MachineWindow",
+                 interval: SettingsController.rawValue.machineTimer.interval)
+                 private var machineTimer
+  @TimerProperty(identifier: "MachineWindow",
+                 interval: SettingsController.rawValue.statusTimer.interval)
+                 private var statusTimer
+  @TimerProperty(identifier: "MachineWindow",
+                 interval: 0.5,
+                 isRunning: false)
+                 private var spinnerTimer
   
   
   private var selectionForMenus: Set<Machine.Identifier> {
@@ -52,6 +52,7 @@ public struct MachineWindow: View {
     NavigationStack {
       MachineTable(machines: self.machines,
                    services: self.services,
+                   spinnerValue: self.spinnerTimer.percentage(of: 10),
                    selection: self.$presentation.selection)
       .overlay(alignment: .topTrailing) {
           ProgressView(value: Double(self.services.progress.completedUnitCount),
@@ -180,7 +181,7 @@ public struct MachineWindow: View {
         switch (self.isAwaitingRefresh, self.settings.statusTimer.automatic) {
         case (true, _):
           Image(systemName: .imageStatusProcessing,
-                variableValue: self.UITimer.percentage(of: 10))
+                variableValue: self.spinnerTimer.percentage(of: 10))
         case (false, false):
           Image(systemName: .imageRefresh)
         case (false, true):
@@ -299,7 +300,7 @@ public struct MachineWindow: View {
   private func performAsync(function: @escaping (() async throws -> Void)) {
     Task {
       do {
-        self.UITimer.isRunning = true
+        self.spinnerTimer.isRunning = true
         try await function()
       } catch {
         // TODO: Show error in UI

@@ -32,6 +32,7 @@ internal struct MachineTable: View {
   // but data was not updating
   internal let machines: MachineController.Value
   internal let services: ServiceController.Value
+  internal let spinnerValue: Double
   @Binding internal var selection: Set<Machine.Identifier>
   
   internal var body: some View {
@@ -60,11 +61,13 @@ internal struct MachineTable: View {
       }.width(ideal: 128)
       
       TableColumn(.activity) { machine in
-        TableRowActivity(activity: machine.activity)
+        TableRowActivity(activity: machine.activity,
+                         spinnerValue: self.spinnerValue)
       }.width(ideal: 96)
       
       TableColumn(.ping) { machine in
-        TableRowPing(status: self.services[machine.id])
+        TableRowPing(status: self.services[machine.id],
+                     spinnerValue: self.spinnerValue)
       }.width(24)
       
       TableColumnForEach(self.settings.services) { service in
@@ -73,7 +76,8 @@ internal struct MachineTable: View {
                          url:    self.machines.url(for: service,
                                                 on: machine.id,
                                                 username: self.passwords[.username, machine.id],
-                                                password: self.passwords[.password, machine.id]))
+                                                password: self.passwords[.password, machine.id]),
+                         spinnerValue: self.spinnerValue)
         }.width(36)
       }
     }
@@ -162,11 +166,11 @@ internal struct TableRowName: View {
 
 internal struct TableRowActivity: View {
   
-  @TimerProperty private var timer
-  
-  private let byteF = ByteCountFormatter()
-  
+  private static let byteF = ByteCountFormatter()
+
   internal let activity: Machine.Activity?
+  internal let spinnerValue: Double
+  
   internal var body: some View {
     HStack(alignment: .center) {
       self.indicator
@@ -175,8 +179,8 @@ internal struct TableRowActivity: View {
           Image(systemName: .imageActivityUpDown)
             .font(.headline)
           VStack(alignment: .leading, spacing: 0) {
-            Text(byteF.string(fromByteCount: activity.txBytes))
-            Text(byteF.string(fromByteCount: activity.rxBytes))
+            Text(type(of: self).byteF.string(fromByteCount: activity.txBytes))
+            Text(type(of: self).byteF.string(fromByteCount: activity.rxBytes))
           }.font(.subheadline)
         }
       }
@@ -187,7 +191,7 @@ internal struct TableRowActivity: View {
     switch activity?.isActive {
     case .some(true):
       Image(systemName: .imageActivityActive,
-            variableValue: self.timer.percentage(of: 10))
+            variableValue: self.spinnerValue)
         .font(.headline)
     case .some(false):
       Image(systemName: .imageActivityInactive)
@@ -202,8 +206,8 @@ internal struct TableRowActivity: View {
 
 internal struct TableRowPing: View {
   
-  @TimerProperty private var timer
   internal let status: Service.Status
+  internal let spinnerValue: Double
   
   internal var body: some View {
     Label {
@@ -224,7 +228,7 @@ internal struct TableRowPing: View {
           .foregroundStyle(Color(nsColor: .systemGray).gradient)
       case .processing:
         Image(systemName: .imageStatusProcessing,
-              variableValue: self.timer.percentage(of: 10))
+              variableValue: self.spinnerValue)
       }
     }
     .labelStyle(.iconOnly)
@@ -244,10 +248,9 @@ internal struct TableRowPing: View {
 
 internal struct TableRowStatus: View {
   
-  @TimerProperty private var timer
-  
   internal let status: Service.Status
   internal let url: URL
+  internal let spinnerValue: Double
   
   internal var body: some View {
     Button {
@@ -272,7 +275,7 @@ internal struct TableRowStatus: View {
     case .offline: Image(systemName: .imageStatusOffline)
     case .processing:
       Image(systemName: .imageStatusProcessing,
-            variableValue: self.timer.percentage(of: 10))
+            variableValue: self.spinnerValue)
     }
   }
   

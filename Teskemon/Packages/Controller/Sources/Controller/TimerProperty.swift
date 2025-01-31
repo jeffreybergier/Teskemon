@@ -28,53 +28,6 @@ import SwiftUI
 @MainActor
 @propertyWrapper
 public struct TimerProperty: DynamicProperty {
-  
-  internal class Object: ObservableObject {
-    @Published internal var value = Value(rawValue: 0)
-    internal var timer: Timer?
-    internal init() {
-      self.timer = Timer.scheduledTimer(timeInterval: 1,
-                                        target: self,
-                                        selector: #selector(timerFired(_:)),
-                                        userInfo: nil,
-                                        repeats: true)
-    }
-    @objc private func timerFired(_ timer: Timer) {
-      self.value.rawValue += 1
-    }
-  }
-  
-  public struct Value: RawRepresentable, Identifiable, Equatable {
-    public var rawValue: Int
-    public var id: Int { self.rawValue }
-    public init(rawValue: Int) {
-      self.rawValue = rawValue
-    }
-    public func hasElapsed(seconds: Int) -> Bool {
-      return self.rawValue % seconds == 0
-    }
-    public func numerator(for denominator: Int) -> Double {
-      return Double(1*(self.rawValue % denominator))
-    }
-    public func percentage(of denominator: Int) -> Double {
-      return self.numerator(for: denominator) / Double(denominator)
-    }
-  }
-  
-  internal static let sharedTimer = Object()
-  
-  @ObservedObject private var storage = TimerProperty.sharedTimer
-  
-  public init() {}
-  
-  public var wrappedValue: Value {
-    return self.storage.value
-  }
-}
-
-@MainActor
-@propertyWrapper
-public struct TimerProperty2: DynamicProperty {
     
   internal class Object: ObservableObject {
     
@@ -149,10 +102,10 @@ public struct TimerProperty2: DynamicProperty {
   
   public init(identifier: String, interval: TimeInterval, isRunning: Bool = true) {
     let key = Key(identifier: identifier, interval: interval)
-    var timer: Object! = TimerProperty2.timers[key]
+    var timer: Object! = TimerProperty.timers[key]
     if timer == nil {
       timer = Object(key: key, isRunning: isRunning)
-      TimerProperty2.timers[key] = timer
+      TimerProperty.timers[key] = timer
     }
     _timer = .init(wrappedValue: timer)
   }
