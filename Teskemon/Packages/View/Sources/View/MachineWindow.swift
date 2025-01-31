@@ -28,13 +28,13 @@ public struct MachineWindow: View {
   @ServiceController  private var services
   @SettingsController private var settings
   @PresentationController private var presentation
-  @TimerProperty(identifier: "MachineWindow",
+  @TimerProperty(identifier: "MachineWindow:Machine",
                  interval: SettingsController.rawValue.machineTimer.interval)
                  private var machineTimer
-  @TimerProperty(identifier: "MachineWindow",
+  @TimerProperty(identifier: "MachineWindow:Status",
                  interval: SettingsController.rawValue.statusTimer.interval)
                  private var statusTimer
-  @TimerProperty(identifier: "MachineWindow",
+  @TimerProperty(identifier: "MachineWindow:Spinner",
                  interval: 0.5)
                  private var spinnerTimer
   

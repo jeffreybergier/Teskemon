@@ -24,13 +24,8 @@ import Controller
 
 internal struct MachineTable: View {
   
-  @Environment(\.appearsActive) private var appearsActive
-  
   @SettingsController private var settings
   @PasswordController private var passwords
-  @TimerProperty(identifier: "MachineTable",
-                 interval: 1.0)
-                 private var activityColumnTimer
   
   // TODO: Not sure why these need to be manually passed in
   // I should be able to use the property wrappers directly,
@@ -66,8 +61,7 @@ internal struct MachineTable: View {
       }.width(ideal: 128)
       
       TableColumn(.activity) { machine in
-        TableRowActivity(activity: machine.activity,
-                         spinnerValue: self.activityColumnTimer.percentage(of: 10))
+        TableRowActivity(activity: machine.activity)
       }.width(ideal: 96)
       
       TableColumn(.ping) { machine in
@@ -85,9 +79,6 @@ internal struct MachineTable: View {
                          spinnerValue: self.spinnerValue)
         }.width(36)
       }
-    }
-    .onChange(of: self.appearsActive, initial: true) { _, newValue in
-      newValue ? self.activityColumnTimer.retain() : self.activityColumnTimer.release()
     }
   }
 }
@@ -175,9 +166,13 @@ internal struct TableRowName: View {
 internal struct TableRowActivity: View {
   
   private static let byteF = ByteCountFormatter()
+  
+  @Environment(\.appearsActive) private var sceneAppearsActive
+  @TimerProperty(identifier: "MachineTable",
+                 interval: 1.0)
+                 private var activityTimer
 
   internal let activity: Machine.Activity?
-  internal let spinnerValue: Double
   
   internal var body: some View {
     HStack(alignment: .center) {
@@ -193,13 +188,23 @@ internal struct TableRowActivity: View {
         }
       }
     }
+    .onChange(of: self.sceneAppearsActive, initial: true, self.manageTimer)
+    .onChange(of: self.activity?.isActive, initial: true, self.manageTimer)
+  }
+  
+  private func manageTimer<T>(_ oldValue: T, newValue: T) {
+    if self.sceneAppearsActive, (self.activity?.isActive ?? false) {
+      self.activityTimer.retain()
+    } else {
+      self.activityTimer.release()
+    }
   }
   
   @ViewBuilder private var indicator: some View {
     switch activity?.isActive {
     case .some(true):
       Image(systemName: .imageActivityActive,
-            variableValue: self.spinnerValue)
+            variableValue: self.activityTimer.percentage(of: 10))
         .font(.headline)
     case .some(false):
       Image(systemName: .imageActivityInactive)

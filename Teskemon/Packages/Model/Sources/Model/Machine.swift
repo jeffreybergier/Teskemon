@@ -176,7 +176,7 @@ extension Machine {
     }
   }
   
-  public struct Activity: Codable, Sendable {
+  public struct Activity: Codable, Sendable, Equatable {
     public let isOnline: Bool
     public let isActive: Bool
     public let rxBytes: Int64
