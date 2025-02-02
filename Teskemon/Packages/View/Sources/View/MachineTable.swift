@@ -25,7 +25,7 @@ import Controller
 internal struct MachineTable: View {
   
   @SettingsController private var settings
-  @PasswordController private var passwords
+  //@PasswordController private var passwords
   
   // TODO: Not sure why these need to be bindings
   // I should be able to directly use
@@ -73,8 +73,10 @@ internal struct MachineTable: View {
           TableRowStatus(status: self.services[machine.id, service],
                          url:    self.machines.url(for: service,
                                                 on: machine.id,
-                                                username: self.passwords[.username, machine.id],
-                                                password: self.passwords[.password, machine.id]))
+                                                   // TODO: Fix put passwords back
+                                                   // and make this lazy (on button click)
+                                                username: nil,
+                                                password: nil))
         }.width(36)
       }
     }
