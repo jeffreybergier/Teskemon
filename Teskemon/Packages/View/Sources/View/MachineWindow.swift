@@ -230,8 +230,8 @@ public struct MachineWindow: View {
         }
       case .some(let tailscale):
         Section(.versionOld) {
-          Label(tailscale.version, systemImage: .imageStatusUnknown)
-            .foregroundStyle(Color.statusUnknown, Color.HACK_showColorInMenus)
+          Label(tailscale.version, systemImage: .imageStatusError)
+            .foregroundStyle(Color.HACK_showColorInMenus, Color.statusError)
         }
       case .none:
         Section(.version) {
