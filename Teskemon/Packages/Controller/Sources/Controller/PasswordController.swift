@@ -31,7 +31,10 @@ public struct PasswordController: DynamicProperty {
     public var passwords: [Machine.Identifier: Password] = [:]
     public subscript(id: Machine.Identifier) -> Password {
       get { self.passwords[id, default: .init()] }
-      set { self.passwords[id] = newValue }
+      set {
+        print("set: account:`\(newValue.account)` pass:`\(newValue.password)`")
+        self.passwords[id] = newValue
+      }
     }
   }
     
@@ -55,9 +58,35 @@ public struct PasswordController: DynamicProperty {
     }
   }
   
+  public func delete(id: Machine.Identifier) {
+    
+  }
+  
+  public func save(id: Machine.Identifier) {
+    let password = self.values[id]
+    guard password.account.trimmed != nil, password.password.trimmed != nil else { return }
+    let status: OSStatus
+    switch password.status {
+    case .newModified:
+      status = SecItemAdd(password.valueForSaving as CFDictionary, nil)
+    case .savedModified:
+      status = SecItemUpdate(password.queryValue as CFDictionary,
+                             password.valueForUpdating as CFDictionary)
+    case .new, .saved, .error:
+      return
+    }
+    
+    guard status == errSecSuccess else {
+      print(status.description)
+      return
+    }
+    
+    self.values[id].status = .saved
+  }
+  
   private func fetch(id: Machine.Identifier) -> Password {
-    let server = self.machines[id].url
-    let query = Password.Query(server: server)
+    let machine = self.machines[id]
+    let query = Password.Query(id: machine.id, server: machine.url)
     let password = type(of: self).query(query)
     return password
   }
@@ -73,6 +102,7 @@ public struct PasswordController: DynamicProperty {
       kSecAttrCreator:      query.creator,
       kSecMatchLimit:       kSecMatchLimitOne,
       kSecReturnAttributes: true,
+      kSecReturnData:       true,
     ]
     
     // Perform Query
@@ -80,7 +110,9 @@ public struct PasswordController: DynamicProperty {
     let status: OSStatus = SecItemCopyMatching(rawQuery as CFDictionary, &item)
     switch status {
     case errSecItemNotFound:
-      output.status = .notFound
+      output.status = .new
+      output.server = query.server
+      output.description = query.id.rawValue
     case errSecSuccess:
       output.status = .saved
     default:
@@ -96,12 +128,55 @@ public struct PasswordController: DynamicProperty {
     output.server      = rawPassword[kSecAttrServer     ] as? String ?? ""
     output.description = rawPassword[kSecAttrDescription] as? String ?? ""
     output.comment     = rawPassword[kSecAttrComment    ] as? String ?? ""
-    output.label       = rawPassword[kSecAttrComment    ] as? String ?? ""
+    output.label       = rawPassword[kSecAttrLabel      ] as? String ?? ""
     output.creator     = rawPassword[kSecAttrCreator    ] as? OSType
     output.accessGroup = rawPassword[kSecAttrAccessGroup] as? String ?? ""
     output.class       = query.class
+    let passwordString = (rawPassword[kSecValueData] as? Data)
+                         .map { String(data: $0, encoding: .utf8) } ?? ""
+    output.password    = passwordString ?? ""
+    
+    guard output.description == query.id.rawValue, output.server == query.server else {
+      output.status = .new
+      return output
+    }
     
     return output
   }
+}
+
+extension Password {
+  internal var queryValue: [CFString: Any] {
+    var query: [CFString : Any] = [
+      kSecClass:            self.class       as CFString,
+      kSecAttrAccessGroup:  self.accessGroup as CFString,
+      kSecAttrServer:       self.server      as CFString,
+    ]
+    
+    query[kSecAttrPath]        = self.path.trimmed
+    query[kSecAttrPort]        = self.port.trimmed
+    query[kSecAttrProtocol]    = self.protocol.trimmed
+    query[kSecAttrServer]      = self.server.trimmed
+    query[kSecAttrDescription] = self.description.trimmed
+    query[kSecAttrComment]     = self.comment.trimmed
+    query[kSecAttrLabel]       = self.label.trimmed
+    query[kSecAttrCreator]     = self.creator
+    query[kSecAttrAccessGroup] = self.accessGroup
+    
+    return query
+  }
   
+  internal var valueForSaving: [CFString: Any] {
+    var query = self.queryValue
+    query[kSecAttrAccount] = self.account.trimmed
+    query[kSecValueData  ] = self.password.data(using: .utf8)!
+    return query
+  }
+  
+  internal var valueForUpdating: [CFString: Any] {
+    return [
+      kSecAttrAccount: self.account,
+      kSecValueData:   self.password.data(using: .utf8)!
+    ]
+  }
 }

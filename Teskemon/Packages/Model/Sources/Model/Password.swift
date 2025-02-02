@@ -23,35 +23,39 @@ import SwiftUI
 public struct Password: Sendable, Equatable, Hashable {
   
   public enum Status: Sendable, Equatable, Hashable {
+    case new
+    case newModified
     case saved
-    case notFound
-    case modified
+    case savedModified
     case error(OSStatus)
   }
   
-  public var status:      Status = .notFound
-  public var account:     String = ""
-  public var path:        String = ""
-  public var port:        String = ""
-  public var `protocol`:  String = ""
-  public var server:      String = ""
-  public var description: String = ""
-  public var comment:     String = ""
-  public var label:       String = ""
-  public var `class`:     String = kSecClassInternetPassword as String
+  public var status:      Status  = .new
+  public var account:     String  = ""
+  public var path:        String  = ""
+  public var port:        String  = ""
+  public var `protocol`:  String  = ""
+  public var server:      String  = ""
+  public var description: String  = ""
+  public var comment:     String  = ""
+  public var label:       String  = ""
+  public var password:    String  = ""
+  public var `class`:     String  = kSecClassInternetPassword as String
   public var creator:     OSType? = OSType(string: "SATM")
-  public var accessGroup: String = Bundle.main.bundleIdentifier!
+  public var accessGroup: String  = Bundle.main.bundleIdentifier!
   
   public init() {}
 }
 
 extension Password {
   public struct Query {
+    public var id: Machine.Identifier
     public var server: String
     public var `class`: String = kSecClassInternetPassword as String
     public var creator: OSType = OSType(string: "SATM")
     public var accessGroup: String = Bundle.main.bundleIdentifier!
-    public init(server: String) {
+    public init(id: Machine.Identifier, server: String) {
+      self.id = id
       self.server = server
     }
   }

@@ -88,28 +88,22 @@ internal struct InfoSheet: View {
           .font(.body)
       }.width(120)
       TableColumn(.username) { id in
-        let password = self.passwords[id]
-        switch (password.status) {
-        case .notFound:
-          Text("–")
-        case .saved:
-          Text(password.account.trimmed ?? "–")
-        case .modified:
-          Text(password.account.trimmed ?? "–")
+        switch (self.passwords[id].status) {
+        case .new, .saved:
+          Text(self.passwords[id].account.trimmed ?? "–")
+        case .newModified, .savedModified:
+          TextField("", text: self.$passwords[id].account)
         case .error(let error):
           Text(String(describing: error))
         }
       }
-      TableColumn(.username) { id in
+      TableColumn(.password) { id in
         let password = self.passwords[id]
         switch (password.status) {
-        case .notFound:
-          Text("–")
-        case .saved:
-          // TODO: Get actual password
-          Text(password.account.trimmed ?? "–")
-        case .modified:
-          Text(password.account.trimmed ?? "–")
+        case .new, .saved:
+          Text(self.passwords[id].password.trimmed ?? "–")
+        case .newModified, .savedModified:
+          TextField("", text: self.$passwords[id].password)
         case .error(let error):
           Text(String(describing: error))
         }
@@ -117,12 +111,18 @@ internal struct InfoSheet: View {
       TableColumn("Action") { id in
         let password = self.passwords[id]
         switch (password.status) {
-        case .notFound:
-          Button("Create Password") { }
+        case .new:
+          Button("Add") {
+            self.passwords[id].status = .newModified
+          }
         case .saved:
-          Button("Delete Password") { }
-        case .modified:
-          Button("Update Password") { }
+          Button("Update") {
+            self.passwords[id].status = .savedModified
+          }
+        case .newModified, .savedModified:
+          Button("Save") {
+            _passwords.save(id: id)
+          }
         case .error:
           EmptyView()
         }
