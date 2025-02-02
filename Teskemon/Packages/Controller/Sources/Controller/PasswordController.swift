@@ -31,10 +31,7 @@ public struct PasswordController: DynamicProperty {
     public var passwords: [Machine.Identifier: Password] = [:]
     public subscript(id: Machine.Identifier) -> Password {
       get { self.passwords[id, default: .init()] }
-      set {
-        print("set: account:`\(newValue.account)` pass:`\(newValue.password)`")
-        self.passwords[id] = newValue
-      }
+      set { self.passwords[id] = newValue }
     }
   }
     
@@ -62,6 +59,7 @@ public struct PasswordController: DynamicProperty {
     
   }
   
+  // TODO: Make async throwing
   public func save(id: Machine.Identifier) {
     let password = self.values[id]
     guard password.account.trimmed != nil, password.password.trimmed != nil else { return }
@@ -70,7 +68,7 @@ public struct PasswordController: DynamicProperty {
     case .newModified:
       status = SecItemAdd(password.valueForSaving as CFDictionary, nil)
     case .savedModified:
-      status = SecItemUpdate(password.queryValue as CFDictionary,
+      status = SecItemUpdate(password.valueForQuery    as CFDictionary,
                              password.valueForUpdating as CFDictionary)
     case .new, .saved, .error:
       return
@@ -84,6 +82,7 @@ public struct PasswordController: DynamicProperty {
     self.values[id].status = .saved
   }
   
+  // TODO: Make Async
   private func fetch(id: Machine.Identifier) -> Password {
     let machine = self.machines[id]
     let query = Password.Query(id: machine.id, server: machine.url)
@@ -91,7 +90,8 @@ public struct PasswordController: DynamicProperty {
     return password
   }
   
-  public static func query(_ query: Password.Query) -> Password {
+  // TODO: Make Async
+  private static func query(_ query: Password.Query) -> Password {
     var output = Password()
     
     // Create Query
@@ -129,8 +129,8 @@ public struct PasswordController: DynamicProperty {
     output.description = rawPassword[kSecAttrDescription] as? String ?? ""
     output.comment     = rawPassword[kSecAttrComment    ] as? String ?? ""
     output.label       = rawPassword[kSecAttrLabel      ] as? String ?? ""
-    output.creator     = rawPassword[kSecAttrCreator    ] as? OSType
     output.accessGroup = rawPassword[kSecAttrAccessGroup] as? String ?? ""
+    output.creator     = rawPassword[kSecAttrCreator    ] as? OSType ?? Password.creator
     output.class       = query.class
     let passwordString = (rawPassword[kSecValueData] as? Data)
                          .map { String(data: $0, encoding: .utf8) } ?? ""
@@ -146,11 +146,12 @@ public struct PasswordController: DynamicProperty {
 }
 
 extension Password {
-  internal var queryValue: [CFString: Any] {
+  internal var valueForQuery: [CFString: Any] {
     var query: [CFString : Any] = [
-      kSecClass:            self.class       as CFString,
-      kSecAttrAccessGroup:  self.accessGroup as CFString,
-      kSecAttrServer:       self.server      as CFString,
+      kSecClass:           self.class,
+      kSecAttrAccessGroup: self.accessGroup,
+      kSecAttrServer:      self.server,
+      kSecAttrCreator:     self.creator,
     ]
     
     query[kSecAttrPath]        = self.path.trimmed
@@ -160,14 +161,12 @@ extension Password {
     query[kSecAttrDescription] = self.description.trimmed
     query[kSecAttrComment]     = self.comment.trimmed
     query[kSecAttrLabel]       = self.label.trimmed
-    query[kSecAttrCreator]     = self.creator
-    query[kSecAttrAccessGroup] = self.accessGroup
     
     return query
   }
   
   internal var valueForSaving: [CFString: Any] {
-    var query = self.queryValue
+    var query = self.valueForQuery
     query[kSecAttrAccount] = self.account.trimmed
     query[kSecValueData  ] = self.password.data(using: .utf8)!
     return query

@@ -22,6 +22,8 @@ import SwiftUI
 
 public struct Password: Sendable, Equatable, Hashable {
   
+  public static let creator = OSType(string: "SATM")
+  
   public enum Status: Sendable, Equatable, Hashable {
     case new
     case newModified
@@ -30,19 +32,19 @@ public struct Password: Sendable, Equatable, Hashable {
     case error(OSStatus)
   }
   
-  public var status:      Status  = .new
-  public var account:     String  = ""
-  public var path:        String  = ""
-  public var port:        String  = ""
-  public var `protocol`:  String  = ""
-  public var server:      String  = ""
-  public var description: String  = ""
-  public var comment:     String  = ""
-  public var label:       String  = ""
-  public var password:    String  = ""
-  public var `class`:     String  = kSecClassInternetPassword as String
-  public var creator:     OSType? = OSType(string: "SATM")
-  public var accessGroup: String  = Bundle.main.bundleIdentifier!
+  public var status:      Status = .new
+  public var account:     String = ""
+  public var path:        String = ""
+  public var port:        String = ""
+  public var `protocol`:  String = ""
+  public var server:      String = ""
+  public var description: String = ""
+  public var comment:     String = ""
+  public var label:       String = ""
+  public var password:    String = ""
+  public var `class`:     String = kSecClassInternetPassword as String
+  public var creator:     OSType = Password.creator
+  public var accessGroup: String = Bundle.main.bundleIdentifier!
   
   public init() {}
 }
