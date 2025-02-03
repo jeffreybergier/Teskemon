@@ -84,7 +84,7 @@ public struct PasswordController: DynamicProperty {
   // TODO: Make Async
   private func fetch(id: Machine.Identifier) -> Password {
     let machine = self.machines[id]
-    let query = Password.Query(id: machine.id, server: machine.url)
+    let query = Password.Query(machine: machine)
     let password = type(of: self).query(query)
     return password
   }
@@ -97,7 +97,7 @@ public struct PasswordController: DynamicProperty {
     let rawQuery: [CFString: Any] = [
       kSecClass:            query.class       as CFString,
       kSecAttrAccessGroup:  query.accessGroup as CFString,
-      kSecAttrServer:       query.server      as CFString,
+      kSecAttrServer:       query.machine.url as CFString,
       kSecAttrCreator:      query.creator,
       kSecMatchLimit:       kSecMatchLimitOne,
       kSecReturnAttributes: true,
@@ -110,8 +110,8 @@ public struct PasswordController: DynamicProperty {
     switch status {
     case errSecItemNotFound:
       output.status = .new
-      output.server = query.server
-      output.description = query.id.rawValue
+      output.server = query.machine.url
+      output.label  = "\(query.machine.url) (\(query.machine.name)<\(query.machine.id.rawValue)>)"
     case errSecSuccess:
       output.status = .saved
     default:
@@ -125,18 +125,23 @@ public struct PasswordController: DynamicProperty {
     output.port        = rawPassword[kSecAttrPort       ] as? String ?? ""
     output.protocol    = rawPassword[kSecAttrProtocol   ] as? String ?? ""
     output.server      = rawPassword[kSecAttrServer     ] as? String ?? ""
-    output.description = rawPassword[kSecAttrDescription] as? String ?? ""
     output.comment     = rawPassword[kSecAttrComment    ] as? String ?? ""
     output.label       = rawPassword[kSecAttrLabel      ] as? String ?? ""
-    output.accessGroup = rawPassword[kSecAttrAccessGroup] as? String ?? ""
-    output.creator     = rawPassword[kSecAttrCreator    ] as? OSType ?? Password.creator
+    output.description = rawPassword[kSecAttrDescription] as? String ?? ""
+    output.accessGroup = rawPassword[kSecAttrAccessGroup] as? String ?? Password.defaultAccessGroup // Access Group seems to come back nil
+    output.creator     = rawPassword[kSecAttrCreator    ] as! OSType
     output.class       = query.class
-    let passwordString = (rawPassword[kSecValueData] as? Data)
-                         .map { String(data: $0, encoding: .utf8) } ?? ""
+    let passwordString = (rawPassword[kSecValueData] as? Data).map { String(data: $0, encoding: .utf8) } ?? ""
     output.password    = passwordString ?? ""
     
-    guard output.description == query.id.rawValue, output.server == query.server else {
-      output.status = .new
+    guard output.description == Password.defaultDescription,
+          output.accessGroup == Password.defaultAccessGroup,
+          output.creator == Password.defaultCreator,
+          output.class == Password.defaultClass
+    else {
+      // TODO: Make my own errors
+      output.status = .error(5)
+      assertionFailure()
       return output
     }
     

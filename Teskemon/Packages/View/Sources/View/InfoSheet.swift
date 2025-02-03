@@ -93,6 +93,7 @@ internal struct InfoSheet: View {
           Text(self.passwords[id].account.trimmed ?? "–")
         case .newModified, .savedModified:
           TextField("", text: self.$passwords[id].account)
+            .textFieldStyle(.roundedBorder)
         case .error(let error):
           Text(String(describing: error))
         }
@@ -104,6 +105,7 @@ internal struct InfoSheet: View {
           Text(self.passwords[id].password.trimmed ?? "–")
         case .newModified, .savedModified:
           TextField("", text: self.$passwords[id].password)
+            .textFieldStyle(.roundedBorder)
         case .error(let error):
           Text(String(describing: error))
         }
