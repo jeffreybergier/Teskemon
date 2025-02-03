@@ -17,7 +17,6 @@ let package = Package(
   dependencies: [
     .package(path: "../Model"),
     .package(url: "https://github.com/jeffreybergier/Umbrella.git", branch: "waterme3-wOS10-Swift6"),
-    .package(url: "https://github.com/evgenyneu/keychain-swift.git", from: "24.0.0"),
   ],
   targets: [
     .target(
@@ -25,7 +24,6 @@ let package = Package(
       dependencies: [
         .byNameItem(name: "Model", condition: nil),
         .byNameItem(name: "Umbrella", condition: nil),
-        .product(name: "KeychainSwift", package: "keychain-swift")
       ],
       swiftSettings: [.swiftLanguageMode(.v6)]
     ),

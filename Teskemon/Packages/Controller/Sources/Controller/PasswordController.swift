@@ -21,7 +21,6 @@
 import SwiftUI
 import Umbrella
 import Model
-import KeychainSwift
 
 @MainActor
 @propertyWrapper
