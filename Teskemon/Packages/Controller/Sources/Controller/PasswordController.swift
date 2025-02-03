@@ -26,41 +26,59 @@ import Model
 @propertyWrapper
 public struct PasswordController: DynamicProperty {
   
-  public struct Value: Sendable, Equatable, Hashable {
-    public var passwords: [Machine.Identifier: Password] = [:]
-    public subscript(id: Machine.Identifier) -> Password {
-      get { self.passwords[id, default: .init()] }
-      set { self.passwords[id] = newValue }
+  @MainActor
+  internal class Cache: ObservableObject {
+    
+    private var cache: [Machine.Identifier: Password] = [:]
+    @Published internal var passwords: [Machine.Identifier: Password] = [:]
+    
+    internal subscript(machine: Machine) -> Password {
+      set {
+        self.passwords[machine.id] = newValue
+      }
+      get {
+        if let password = self.passwords[machine.id] { return password }
+        if let password = self.cache[machine.id]     { return password }
+        let password = PasswordController.query(machine)
+        self.cache[machine.id] = password
+        return password
+      }
+    }
+  }
+  
+  @MainActor
+  public struct Value {
+    internal var cache: Cache
+    public subscript(machine: Machine) -> Password {
+      get { self.cache[machine] }
+      nonmutating set { self.cache[machine] = newValue }
+    }
+    
+    public func bind(machine: Machine) -> Binding<Password> {
+      return Binding {
+        return self.cache[machine]
+      } set: {
+        self.cache[machine] = $0
+      }
     }
   }
   
   @MachineController  private var machines
-  @State private var values: Value = .init()
+  @StateObject private var cache = Cache()
   
   public var wrappedValue: Value {
-    get { self.values }
-    nonmutating set { self.values = newValue }
-  }
-  
-  public var projectedValue: Binding<Value> {
-    self.$values
+    .init(cache: self.cache)
   }
   
   public init() { }
-  
-  public func prefetch(ids: [Machine.Identifier]) {
-    for id in ids {
-      self.values[id] = self.fetch(id: id)
-    }
-  }
   
   public func delete(id: Machine.Identifier) {
     
   }
   
   // TODO: Make async throwing
-  public func save(id: Machine.Identifier) -> Password.Status {
-    let password = self.values[id]
+  public func save(machine: Machine) -> Password.Status {
+    let password = self.wrappedValue[machine]
     
     let status: OSStatus
     switch password.status {
@@ -90,18 +108,14 @@ public struct PasswordController: DynamicProperty {
     return .saved
   }
   
-  private func fetch(id: Machine.Identifier) -> Password {
-    return type(of: self).query(self.machines[id])
-  }
-  
-  private static func query(_ machine: Machine) -> Password {
+  internal static func query(_ machine: Machine) -> Password {
     // Create Query
     let rawQuery: [CFString: Any] = [
       kSecClass:            Password.defaultClass,
       kSecAttrCreator:      Password.defaultCreator,
       kSecMatchLimit:       kSecMatchLimitOne,
-      kSecReturnAttributes: true,
       kSecReturnData:       true,
+      kSecReturnAttributes: true,
       kSecAttrServer:       machine.url,
     ]
     

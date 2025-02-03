@@ -88,42 +88,42 @@ internal struct InfoSheet: View {
           .font(.body)
       }.width(120)
       TableColumn(.username) { id in
-        switch (self.passwords[id].status) {
+        switch (self.passwords[self.machines[id]].status) {
         case .new, .saved:
-          Text(self.passwords[id].user_account.trimmed ?? "–")
+          Text(self.passwords[self.machines[id]].user_account.trimmed ?? "–")
         case .newModified, .savedModified:
-          TextField("", text: self.$passwords[id].user_account)
+          TextField("", text: self.passwords.bind(machine: self.machines[id]).user_account)
             .textFieldStyle(.roundedBorder)
         case .keychainError, .error:
           Text("–")
         }
       }
       TableColumn(.password) { id in
-        let password = self.passwords[id]
+        let password = self.passwords[self.machines[id]]
         switch (password.status) {
         case .new, .saved:
-          Text(self.passwords[id].user_password.trimmed ?? "–")
+          Text(self.passwords[self.machines[id]].user_password.trimmed ?? "–")
         case .newModified, .savedModified:
-          TextField("", text: self.$passwords[id].user_password)
+          TextField("", text: self.passwords.bind(machine: self.machines[id]).user_password)
             .textFieldStyle(.roundedBorder)
         case .keychainError, .error:
           Text("–")
         }
       }
       TableColumn("Action") { id in
-        let password = self.passwords[id]
+        let password = self.passwords[self.machines[id]]
         switch (password.status) {
         case .new:
           Button("Add") {
-            self.passwords[id].status = .newModified
+            self.passwords[self.machines[id]].status = .newModified
           }
         case .saved:
           Button("Update") {
-            self.passwords[id].status = .savedModified
+            self.passwords[self.machines[id]].status = .savedModified
           }
         case .newModified, .savedModified:
           Button("Save") {
-            self.passwords[id].status = _passwords.save(id: id)
+            self.passwords[self.machines[id]].status = _passwords.save(machine: self.machines[id])
           }
         case .keychainError(let error):
           Text(error.localizedDescription)
@@ -131,9 +131,6 @@ internal struct InfoSheet: View {
           Text(error.localizedDescription)
         }
       }
-    }
-    .onAppear {
-      _passwords.prefetch(ids: self.selection)
     }
   }
   
