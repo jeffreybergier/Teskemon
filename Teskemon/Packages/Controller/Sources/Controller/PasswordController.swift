@@ -59,9 +59,13 @@ public struct PasswordController: DynamicProperty {
   }
   
   // TODO: Make async throwing
-  public func save(id: Machine.Identifier) {
+  public func save(id: Machine.Identifier) -> Password.Status {
     let password = self.values[id]
-    guard password.user_account.trimmed != nil, password.user_password.trimmed != nil else { return }
+    
+    guard password.user_account.trimmed != nil, password.user_password.trimmed != nil else {
+      return .error(.missingUsernameOrPassword)
+    }
+    
     let status: OSStatus
     switch password.status {
     case .newModified:
@@ -69,17 +73,16 @@ public struct PasswordController: DynamicProperty {
     case .savedModified:
       status = SecItemUpdate(password.valueForQuery    as CFDictionary,
                              password.valueForUpdating as CFDictionary)
-    case .new, .saved, .error:
-      return
+    case .new, .saved, .keychainError, .error:
+      fatalError("Tried to save password that is not in the modified state")
     }
     
     // TODO: Create custom error here
     guard status == errSecSuccess else {
-      print(status.description)
-      return
+      return .keychainError(status)
     }
     
-    self.values[id].status = .saved
+    return .saved
   }
   
   // TODO: Make Async
@@ -108,47 +111,58 @@ public struct PasswordController: DynamicProperty {
     var item: CFTypeRef?
     let status: OSStatus = SecItemCopyMatching(rawQuery as CFDictionary, &item)
     switch status {
+    case errSecSuccess:
+      output.status = .saved
     case errSecItemNotFound:
       output.status = .new
       output.app_server = query.machine.url
       output.app_label  = "\(query.machine.url) (\(query.machine.name)<\(query.machine.id.rawValue)>)"
-    case errSecSuccess:
-      output.status = .saved
+      output.const_class       = Password.defaultClass
+      output.const_creator     = Password.defaultCreator
+      output.const_description = Password.defaultDescription
     default:
-      output.status = .error(status)
+      output.status = .keychainError(status)
     }
     
     // Parse results
-    guard let rawPassword = item as? [CFString: Any] else { return output }
+    guard status == errSecSuccess else { return output }
+    let rawPassword = item as! [CFString: Any]
     
-    // TODO: Do more validation here and return errors for malformed passwords
-
     // Configured by the user
     output.user_account  = rawPassword[kSecAttrAccount] as! String
     output.user_password = String(data: rawPassword[kSecValueData] as! Data, encoding: .utf8)!
     
     // Configured by app
-    output.app_server      = rawPassword[kSecAttrServer] as! String
-    output.app_label       = rawPassword[kSecAttrLabel ] as! String
+    output.app_label  = rawPassword[kSecAttrLabel ] as! String
+    output.app_server = rawPassword[kSecAttrServer] as! String
     
     // Constant across all keychain entries
-    output.const_description = rawPassword[kSecAttrDescription] as! String
+    output.const_class       = rawPassword[kSecClass          ] as! String
     output.const_creator     = rawPassword[kSecAttrCreator    ] as! OSType
-    output.const_class       = rawPassword[kSecClass]           as! String
+    output.const_description = rawPassword[kSecAttrDescription] as! String
     
     // So far, unused by the app
     output.unused_path     = rawPassword[kSecAttrPath    ] as? String ?? ""
     output.unused_port     = rawPassword[kSecAttrPort    ] as? String ?? ""
-    output.unused_protocol = rawPassword[kSecAttrProtocol] as? String ?? ""
     output.unused_comment  = rawPassword[kSecAttrComment ] as? String ?? ""
+    output.unused_protocol = rawPassword[kSecAttrProtocol] as? String ?? ""
     
-    guard output.const_description == Password.defaultDescription,
-          output.const_creator == Password.defaultCreator,
-          output.const_class == Password.defaultClass
+    guard
+      output.const_description == Password.defaultDescription,
+      output.const_creator     == Password.defaultCreator,
+      output.const_class       == Password.defaultClass
     else {
-      // TODO: Make my own errors
-      output.status = .error(5)
-      assertionFailure()
+      output.status = .error(.criticalDataIncorrect)
+      return output
+    }
+    
+    guard output.user_account.trimmed != nil, output.user_password.trimmed != nil else {
+      output.status = .error(.missingUsernameOrPassword)
+      return output
+    }
+    
+    guard output.app_server == query.machine.url else {
+      output.status = .error(.machineDataIncorrect)
       return output
     }
     

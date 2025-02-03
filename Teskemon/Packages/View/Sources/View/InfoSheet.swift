@@ -94,8 +94,8 @@ internal struct InfoSheet: View {
         case .newModified, .savedModified:
           TextField("", text: self.$passwords[id].user_account)
             .textFieldStyle(.roundedBorder)
-        case .error(let error):
-          Text(String(describing: error))
+        case .keychainError, .error:
+          Text("–")
         }
       }
       TableColumn(.password) { id in
@@ -106,8 +106,8 @@ internal struct InfoSheet: View {
         case .newModified, .savedModified:
           TextField("", text: self.$passwords[id].user_password)
             .textFieldStyle(.roundedBorder)
-        case .error(let error):
-          Text(String(describing: error))
+        case .keychainError, .error:
+          Text("–")
         }
       }
       TableColumn("Action") { id in
@@ -123,10 +123,12 @@ internal struct InfoSheet: View {
           }
         case .newModified, .savedModified:
           Button("Save") {
-            _passwords.save(id: id)
+            self.passwords[id].status = _passwords.save(id: id)
           }
-        case .error:
-          EmptyView()
+        case .keychainError(let error):
+          Text(error.localizedDescription)
+        case .error(let error):
+          Text(error.localizedDescription)
         }
       }
     }

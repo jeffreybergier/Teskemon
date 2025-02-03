@@ -26,6 +26,7 @@ public struct Password: Sendable, Equatable, Hashable {
   public static let defaultDescription = "Teskemon password"
   public static let defaultClass       = kSecClassInternetPassword as String
   
+  // TODO: This is not needed, just use the machine
   public struct Query {
     public var machine: Machine
     public var `class`: String = Password.defaultClass
@@ -35,12 +36,19 @@ public struct Password: Sendable, Equatable, Hashable {
     }
   }
   
+  public enum Error: Swift.Error, Sendable, Equatable, Hashable {
+    case missingUsernameOrPassword
+    case machineDataIncorrect
+    case criticalDataIncorrect
+  }
+  
   public enum Status: Sendable, Equatable, Hashable {
     case new
     case newModified
     case saved
     case savedModified
-    case error(OSStatus)
+    case keychainError(OSStatus)
+    case error(Error)
   }
   
   public var status: Status = .new
@@ -71,7 +79,7 @@ extension Password {
 }
 
 extension OSStatus {
-  public var description: String {
+  public var localizedDescription: String {
     String(SecCopyErrorMessageString(self, nil)!)
   }
 }
