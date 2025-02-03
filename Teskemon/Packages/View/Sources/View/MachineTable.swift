@@ -25,7 +25,7 @@ import Controller
 internal struct MachineTable: View {
   
   @SettingsController private var settings
-  @PasswordController private var passwords
+  // @PasswordController private var passwords
   
   // TODO: Not sure why these need to be manually passed in
   // I should be able to use the property wrappers directly,
@@ -74,8 +74,9 @@ internal struct MachineTable: View {
           TableRowStatus(status: self.services[machine.id, service],
                          url:    self.machines.url(for: service,
                                                 on: machine.id,
-                                                username: self.passwords[.username, machine.id],
-                                                password: self.passwords[.password, machine.id]),
+                                                   // TODO: Put passwords back but make them lazy
+                                                username: nil, //self.passwords[.username, machine.id],
+                                                password: nil), // self.passwords[.password, machine.id]),
                          spinnerValue: self.spinnerValue)
         }.width(36)
       }

@@ -70,7 +70,7 @@ internal struct MachineCLI: Codable, Sendable {
 }
 
 internal struct ClientVersion: Codable, Sendable {
-  internal let runningLatest: Bool
+  internal let runningLatest: Bool = false
   internal enum CodingKeys: String, CodingKey {
     case runningLatest = "RunningLatest"
   }

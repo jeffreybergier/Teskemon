@@ -27,87 +27,155 @@ import KeychainSwift
 @propertyWrapper
 public struct PasswordController: DynamicProperty {
   
-  internal static let sharedCache = PasswordController.Value()
-  
-  @ObservedObject private var storage: Value
-  
-  public init() {
-    _storage = .init(initialValue: PasswordController.sharedCache)
+  public struct Value: Sendable, Equatable, Hashable {
+    public var passwords: [Machine.Identifier: Password] = [:]
+    public subscript(id: Machine.Identifier) -> Password {
+      get { self.passwords[id, default: .init()] }
+      set { self.passwords[id] = newValue }
+    }
   }
+    
+  @MachineController  private var machines
+  @State private var values: Value = .init()
   
   public var wrappedValue: Value {
-    self.storage
+    get { self.values }
+    nonmutating set { self.values = newValue }
   }
-}
-
-extension PasswordController {
   
-  @MainActor
-  public class Value: ObservableObject {
+  public var projectedValue: Binding<Value> {
+    self.$values
+  }
+  
+  public init() { }
+  
+  public func prefetch(ids: [Machine.Identifier]) {
+    for id in ids {
+      self.values[id] = self.fetch(id: id)
+    }
+  }
+  
+  public func delete(id: Machine.Identifier) {
     
-    public enum Namespace {
-      case username
-      case password
+  }
+  
+  // TODO: Make async throwing
+  public func save(id: Machine.Identifier) {
+    let password = self.values[id]
+    guard password.account.trimmed != nil, password.password.trimmed != nil else { return }
+    let status: OSStatus
+    switch password.status {
+    case .newModified:
+      status = SecItemAdd(password.valueForSaving as CFDictionary, nil)
+    case .savedModified:
+      status = SecItemUpdate(password.valueForQuery    as CFDictionary,
+                             password.valueForUpdating as CFDictionary)
+    case .new, .saved, .error:
+      return
     }
     
-    private let usernameKeychain = KeychainSwift(keyPrefix: "teskemon/username/")
-    private let passwordKeychain = KeychainSwift(keyPrefix: "teskemon/password/")
-    
-    private var cache: [Namespace: [Machine.Identifier: Rumsfeld<String>]] = {
-      return [
-        .username: [:],
-        .password: [:]
-      ]
-    }()
-    
-    public subscript (space: Namespace, id: Machine.Identifier) -> String? {
-      get {
-        if let cache = self.cache[space]![id] { return cache.knownValue }
-        if let uncached = self.keychain(for: space).get(id.rawValue) {
-          self.cache[space]![id] = .knownKnown(uncached)
-          return uncached
-        } else {
-          self.cache[space]![id] = .knownUnknown
-          return nil
-        }
-      }
-      set {
-        self.objectWillChange.send()
-        
-        guard let newValue = newValue?.trimmed else {
-          self.keychain(for: space).delete(id.rawValue)
-          self.cache[space]![id] = .knownUnknown
-          return
-        }
-        
-        self.keychain(for: space).set(newValue, forKey: id.rawValue)
-        self.cache[space]![id] = .knownKnown(newValue)
-      }
+    guard status == errSecSuccess else {
+      print(status.description)
+      return
     }
     
-    public func binding(_ space: Namespace, _ id: Machine.Identifier) -> Binding<String> {
-      return Binding(get: { self[space, id] ?? "" },
-                     set: { self[space, id] = $0.trimmed })
+    self.values[id].status = .saved
+  }
+  
+  // TODO: Make Async
+  private func fetch(id: Machine.Identifier) -> Password {
+    let machine = self.machines[id]
+    let query = Password.Query(id: machine.id, server: machine.url)
+    let password = type(of: self).query(query)
+    return password
+  }
+  
+  // TODO: Make Async
+  private static func query(_ query: Password.Query) -> Password {
+    var output = Password()
+    
+    // Create Query
+    let rawQuery: [CFString: Any] = [
+      kSecClass:            query.class       as CFString,
+      kSecAttrAccessGroup:  query.accessGroup as CFString,
+      kSecAttrServer:       query.server      as CFString,
+      kSecAttrCreator:      query.creator,
+      kSecMatchLimit:       kSecMatchLimitOne,
+      kSecReturnAttributes: true,
+      kSecReturnData:       true,
+    ]
+    
+    // Perform Query
+    var item: CFTypeRef?
+    let status: OSStatus = SecItemCopyMatching(rawQuery as CFDictionary, &item)
+    switch status {
+    case errSecItemNotFound:
+      output.status = .new
+      output.server = query.server
+      output.description = query.id.rawValue
+    case errSecSuccess:
+      output.status = .saved
+    default:
+      output.status = .error(status)
     }
     
-    private func keychain(for space: Namespace) -> KeychainSwift {
-      switch space {
-      case .username: return self.usernameKeychain
-      case .password: return self.passwordKeychain
-      }
+    // Parse results
+    guard let rawPassword = item as? [CFString: Any] else { return output }
+    output.account     = rawPassword[kSecAttrAccount    ] as? String ?? ""
+    output.path        = rawPassword[kSecAttrPath       ] as? String ?? ""
+    output.port        = rawPassword[kSecAttrPort       ] as? String ?? ""
+    output.protocol    = rawPassword[kSecAttrProtocol   ] as? String ?? ""
+    output.server      = rawPassword[kSecAttrServer     ] as? String ?? ""
+    output.description = rawPassword[kSecAttrDescription] as? String ?? ""
+    output.comment     = rawPassword[kSecAttrComment    ] as? String ?? ""
+    output.label       = rawPassword[kSecAttrLabel      ] as? String ?? ""
+    output.accessGroup = rawPassword[kSecAttrAccessGroup] as? String ?? ""
+    output.creator     = rawPassword[kSecAttrCreator    ] as? OSType ?? Password.creator
+    output.class       = query.class
+    let passwordString = (rawPassword[kSecValueData] as? Data)
+                         .map { String(data: $0, encoding: .utf8) } ?? ""
+    output.password    = passwordString ?? ""
+    
+    guard output.description == query.id.rawValue, output.server == query.server else {
+      output.status = .new
+      return output
     }
+    
+    return output
   }
 }
 
-internal enum Rumsfeld<T> {
-  case knownKnown(T)
-  case knownUnknown
-  internal var knownValue: T? {
-    switch self {
-    case .knownKnown(let value):
-      return value
-    case .knownUnknown:
-      return nil
-    }
+extension Password {
+  internal var valueForQuery: [CFString: Any] {
+    var query: [CFString : Any] = [
+      kSecClass:           self.class,
+      kSecAttrAccessGroup: self.accessGroup,
+      kSecAttrServer:      self.server,
+      kSecAttrCreator:     self.creator,
+    ]
+    
+    query[kSecAttrPath]        = self.path.trimmed
+    query[kSecAttrPort]        = self.port.trimmed
+    query[kSecAttrProtocol]    = self.protocol.trimmed
+    query[kSecAttrServer]      = self.server.trimmed
+    query[kSecAttrDescription] = self.description.trimmed
+    query[kSecAttrComment]     = self.comment.trimmed
+    query[kSecAttrLabel]       = self.label.trimmed
+    
+    return query
+  }
+  
+  internal var valueForSaving: [CFString: Any] {
+    var query = self.valueForQuery
+    query[kSecAttrAccount] = self.account.trimmed
+    query[kSecValueData  ] = self.password.data(using: .utf8)!
+    return query
+  }
+  
+  internal var valueForUpdating: [CFString: Any] {
+    return [
+      kSecAttrAccount: self.account,
+      kSecValueData:   self.password.data(using: .utf8)!
+    ]
   }
 }

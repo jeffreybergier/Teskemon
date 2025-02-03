@@ -88,13 +88,48 @@ internal struct InfoSheet: View {
           .font(.body)
       }.width(120)
       TableColumn(.username) { id in
-        TextField("", text: self.passwords.binding(.username, id))
-          .font(.headline)
+        switch (self.passwords[id].status) {
+        case .new, .saved:
+          Text(self.passwords[id].account.trimmed ?? "–")
+        case .newModified, .savedModified:
+          TextField("", text: self.$passwords[id].account)
+        case .error(let error):
+          Text(String(describing: error))
+        }
       }
       TableColumn(.password) { id in
-        SecureField("", text: self.passwords.binding(.password, id))
-          .font(.headline)
+        let password = self.passwords[id]
+        switch (password.status) {
+        case .new, .saved:
+          Text(self.passwords[id].password.trimmed ?? "–")
+        case .newModified, .savedModified:
+          TextField("", text: self.$passwords[id].password)
+        case .error(let error):
+          Text(String(describing: error))
+        }
       }
+      TableColumn("Action") { id in
+        let password = self.passwords[id]
+        switch (password.status) {
+        case .new:
+          Button("Add") {
+            self.passwords[id].status = .newModified
+          }
+        case .saved:
+          Button("Update") {
+            self.passwords[id].status = .savedModified
+          }
+        case .newModified, .savedModified:
+          Button("Save") {
+            _passwords.save(id: id)
+          }
+        case .error:
+          EmptyView()
+        }
+      }
+    }
+    .onAppear {
+      _passwords.prefetch(ids: self.selection)
     }
   }
   
