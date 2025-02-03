@@ -33,7 +33,7 @@ public struct PasswordController: DynamicProperty {
       set { self.passwords[id] = newValue }
     }
   }
-    
+  
   @MachineController  private var machines
   @State private var values: Value = .init()
   
@@ -61,7 +61,7 @@ public struct PasswordController: DynamicProperty {
   // TODO: Make async throwing
   public func save(id: Machine.Identifier) {
     let password = self.values[id]
-    guard password.account.trimmed != nil, password.password.trimmed != nil else { return }
+    guard password.user_account.trimmed != nil, password.user_password.trimmed != nil else { return }
     let status: OSStatus
     switch password.status {
     case .newModified:
@@ -73,6 +73,7 @@ public struct PasswordController: DynamicProperty {
       return
     }
     
+    // TODO: Create custom error here
     guard status == errSecSuccess else {
       print(status.description)
       return
@@ -95,9 +96,8 @@ public struct PasswordController: DynamicProperty {
     
     // Create Query
     let rawQuery: [CFString: Any] = [
-      kSecClass:            query.class       as CFString,
-      kSecAttrAccessGroup:  query.accessGroup as CFString,
-      kSecAttrServer:       query.machine.url as CFString,
+      kSecClass:            query.class,
+      kSecAttrServer:       query.machine.url,
       kSecAttrCreator:      query.creator,
       kSecMatchLimit:       kSecMatchLimitOne,
       kSecReturnAttributes: true,
@@ -110,8 +110,8 @@ public struct PasswordController: DynamicProperty {
     switch status {
     case errSecItemNotFound:
       output.status = .new
-      output.server = query.machine.url
-      output.label  = "\(query.machine.url) (\(query.machine.name)<\(query.machine.id.rawValue)>)"
+      output.app_server = query.machine.url
+      output.app_label  = "\(query.machine.url) (\(query.machine.name)<\(query.machine.id.rawValue)>)"
     case errSecSuccess:
       output.status = .saved
     default:
@@ -120,24 +120,31 @@ public struct PasswordController: DynamicProperty {
     
     // Parse results
     guard let rawPassword = item as? [CFString: Any] else { return output }
-    output.account     = rawPassword[kSecAttrAccount    ] as? String ?? ""
-    output.path        = rawPassword[kSecAttrPath       ] as? String ?? ""
-    output.port        = rawPassword[kSecAttrPort       ] as? String ?? ""
-    output.protocol    = rawPassword[kSecAttrProtocol   ] as? String ?? ""
-    output.server      = rawPassword[kSecAttrServer     ] as? String ?? ""
-    output.comment     = rawPassword[kSecAttrComment    ] as? String ?? ""
-    output.label       = rawPassword[kSecAttrLabel      ] as? String ?? ""
-    output.description = rawPassword[kSecAttrDescription] as? String ?? ""
-    output.accessGroup = rawPassword[kSecAttrAccessGroup] as? String ?? Password.defaultAccessGroup // Access Group seems to come back nil
-    output.creator     = rawPassword[kSecAttrCreator    ] as! OSType
-    output.class       = query.class
-    let passwordString = (rawPassword[kSecValueData] as? Data).map { String(data: $0, encoding: .utf8) } ?? ""
-    output.password    = passwordString ?? ""
     
-    guard output.description == Password.defaultDescription,
-          output.accessGroup == Password.defaultAccessGroup,
-          output.creator == Password.defaultCreator,
-          output.class == Password.defaultClass
+    // TODO: Do more validation here and return errors for malformed passwords
+
+    // Configured by the user
+    output.user_account  = rawPassword[kSecAttrAccount] as! String
+    output.user_password = String(data: rawPassword[kSecValueData] as! Data, encoding: .utf8)!
+    
+    // Configured by app
+    output.app_server      = rawPassword[kSecAttrServer] as! String
+    output.app_label       = rawPassword[kSecAttrLabel ] as! String
+    
+    // Constant across all keychain entries
+    output.const_description = rawPassword[kSecAttrDescription] as! String
+    output.const_creator     = rawPassword[kSecAttrCreator    ] as! OSType
+    output.const_class       = rawPassword[kSecClass]           as! String
+    
+    // So far, unused by the app
+    output.unused_path     = rawPassword[kSecAttrPath    ] as? String ?? ""
+    output.unused_port     = rawPassword[kSecAttrPort    ] as? String ?? ""
+    output.unused_protocol = rawPassword[kSecAttrProtocol] as? String ?? ""
+    output.unused_comment  = rawPassword[kSecAttrComment ] as? String ?? ""
+    
+    guard output.const_description == Password.defaultDescription,
+          output.const_creator == Password.defaultCreator,
+          output.const_class == Password.defaultClass
     else {
       // TODO: Make my own errors
       output.status = .error(5)
@@ -152,34 +159,34 @@ public struct PasswordController: DynamicProperty {
 extension Password {
   internal var valueForQuery: [CFString: Any] {
     var query: [CFString : Any] = [
-      kSecClass:           self.class,
-      kSecAttrAccessGroup: self.accessGroup,
-      kSecAttrServer:      self.server,
-      kSecAttrCreator:     self.creator,
+      kSecClass:           self.const_class,
+      kSecAttrCreator:     self.const_creator,
+      kSecAttrDescription: self.const_description,
+      kSecAttrServer:      self.app_server,
+      kSecAttrLabel:       self.app_label,
     ]
     
-    query[kSecAttrPath]        = self.path.trimmed
-    query[kSecAttrPort]        = self.port.trimmed
-    query[kSecAttrProtocol]    = self.protocol.trimmed
-    query[kSecAttrServer]      = self.server.trimmed
-    query[kSecAttrDescription] = self.description.trimmed
-    query[kSecAttrComment]     = self.comment.trimmed
-    query[kSecAttrLabel]       = self.label.trimmed
+    query[kSecAttrComment ] = self.unused_comment.trimmed
+    query[kSecAttrProtocol] = self.unused_protocol.trimmed
+    query[kSecAttrPath    ] = self.unused_path.trimmed
+    query[kSecAttrPort    ] = self.unused_port.trimmed
     
     return query
   }
   
+  // TODO: Make throwing or return result to show bad username and password
   internal var valueForSaving: [CFString: Any] {
     var query = self.valueForQuery
-    query[kSecAttrAccount] = self.account.trimmed
-    query[kSecValueData  ] = self.password.data(using: .utf8)!
+    query[kSecAttrAccount] = self.user_account.trimmed
+    query[kSecValueData  ] = self.user_password.data(using: .utf8)!
     return query
   }
   
+  // TODO: Make throwing or return result to show bad username and password
   internal var valueForUpdating: [CFString: Any] {
     return [
-      kSecAttrAccount: self.account,
-      kSecValueData:   self.password.data(using: .utf8)!
+      kSecAttrAccount: self.user_account,
+      kSecValueData:   self.user_password.data(using: .utf8)!
     ]
   }
 }

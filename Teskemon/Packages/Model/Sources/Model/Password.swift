@@ -22,10 +22,18 @@ import SwiftUI
 
 public struct Password: Sendable, Equatable, Hashable {
   
-  public static let defaultCreator = OSType(string: "SATM")
+  public static let defaultCreator     = OSType(string: "SATM")
   public static let defaultDescription = "Teskemon password"
-  public static let defaultAccessGroup = Bundle.main.bundleIdentifier!
-  public static let defaultClass = kSecClassInternetPassword as String
+  public static let defaultClass       = kSecClassInternetPassword as String
+  
+  public struct Query {
+    public var machine: Machine
+    public var `class`: String = Password.defaultClass
+    public var creator: OSType = Password.defaultCreator
+    public init(machine: Machine) {
+      self.machine = machine
+    }
+  }
   
   public enum Status: Sendable, Equatable, Hashable {
     case new
@@ -35,33 +43,31 @@ public struct Password: Sendable, Equatable, Hashable {
     case error(OSStatus)
   }
   
-  public var status:      Status = .new
-  public var account:     String = ""
-  public var path:        String = ""
-  public var port:        String = ""
-  public var `protocol`:  String = ""
-  public var server:      String = ""
-  public var comment:     String = ""
-  public var label:       String = ""
-  public var password:    String = ""
-  public var description: String = Password.defaultDescription
-  public var `class`:     String = Password.defaultClass
-  public var creator:     OSType = Password.defaultCreator
-  public var accessGroup: String = Password.defaultAccessGroup
+  public var status: Status = .new
+  
+  // Editable by the user in the app
+  public var user_account:  String = ""
+  public var user_password: String = ""
+  
+  // Set by the app but are specific to each keychain entry
+  public var app_server: String = ""
+  public var app_label:  String = ""
+  
+  // Set but are constant across all keychain entries
+  public var const_class:       String = Password.defaultClass
+  public var const_creator:     OSType = Password.defaultCreator
+  public var const_description: String = Password.defaultDescription
+  
+  // So far ununsed by the app
+  public var unused_path:     String = ""
+  public var unused_port:     String = ""
+  public var unused_protocol: String = ""
+  public var unused_comment:  String = ""
   
   public init() {}
 }
 
 extension Password {
-  public struct Query {
-    public var machine: Machine
-    public var `class`: String = Password.defaultClass
-    public var creator: OSType = Password.defaultCreator
-    public var accessGroup: String = Password.defaultAccessGroup
-    public init(machine: Machine) {
-      self.machine = machine
-    }
-  }
 }
 
 extension OSStatus {

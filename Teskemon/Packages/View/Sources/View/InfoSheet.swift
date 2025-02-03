@@ -90,9 +90,9 @@ internal struct InfoSheet: View {
       TableColumn(.username) { id in
         switch (self.passwords[id].status) {
         case .new, .saved:
-          Text(self.passwords[id].account.trimmed ?? "–")
+          Text(self.passwords[id].user_account.trimmed ?? "–")
         case .newModified, .savedModified:
-          TextField("", text: self.$passwords[id].account)
+          TextField("", text: self.$passwords[id].user_account)
             .textFieldStyle(.roundedBorder)
         case .error(let error):
           Text(String(describing: error))
@@ -102,9 +102,9 @@ internal struct InfoSheet: View {
         let password = self.passwords[id]
         switch (password.status) {
         case .new, .saved:
-          Text(self.passwords[id].password.trimmed ?? "–")
+          Text(self.passwords[id].user_password.trimmed ?? "–")
         case .newModified, .savedModified:
-          TextField("", text: self.$passwords[id].password)
+          TextField("", text: self.$passwords[id].user_password)
             .textFieldStyle(.roundedBorder)
         case .error(let error):
           Text(String(describing: error))
