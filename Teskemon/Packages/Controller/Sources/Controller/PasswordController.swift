@@ -62,22 +62,27 @@ public struct PasswordController: DynamicProperty {
   public func save(id: Machine.Identifier) -> Password.Status {
     let password = self.values[id]
     
-    guard password.user_account.trimmed != nil, password.user_password.trimmed != nil else {
-      return .error(.missingUsernameOrPassword)
-    }
-    
     let status: OSStatus
     switch password.status {
     case .newModified:
-      status = SecItemAdd(password.valueForSaving as CFDictionary, nil)
+      switch password.valueForSaving {
+      case .success(let toSave):
+        status = SecItemAdd(toSave as CFDictionary, nil)
+      case .failure(let error):
+        return .error(error)
+      }
     case .savedModified:
-      status = SecItemUpdate(password.valueForQuery    as CFDictionary,
-                             password.valueForUpdating as CFDictionary)
+      switch password.valueForUpdates {
+      case .success(let toUpdate):
+        status = SecItemUpdate(password.valueForUpdating as CFDictionary,
+                               toUpdate as CFDictionary)
+      case .failure(let error):
+        return .error(error)
+      }
     case .new, .saved, .keychainError, .error:
       fatalError("Tried to save password that is not in the modified state")
     }
     
-    // TODO: Create custom error here
     guard status == errSecSuccess else {
       return .keychainError(status)
     }
@@ -85,122 +90,24 @@ public struct PasswordController: DynamicProperty {
     return .saved
   }
   
-  // TODO: Make Async
   private func fetch(id: Machine.Identifier) -> Password {
-    let machine = self.machines[id]
-    let query = Password.Query(machine: machine)
-    let password = type(of: self).query(query)
-    return password
+    return type(of: self).query(self.machines[id])
   }
   
-  // TODO: Make Async
-  private static func query(_ query: Password.Query) -> Password {
-    var output = Password()
-    
+  private static func query(_ machine: Machine) -> Password {
     // Create Query
     let rawQuery: [CFString: Any] = [
-      kSecClass:            query.class,
-      kSecAttrServer:       query.machine.url,
-      kSecAttrCreator:      query.creator,
+      kSecClass:            Password.defaultClass,
+      kSecAttrCreator:      Password.defaultCreator,
       kSecMatchLimit:       kSecMatchLimitOne,
       kSecReturnAttributes: true,
       kSecReturnData:       true,
+      kSecAttrServer:       machine.url,
     ]
     
     // Perform Query
     var item: CFTypeRef?
     let status: OSStatus = SecItemCopyMatching(rawQuery as CFDictionary, &item)
-    switch status {
-    case errSecSuccess:
-      output.status = .saved
-    case errSecItemNotFound:
-      output.status = .new
-      output.app_server = query.machine.url
-      output.app_label  = "\(query.machine.url) (\(query.machine.name)<\(query.machine.id.rawValue)>)"
-      output.const_class       = Password.defaultClass
-      output.const_creator     = Password.defaultCreator
-      output.const_description = Password.defaultDescription
-    default:
-      output.status = .keychainError(status)
-    }
-    
-    // Parse results
-    guard status == errSecSuccess else { return output }
-    let rawPassword = item as! [CFString: Any]
-    
-    // Configured by the user
-    output.user_account  = rawPassword[kSecAttrAccount] as! String
-    output.user_password = String(data: rawPassword[kSecValueData] as! Data, encoding: .utf8)!
-    
-    // Configured by app
-    output.app_label  = rawPassword[kSecAttrLabel ] as! String
-    output.app_server = rawPassword[kSecAttrServer] as! String
-    
-    // Constant across all keychain entries
-    output.const_class       = rawPassword[kSecClass          ] as! String
-    output.const_creator     = rawPassword[kSecAttrCreator    ] as! OSType
-    output.const_description = rawPassword[kSecAttrDescription] as! String
-    
-    // So far, unused by the app
-    output.unused_path     = rawPassword[kSecAttrPath    ] as? String ?? ""
-    output.unused_port     = rawPassword[kSecAttrPort    ] as? String ?? ""
-    output.unused_comment  = rawPassword[kSecAttrComment ] as? String ?? ""
-    output.unused_protocol = rawPassword[kSecAttrProtocol] as? String ?? ""
-    
-    guard
-      output.const_description == Password.defaultDescription,
-      output.const_creator     == Password.defaultCreator,
-      output.const_class       == Password.defaultClass
-    else {
-      output.status = .error(.criticalDataIncorrect)
-      return output
-    }
-    
-    guard output.user_account.trimmed != nil, output.user_password.trimmed != nil else {
-      output.status = .error(.missingUsernameOrPassword)
-      return output
-    }
-    
-    guard output.app_server == query.machine.url else {
-      output.status = .error(.machineDataIncorrect)
-      return output
-    }
-    
-    return output
-  }
-}
-
-extension Password {
-  internal var valueForQuery: [CFString: Any] {
-    var query: [CFString : Any] = [
-      kSecClass:           self.const_class,
-      kSecAttrCreator:     self.const_creator,
-      kSecAttrDescription: self.const_description,
-      kSecAttrServer:      self.app_server,
-      kSecAttrLabel:       self.app_label,
-    ]
-    
-    query[kSecAttrComment ] = self.unused_comment.trimmed
-    query[kSecAttrProtocol] = self.unused_protocol.trimmed
-    query[kSecAttrPath    ] = self.unused_path.trimmed
-    query[kSecAttrPort    ] = self.unused_port.trimmed
-    
-    return query
-  }
-  
-  // TODO: Make throwing or return result to show bad username and password
-  internal var valueForSaving: [CFString: Any] {
-    var query = self.valueForQuery
-    query[kSecAttrAccount] = self.user_account.trimmed
-    query[kSecValueData  ] = self.user_password.data(using: .utf8)!
-    return query
-  }
-  
-  // TODO: Make throwing or return result to show bad username and password
-  internal var valueForUpdating: [CFString: Any] {
-    return [
-      kSecAttrAccount: self.user_account,
-      kSecValueData:   self.user_password.data(using: .utf8)!
-    ]
+    return Password(secItemCopyStatus: status, payload: item, machine: machine)
   }
 }

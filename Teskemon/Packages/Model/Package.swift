@@ -7,6 +7,7 @@ let name = "Model"
 
 let package = Package(
   name: name,
+  platforms: [.macOS(.v13)],
   products: [
     .library(
       name: name,
@@ -14,11 +15,13 @@ let package = Package(
     ),
   ],
   dependencies: [
+    .package(url: "https://github.com/jeffreybergier/Umbrella.git", branch: "waterme3-wOS10-Swift6"),
   ],
   targets: [
     .target(
       name: name,
       dependencies: [
+        .byNameItem(name: "Umbrella", condition: nil),
       ],
       swiftSettings: [.swiftLanguageMode(.v6)]
     ),
