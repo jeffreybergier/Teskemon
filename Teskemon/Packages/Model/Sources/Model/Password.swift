@@ -126,7 +126,7 @@ extension Password {
     }
   }
   
-  public var valueForUpdating: [CFString: any Sendable] {
+  public func valueForUpdating() -> [CFString: any Sendable] {
     var query: [CFString : any Sendable] = [
       kSecClass:           self.const_class,
       kSecAttrCreator:     self.const_creator,
@@ -143,33 +143,33 @@ extension Password {
     return query
   }
   
-  public var valueForUpdates: Result<[CFString: any Sendable], Password.Error> {
+  public func valueForUpdate() throws(Password.Error) -> [CFString: any Sendable] {
     guard
       let accountString = self.user_account.trimmed,
-      let passwordData = self.user_password.data(using: .utf8)
+      let passwordData  = self.user_password.data(using: .utf8)
     else {
-      return .failure(.missingUsernameOrPassword)
+      throw .missingUsernameOrPassword
     }
     
-    return .success([
+    return [
       kSecAttrAccount: accountString,
       kSecValueData:   passwordData
-    ])
+    ]
   }
   
-  public var valueForSaving: Result<[CFString: any Sendable], Password.Error> {
+  public func valueForSaving() throws(Password.Error) -> [CFString: any Sendable] {
     guard
       let accountString = self.user_account.trimmed,
-      let passwordData = self.user_password.data(using: .utf8)
+      let passwordData  = self.user_password.data(using: .utf8)
     else {
-      return .failure(.missingUsernameOrPassword)
+      throw .missingUsernameOrPassword
     }
     
-    var query = self.valueForUpdating
+    var query = self.valueForUpdating()
     query[kSecAttrAccount] = accountString
-    query[kSecValueData  ] = [passwordData]
+    query[kSecValueData  ] = passwordData
     
-    return .success(query)
+    return query
   }
 }
 
