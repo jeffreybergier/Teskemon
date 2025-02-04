@@ -89,9 +89,9 @@ internal struct InfoSheet: View {
       }.width(120)
       TableColumn(.username) { id in
         switch (self.passwords[self.machines[id]].status) {
-        case .new, .saved:
+        case .isViewing:
           Text(self.passwords[self.machines[id]].user_account.trimmed ?? "–")
-        case .newModified, .savedModified:
+        case .isEditing:
           TextField("", text: self.passwords.bind(machine: self.machines[id]).user_account)
             .textFieldStyle(.roundedBorder)
         case .keychainError, .error:
@@ -101,9 +101,9 @@ internal struct InfoSheet: View {
       TableColumn(.password) { id in
         let password = self.passwords[self.machines[id]]
         switch (password.status) {
-        case .new, .saved:
+        case .isViewing:
           Text(self.passwords[self.machines[id]].user_password.trimmed ?? "–")
-        case .newModified, .savedModified:
+        case .isEditing:
           TextField("", text: self.passwords.bind(machine: self.machines[id]).user_password)
             .textFieldStyle(.roundedBorder)
         case .keychainError, .error:
@@ -111,19 +111,16 @@ internal struct InfoSheet: View {
         }
       }
       TableColumn("Action") { id in
-        let password = self.passwords[self.machines[id]]
+        let machine = self.machines[id]
+        let password = self.passwords[machine]
         switch (password.status) {
-        case .new:
-          Button("Add") {
-            self.passwords[self.machines[id]].status = .newModified
+        case .isViewing:
+          Button(password.inKeychain ? "Update" : "Add") {
+            self.passwords[machine].status = .isEditing
           }
-        case .saved:
-          Button("Update") {
-            self.passwords[self.machines[id]].status = .savedModified
-          }
-        case .newModified, .savedModified:
+        case .isEditing:
           Button("Save") {
-            self.passwords[self.machines[id]].status = _passwords.save(machine: self.machines[id])
+            _passwords.save(machine: machine)
           }
         case .keychainError(let error):
           Text(error.localizedDescription)

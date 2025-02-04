@@ -34,15 +34,14 @@ public struct Password: Sendable, Equatable, Hashable {
   }
   
   public enum Status: Sendable, Equatable, Hashable {
-    case new
-    case newModified
-    case saved
-    case savedModified
+    case isEditing
+    case isViewing
     case keychainError(OSStatus)
     case error(Error)
   }
   
-  public var status: Status = .new
+  public var status: Status = .isViewing
+  public var inKeychain = false
   
   // Editable by the user in the app
   public var user_account:  String = ""
@@ -75,7 +74,7 @@ extension Password {
   {
     switch status {
     case errSecSuccess:
-      self.status = .saved
+      self.inKeychain = true
     case errSecItemNotFound:
       self.app_server = machine.url
       self.app_label  = "\(machine.url) (\(machine.name)<\(machine.id.rawValue)>)"

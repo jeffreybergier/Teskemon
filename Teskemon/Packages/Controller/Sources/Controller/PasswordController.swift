@@ -77,35 +77,38 @@ public struct PasswordController: DynamicProperty {
   }
   
   // TODO: Make async throwing
-  public func save(machine: Machine) -> Password.Status {
-    let password = self.wrappedValue[machine]
+  public func save(machine: Machine) {
+    var password = self.wrappedValue[machine]
     
     let status: OSStatus
-    switch password.status {
-    case .newModified:
+    switch password.inKeychain {
+    case false:
       switch password.valueForSaving {
       case .success(let toSave):
         status = SecItemAdd(toSave as CFDictionary, nil)
       case .failure(let error):
-        return .error(error)
+        password.status = .error(error)
+        return
       }
-    case .savedModified:
+    case true:
       switch password.valueForUpdates {
       case .success(let toUpdate):
         status = SecItemUpdate(password.valueForUpdating as CFDictionary,
                                toUpdate as CFDictionary)
       case .failure(let error):
-        return .error(error)
+        password.status = .error(error)
+        return
       }
-    case .new, .saved, .keychainError, .error:
-      fatalError("Tried to save password that is not in the modified state")
     }
     
     guard status == errSecSuccess else {
-      return .keychainError(status)
+      password.status = .keychainError(status)
+      return
     }
     
-    return .saved
+    password.inKeychain = true
+    
+    return
   }
   
   internal static func query(_ machine: Machine) -> Password {
