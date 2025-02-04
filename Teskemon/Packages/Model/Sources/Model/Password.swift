@@ -126,8 +126,8 @@ extension Password {
     }
   }
   
-  public var valueForUpdating: [CFString: Any] {
-    var query: [CFString : Any] = [
+  public var valueForUpdating: [CFString: any Sendable] {
+    var query: [CFString : any Sendable] = [
       kSecClass:           self.const_class,
       kSecAttrCreator:     self.const_creator,
       kSecAttrDescription: self.const_description,
@@ -143,7 +143,7 @@ extension Password {
     return query
   }
   
-  public var valueForUpdates: Result<[CFString: Any], Password.Error> {
+  public var valueForUpdates: Result<[CFString: any Sendable], Password.Error> {
     guard
       let accountString = self.user_account.trimmed,
       let passwordData = self.user_password.data(using: .utf8)
@@ -157,7 +157,7 @@ extension Password {
     ])
   }
   
-  public var valueForSaving: Result<[CFString: Any], Password.Error> {
+  public var valueForSaving: Result<[CFString: any Sendable], Password.Error> {
     guard
       let accountString = self.user_account.trimmed,
       let passwordData = self.user_password.data(using: .utf8)

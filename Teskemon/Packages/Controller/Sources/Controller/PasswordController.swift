@@ -27,47 +27,36 @@ import Model
 public struct PasswordController: DynamicProperty {
   
   @MainActor
-  internal class Cache: ObservableObject {
+  public class Value: ObservableObject {
     
-    private var cache: [Machine.Identifier: Password] = [:]
-    @Published internal var passwords: [Machine.Identifier: Password] = [:]
+    internal var cache: [Machine.Identifier: Password] = [:]
     
-    internal subscript(machine: Machine) -> Password {
+    public subscript(machine: Machine) -> Password {
       set {
-        self.passwords[machine.id] = newValue
+        self.objectWillChange.send()
+        self.cache[machine.id] = newValue
       }
       get {
-        if let password = self.passwords[machine.id] { return password }
-        if let password = self.cache[machine.id]     { return password }
+        if let password = self.cache[machine.id] { return password }
         let password = PasswordController.query(machine)
         self.cache[machine.id] = password
         return password
       }
     }
-  }
-  
-  @MainActor
-  public struct Value {
-    internal var cache: Cache
-    public subscript(machine: Machine) -> Password {
-      get { self.cache[machine] }
-      nonmutating set { self.cache[machine] = newValue }
-    }
     
-    public func bind(machine: Machine) -> Binding<Password> {
+    public func bind(_ machine: Machine) -> Binding<Password> {
       return Binding {
-        return self.cache[machine]
+        return self[machine]
       } set: {
-        self.cache[machine] = $0
+        self[machine] = $0
       }
     }
   }
-  
-  @MachineController  private var machines
-  @StateObject private var cache = Cache()
+    
+  @StateObject private var storage = Value()
   
   public var wrappedValue: Value {
-    .init(cache: self.cache)
+    self.storage
   }
   
   public init() { }

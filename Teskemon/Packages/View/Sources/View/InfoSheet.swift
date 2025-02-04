@@ -88,23 +88,26 @@ internal struct InfoSheet: View {
           .font(.body)
       }.width(120)
       TableColumn(.username) { id in
-        switch (self.passwords[self.machines[id]].status) {
+        let machine = self.machines[id]
+        let password = self.passwords[machine]
+        switch (password.status) {
         case .isViewing:
-          Text(self.passwords[self.machines[id]].user_account.trimmed ?? "–")
+          Text(password.user_account.trimmed ?? "–")
         case .isEditing:
-          TextField("", text: self.passwords.bind(machine: self.machines[id]).user_account)
+          TextField("", text: self.passwords.bind(machine).user_account)
             .textFieldStyle(.roundedBorder)
         case .keychainError, .error:
           Text("–")
         }
       }
       TableColumn(.password) { id in
-        let password = self.passwords[self.machines[id]]
+        let machine = self.machines[id]
+        let password = self.passwords[machine]
         switch (password.status) {
         case .isViewing:
-          Text(self.passwords[self.machines[id]].user_password.trimmed ?? "–")
+          Text(password.user_password.trimmed ?? "–")
         case .isEditing:
-          TextField("", text: self.passwords.bind(machine: self.machines[id]).user_password)
+          TextField("", text: self.passwords.bind(machine).user_password)
             .textFieldStyle(.roundedBorder)
         case .keychainError, .error:
           Text("–")
