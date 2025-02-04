@@ -23,7 +23,6 @@ import Umbrella
 
 // TODO: See if this is needed
 extension CFString: @unchecked @retroactive Sendable {}
-extension OSStatus: @retroactive Swift.Error {}
 
 public struct Password: Sendable, Equatable, Hashable {
   
@@ -37,6 +36,7 @@ public struct Password: Sendable, Equatable, Hashable {
     case missingUsernameOrPassword
     case machineDataIncorrect
     case criticalDataIncorrect
+    case keychain(OSStatus)
   }
   
   public enum Status: Sendable, Equatable, Hashable {
@@ -74,42 +74,27 @@ public struct Password: Sendable, Equatable, Hashable {
 // MARK: Keychain Support
 
 extension Password {
-  public init(secItemCopyStatus status: OSStatus,
-              payload: CFTypeRef?,
-              machine: Machine)
-  {
-    switch status {
-    case errSecSuccess:
-      self.inKeychain = true
-    case errSecItemNotFound:
-      self.app_server = machine.url
-      self.app_label  = "\(machine.url) (\(machine.name)<\(machine.id.rawValue)>)"
-    default:
-      self.status = .keychainError(status)
-    }
-    
-    // Parse results
-    guard status == errSecSuccess else { return }
-    let rawPassword = payload as! Descriptor
+  public init(from descriptor: Descriptor) {
+    self.inKeychain = true
     
     // Configured by the user
-    self.user_account  = rawPassword[kSecAttrAccount] as! String
-    self.user_password = String(data: rawPassword[kSecValueData] as! Data, encoding: .utf8)!
+    self.user_account  = descriptor[kSecAttrAccount] as! String
+    self.user_password = String(data: descriptor[kSecValueData] as! Data, encoding: .utf8)!
     
     // Configured by app
-    self.app_label  = rawPassword[kSecAttrLabel ] as! String
-    self.app_server = rawPassword[kSecAttrServer] as! String
+    self.app_label  = descriptor[kSecAttrLabel ] as! String
+    self.app_server = descriptor[kSecAttrServer] as! String
     
     // Constant across all keychain entries
-    self.const_class       = rawPassword[kSecClass          ] as! String
-    self.const_creator     = rawPassword[kSecAttrCreator    ] as! OSType
-    self.const_description = rawPassword[kSecAttrDescription] as! String
+    self.const_class       = descriptor[kSecClass          ] as! String
+    self.const_creator     = descriptor[kSecAttrCreator    ] as! OSType
+    self.const_description = descriptor[kSecAttrDescription] as! String
     
     // So far, unused by the app
-    self.unused_path     = rawPassword[kSecAttrPath    ] as? String ?? ""
-    self.unused_port     = rawPassword[kSecAttrPort    ] as? String ?? ""
-    self.unused_comment  = rawPassword[kSecAttrComment ] as? String ?? ""
-    self.unused_protocol = rawPassword[kSecAttrProtocol] as? String ?? ""
+    self.unused_path     = descriptor[kSecAttrPath    ] as? String ?? ""
+    self.unused_port     = descriptor[kSecAttrPort    ] as? String ?? ""
+    self.unused_comment  = descriptor[kSecAttrComment ] as? String ?? ""
+    self.unused_protocol = descriptor[kSecAttrProtocol] as? String ?? ""
     
     // Validate what was read from keychain
     guard
@@ -121,13 +106,9 @@ extension Password {
       return
     }
     
+    // Validate what was read from keychain
     guard self.user_account.trimmed != nil, self.user_password.trimmed != nil else {
       self.status = .error(.missingUsernameOrPassword)
-      return
-    }
-    
-    guard self.app_server == machine.url else {
-      self.status = .error(.machineDataIncorrect)
       return
     }
   }

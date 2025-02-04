@@ -38,7 +38,7 @@ public struct PasswordController: DynamicProperty {
       }
       get {
         if let password = self.cache[machine.id] { return password }
-        let password = PasswordController.query(machine)
+        let password = Password.keychainFind(machine: machine)
         self.cache[machine.id] = password
         return password
       }
@@ -67,35 +67,58 @@ public struct PasswordController: DynamicProperty {
   
   // TODO: Make async throwing
   public func save(machine: Machine) {
-    var password = self.wrappedValue[machine]
+    let password = self.storage.bind(machine)
     
     do {
-      switch password.inKeychain {
+      switch password.wrappedValue.inKeychain {
       case false:
-        let toSave = try password.valueForSaving()
+        let toSave = try password.wrappedValue.valueForSaving()
         try Password.keychainAdd(item: toSave)
       case true:
-        let item = password.valueForUpdating()
-        let newValues = try password.valueForUpdate()
+        let item = password.wrappedValue.valueForUpdating()
+        let newValues = try password.wrappedValue.valueForUpdate()
         try Password.keychainUpdate(item: item, newValues: newValues)
       }
-      password.inKeychain = true
-      password.status = .isViewing
-      return
-    } catch let error as Password.Error {
-      password.status = .error(error)
-      return
-    } catch let error as OSStatus {
-      password.status = .keychainError(error)
+      password.wrappedValue.inKeychain = true
+      password.wrappedValue.status = .isViewing
       return
     } catch {
-      fatalError(String(describing: error))
+      password.wrappedValue.status = .error(error)
+      return
+    }
+  }
+}
+
+extension Password {
+  
+  internal static func keychainAdd(item: Descriptor) throws(Password.Error) {
+    let status = SecItemAdd(item as CFDictionary, nil)
+    guard status == errSecSuccess else { throw .keychain(status) }
+    return
+  }
+  
+  internal static func keychainUpdate(item:      Descriptor,
+                                      newValues: Descriptor) throws(Password.Error)
+  {
+    let status = SecItemUpdate(item      as CFDictionary,
+                               newValues as CFDictionary)
+    guard status == errSecSuccess else { throw .keychain(status) }
+    return
+  }
+  
+  private static func keychainFind(item: Descriptor) throws(Password.Error) -> Password {
+    var output: CFTypeRef?
+    let status = SecItemCopyMatching(item as CFDictionary, &output)
+    switch status {
+    case errSecSuccess:
+      return Password(from: output as! Descriptor)
+    default:
+      throw .keychain(status)
     }
   }
   
-  internal static func query(_ machine: Machine) -> Password {
-    // Create Query
-    let rawQuery: [CFString: Any] = [
+  internal static func keychainFind(machine: Machine) -> Password {
+    let descriptor: Password.Descriptor = [
       kSecClass:            Password.defaultClass,
       kSecAttrCreator:      Password.defaultCreator,
       kSecMatchLimit:       kSecMatchLimitOne,
@@ -104,26 +127,25 @@ public struct PasswordController: DynamicProperty {
       kSecAttrServer:       machine.url,
     ]
     
-    // Perform Query
-    var item: CFTypeRef?
-    let status: OSStatus = SecItemCopyMatching(rawQuery as CFDictionary, &item)
-    return Password(secItemCopyStatus: status, payload: item, machine: machine)
-  }
-}
-
-extension Password {
-  internal static func keychainAdd(item: Descriptor) throws(OSStatus) {
-    let status = SecItemAdd(item as CFDictionary, nil)
-    guard status == errSecSuccess else { throw status }
-    return
+    do {
+      var output = try Password.keychainFind(item: descriptor)
+      output.inKeychain = true
+      if output.app_server == machine.url { return output }
+      output.status = .error(.machineDataIncorrect)
+      return output
+    } catch {
+      switch error {
+      case .keychain(let status) where status == errSecItemNotFound:
+        var output = Password()
+        output.app_server = machine.url
+        output.app_label  = "\(machine.url) (\(machine.name)<\(machine.id.rawValue)>)"
+        return output
+      default:
+        var output = Password()
+        output.status = .error(error)
+        return output
+      }
+    }
   }
   
-  internal static func keychainUpdate(item:      Descriptor,
-                                      newValues: Descriptor) throws(OSStatus)
-  {
-    let status = SecItemUpdate(item      as CFDictionary,
-                               newValues as CFDictionary)
-    guard status == errSecSuccess else { throw status }
-    return
-  }
 }
