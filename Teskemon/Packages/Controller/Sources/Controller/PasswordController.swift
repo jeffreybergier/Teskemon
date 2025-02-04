@@ -51,6 +51,37 @@ public struct PasswordController: DynamicProperty {
         self[machine] = $0
       }
     }
+    
+    public func deletePassword(for machine: Machine) {
+      fatalError("Unimplemented")
+    }
+    
+    public func resetPassword(for machine: Machine) {
+      self.objectWillChange.send()
+      self.cache.removeValue(forKey: machine.id)
+    }
+    
+    public func savePassword(for machine: Machine) {
+      let password = self.bind(machine)
+      
+      do {
+        switch password.wrappedValue.inKeychain {
+        case false:
+          let toSave = try password.wrappedValue.valueForSaving()
+          try Password.keychainAdd(item: toSave)
+        case true:
+          let item = password.wrappedValue.valueForUpdating()
+          let newValues = try password.wrappedValue.valueForUpdate()
+          try Password.keychainUpdate(item: item, newValues: newValues)
+        }
+        password.wrappedValue.inKeychain = true
+        password.wrappedValue.status = .isViewing
+        return
+      } catch {
+        password.wrappedValue.status = .error(error)
+        return
+      }
+    }
   }
     
   @StateObject private var storage = Value()
@@ -60,33 +91,6 @@ public struct PasswordController: DynamicProperty {
   }
   
   public init() { }
-  
-  public func delete(id: Machine.Identifier) {
-    
-  }
-  
-  // TODO: Make async throwing
-  public func save(machine: Machine) {
-    let password = self.storage.bind(machine)
-    
-    do {
-      switch password.wrappedValue.inKeychain {
-      case false:
-        let toSave = try password.wrappedValue.valueForSaving()
-        try Password.keychainAdd(item: toSave)
-      case true:
-        let item = password.wrappedValue.valueForUpdating()
-        let newValues = try password.wrappedValue.valueForUpdate()
-        try Password.keychainUpdate(item: item, newValues: newValues)
-      }
-      password.wrappedValue.inKeychain = true
-      password.wrappedValue.status = .isViewing
-      return
-    } catch {
-      password.wrappedValue.status = .error(error)
-      return
-    }
-  }
 }
 
 extension Password {

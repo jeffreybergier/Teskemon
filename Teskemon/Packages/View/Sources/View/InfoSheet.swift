@@ -90,46 +90,69 @@ internal struct InfoSheet: View {
       TableColumn(.username) { id in
         let machine = self.machines[id]
         let password = self.passwords[machine]
-        switch (password.status) {
-        case .isViewing:
-          Text(password.user_account.trimmed ?? "–")
-        case .isEditing:
-          TextField("", text: self.passwords.bind(machine).user_account)
-            .textFieldStyle(.roundedBorder)
-        case .keychainError, .error:
-          Text("–")
-        }
+        TextField("", text: self.passwords.bind(machine).user_account)
+          .textFieldStyle(.roundedBorder)
+          .disabled(password.status != .isEditing)
       }
       TableColumn(.password) { id in
         let machine = self.machines[id]
         let password = self.passwords[machine]
-        switch (password.status) {
-        case .isViewing:
-          Text(password.user_password.trimmed ?? "–")
-        case .isEditing:
-          TextField("", text: self.passwords.bind(machine).user_password)
-            .textFieldStyle(.roundedBorder)
-        case .keychainError, .error:
-          Text("–")
-        }
+        TextField("", text: self.passwords.bind(machine).user_password)
+          .textFieldStyle(.roundedBorder)
+          .disabled(password.status != .isEditing)
       }
       TableColumn("Action") { id in
-        let machine = self.machines[id]
-        let password = self.passwords[machine]
-        switch (password.status) {
-        case .isViewing:
-          Button(password.inKeychain ? "Update" : "Add") {
-            self.passwords[machine].status = .isEditing
+        HStack {
+          let machine = self.machines[id]
+          let password = self.passwords[machine]
+          switch (password.status) {
+          case .isViewing:
+            HStack(spacing: 4) {
+              Button {
+                self.passwords[machine].status = .isEditing
+              } label: {
+                switch password.inKeychain {
+                case true : Label(.edit, systemImage: .imageEdit)
+                case false: Label(.add,  systemImage: .imageAdd)
+                }
+              }
+              Button {
+                self.passwords.deletePassword(for: machine)
+              } label: {
+                Label(.delete, systemImage: .imageDelete)
+              }
+            }
+          case .isEditing:
+            HStack(spacing: 4) {
+              Button {
+                self.passwords.resetPassword(for: machine)
+              } label: {
+                Label(.reset, systemImage: .imageReset)
+              }
+              Button {
+                self.passwords.savePassword(for: machine)
+              } label: {
+                Label(.save, systemImage: .imageSave)
+              }
+            }
+          case .keychainError(let error):
+            Button {
+              // TODO: Make this show an error
+              NSLog(error.localizedDescription)
+            } label: {
+              Label(.error, systemImage: .imageError)
+            }
+          case .error(let error):
+            Button {
+              // TODO: Make this show an error
+              NSLog(error.localizedDescription)
+            } label: {
+              Label(.error, systemImage: .imageError)
+            }
           }
-        case .isEditing:
-          Button("Save") {
-            _passwords.save(machine: machine)
-          }
-        case .keychainError(let error):
-          Text(error.localizedDescription)
-        case .error(let error):
-          Text(error.localizedDescription)
         }
+        .labelStyle(.iconOnly)
+        .buttonStyle(.bordered)
       }
     }
   }
