@@ -119,8 +119,9 @@ internal struct InfoSheet: View {
               Button {
                 self.passwords.deletePassword(for: machine)
               } label: {
-                Label(.delete, systemImage: .imageDelete)
+                Label(.delete, systemImage: .imageDeleteX)
               }
+              .disabled(!password.inKeychain)
             }
           case .isEditing:
             HStack(spacing: 4) {

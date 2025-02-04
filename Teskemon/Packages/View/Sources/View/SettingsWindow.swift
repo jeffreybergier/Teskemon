@@ -96,7 +96,7 @@ public struct SettingsWindow: View {
                                                set: { Int($0) ?? -1 }))
         }.width(64)
         TableColumn("") { service in
-          Button(.delete, systemImage: .imageDelete) {
+          Button(.delete, systemImage: .imageDeleteXCircle) {
             self.settings.delete(service: service.wrappedValue)
           }
           .labelStyle(.iconOnly)
