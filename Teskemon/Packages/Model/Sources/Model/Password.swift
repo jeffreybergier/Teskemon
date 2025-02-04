@@ -21,11 +21,17 @@
 import SwiftUI
 import Umbrella
 
+// TODO: See if this is needed
+extension CFString: @unchecked @retroactive Sendable {}
+extension OSStatus: @retroactive Swift.Error {}
+
 public struct Password: Sendable, Equatable, Hashable {
   
   public static let defaultCreator     = OSType(string: "SATM")
   public static let defaultDescription = "Teskemon password"
   public static let defaultClass       = kSecClassInternetPassword as String
+  
+  public typealias Descriptor = [CFString: any Sendable]
   
   public enum Error: Swift.Error, Sendable, Equatable, Hashable {
     case missingUsernameOrPassword
@@ -84,7 +90,7 @@ extension Password {
     
     // Parse results
     guard status == errSecSuccess else { return }
-    let rawPassword = payload as! [CFString: Any]
+    let rawPassword = payload as! Descriptor
     
     // Configured by the user
     self.user_account  = rawPassword[kSecAttrAccount] as! String
@@ -126,8 +132,8 @@ extension Password {
     }
   }
   
-  public func valueForUpdating() -> [CFString: any Sendable] {
-    var query: [CFString : any Sendable] = [
+  public func valueForUpdating() -> Descriptor {
+    var query: Descriptor = [
       kSecClass:           self.const_class,
       kSecAttrCreator:     self.const_creator,
       kSecAttrDescription: self.const_description,
@@ -143,7 +149,7 @@ extension Password {
     return query
   }
   
-  public func valueForUpdate() throws(Password.Error) -> [CFString: any Sendable] {
+  public func valueForUpdate() throws(Password.Error) -> Descriptor {
     guard
       let accountString = self.user_account.trimmed,
       let passwordData  = self.user_password.data(using: .utf8)
@@ -157,7 +163,7 @@ extension Password {
     ]
   }
   
-  public func valueForSaving() throws(Password.Error) -> [CFString: any Sendable] {
+  public func valueForSaving() throws(Password.Error) -> Descriptor {
     guard
       let accountString = self.user_account.trimmed,
       let passwordData  = self.user_password.data(using: .utf8)

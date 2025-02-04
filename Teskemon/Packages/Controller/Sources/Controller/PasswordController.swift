@@ -70,26 +70,26 @@ public struct PasswordController: DynamicProperty {
     var password = self.wrappedValue[machine]
     
     do {
-      let status: OSStatus
       switch password.inKeychain {
       case false:
         let toSave = try password.valueForSaving()
-        status = SecItemAdd(toSave as CFDictionary, nil)
+        try Password.keychainAdd(item: toSave)
       case true:
-        let toUpdate = password.valueForUpdating()
-        let updatedValues = try password.valueForUpdate()
-        status = SecItemUpdate(toUpdate      as CFDictionary,
-                               updatedValues as CFDictionary)
-      }
-      guard status == errSecSuccess else {
-        password.status = .keychainError(status)
-        return
+        let item = password.valueForUpdating()
+        let newValues = try password.valueForUpdate()
+        try Password.keychainUpdate(item: item, newValues: newValues)
       }
       password.inKeychain = true
+      password.status = .isViewing
       return
-    } catch {
+    } catch let error as Password.Error {
       password.status = .error(error)
       return
+    } catch let error as OSStatus {
+      password.status = .keychainError(error)
+      return
+    } catch {
+      fatalError(String(describing: error))
     }
   }
   
@@ -108,5 +108,22 @@ public struct PasswordController: DynamicProperty {
     var item: CFTypeRef?
     let status: OSStatus = SecItemCopyMatching(rawQuery as CFDictionary, &item)
     return Password(secItemCopyStatus: status, payload: item, machine: machine)
+  }
+}
+
+extension Password {
+  internal static func keychainAdd(item: Descriptor) throws(OSStatus) {
+    let status = SecItemAdd(item as CFDictionary, nil)
+    guard status == errSecSuccess else { throw status }
+    return
+  }
+  
+  internal static func keychainUpdate(item:      Descriptor,
+                                      newValues: Descriptor) throws(OSStatus)
+  {
+    let status = SecItemUpdate(item      as CFDictionary,
+                               newValues as CFDictionary)
+    guard status == errSecSuccess else { throw status }
+    return
   }
 }
