@@ -76,7 +76,7 @@ internal struct InfoSheet: View {
       TableColumn(.nameCustom) { id in
         TextField("", text: self.customNameBinding(for: id),
                     prompt: Text(self.machines[id].name))
-        .font(.headline)
+        .textFieldStyle(.roundedBorder)
       }
     }
   }

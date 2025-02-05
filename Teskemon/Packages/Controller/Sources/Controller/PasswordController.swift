@@ -128,21 +128,21 @@ extension Password {
       kSecMatchLimit:       kSecMatchLimitOne,
       kSecReturnData:       true,
       kSecReturnAttributes: true,
-      kSecAttrServer:       machine.url,
+      kSecAttrServer:       machine.host,
     ]
     
     do {
       var output = try Password.keychainFind(item: descriptor)
       output.inKeychain = true
-      if output.app_server == machine.url { return output }
+      if output.app_server == machine.host { return output }
       output.status = .error(.machineDataIncorrect)
       return output
     } catch {
       switch error {
       case .keychain(let status) where status == errSecItemNotFound:
         var output = Password()
-        output.app_server = machine.url
-        output.app_label  = "\(machine.url) (\(machine.name)<\(machine.id.rawValue)>)"
+        output.app_server = machine.host
+        output.app_label  = "\(machine.host) (\(machine.name)<\(machine.id.rawValue)>)"
         return output
       default:
         var output = Password()

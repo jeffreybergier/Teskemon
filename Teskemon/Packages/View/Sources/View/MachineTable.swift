@@ -55,7 +55,7 @@ internal struct MachineTable: View {
       
       TableColumn(.machine) { machine in
         TableRowName(name: machine.name,
-                     url: machine.url,
+                     host: machine.host,
                      os: machine.os,
                      customName: self.settings.customNames[machine.id])
       }.width(ideal: 128)
@@ -76,7 +76,7 @@ internal struct MachineTable: View {
                                                 on: machine.id,
                                                    // TODO: Put passwords back but make them lazy
                                                 username: nil, //self.passwords[.username, machine.id],
-                                                password: nil), // self.passwords[.password, machine.id]),
+                                                password: nil)!, // self.passwords[.password, machine.id]),
                          spinnerValue: self.spinnerValue)
         }.width(36)
       }
@@ -147,7 +147,7 @@ internal struct TableRowRelay: View {
 internal struct TableRowName: View {
   
   internal let name: String
-  internal let url: String
+  internal let host: String
   internal let os: String?
   internal let customName: String?
   
@@ -159,7 +159,7 @@ internal struct TableRowName: View {
           Text(os).font(.subheadline)
         }
       }
-      Text(self.url).font(.subheadline)
+      Text(self.host).font(.subheadline)
     }
   }
 }

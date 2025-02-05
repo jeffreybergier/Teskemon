@@ -109,23 +109,22 @@ extension Process {
       "-zv",
       "-G \(timeout)",
       "-w \(timeout)",
-      machine.url,
+      machine.host,
       "\(service.port)"
     ]
     let output = try await Process.execute(arguments: arguments)
     let outputString = String(data: output.errOut, encoding: .utf8)!
     if outputString.hasSuffix("succeeded!\n") {
-      NSLog("[ONLINE ] \(machine.url):\(service.port)")
+      NSLog("[ONLINE ] \(machine.host):\(service.port)")
       return .online
     } else if outputString.hasSuffix("refused\n") {
-      NSLog("[OFFLINE] \(machine.url):\(service.port)")
+      NSLog("[OFFLINE] \(machine.host):\(service.port)")
       return .offline
     } else if outputString.hasSuffix("Operation timed out\n") {
-      NSLog("[TIMEOUT] \(machine.url):\(service.port)")
+      NSLog("[TIMEOUT] \(machine.host):\(service.port)")
       return .error
     } else {
-      NSLog("[ERROR  ] \(machine.url):\(service.port)")
-      NSLog("\(machine.url):\(service.port) - Error")
+      NSLog("[ERROR  ] \(machine.host):\(service.port)")
       return .error
     }
   }
@@ -190,7 +189,7 @@ extension Process {
     let arguments: [String] = [
       "/sbin/ping",
       "-c \(pingCount)",
-      machine.url,
+      machine.host,
     ]
     let output = try await Process.execute(arguments: arguments)
     let outputString = String(data: output.stdOut, encoding: .utf8) ?? ""

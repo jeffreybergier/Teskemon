@@ -87,17 +87,21 @@ extension Machine {
     public func url(for service: Service,
                     on id: Machine.Identifier,
                     username: String?,
-                    password:String?) -> URL
+                    password:String?) -> URL?
     {
       
       let machine = self[id]
       var components = URLComponents()
-      components.host = machine.url
-      components.port = service.port
-      components.scheme = service.scheme
+      components.host = machine.host
       components.user = username
       components.password = password
-      return components.url!
+      if service.port > 0 {
+        components.port = service.port
+      }
+      if !service.scheme.isEmpty {
+        components.scheme = service.scheme
+      }
+      return components.url
     }
   }
 }
@@ -106,7 +110,7 @@ public struct Machine: Codable, Sendable, Identifiable {
   
   public let id: Identifier
   public let name: String
-  public let url: String
+  public let host: String
   public let os: String?
   public let kind: Kind
   public let relay: Relay
@@ -118,7 +122,7 @@ public struct Machine: Codable, Sendable, Identifiable {
   internal init(address: Address, hostName: String, hostID: Machine.Identifier, selfID: Machine.Identifier?) {
     self.id   = .init(rawValue: (selfID?.rawValue ?? "INVALID") + ":" + address.rawValue)
     self.name = address.rawValue
-    self.url  = address.rawValue
+    self.host = address.rawValue
     self.os   = nil
     self.kind = hostID == selfID ? .meSubnet : .remoteSubnet
     self.relay = .route(id: hostID, name: hostName)
@@ -131,7 +135,7 @@ public struct Machine: Codable, Sendable, Identifiable {
   internal init(_ model: MachineCLI, selfID: Machine.Identifier?) {
     self.id       = .init(rawValue: model.ID)
     self.name     = model.HostName
-    self.url      = model.DNSName
+    self.host     = model.DNSName
     self.os       = model.OS
     self.kind     = model.ID == (selfID?.rawValue ?? "INVALID") ? .meHost : .remoteHost
     self.relay    = .relay(model.Relay)
