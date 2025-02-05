@@ -22,36 +22,44 @@ import SwiftUI
 import Umbrella
 import Model
 
-@MainActor
+/// Basic Password Controller for Read Only
 @propertyWrapper
 public struct PasswordController: DynamicProperty {
+  public struct Value {
+    public subscript(machine: Machine) -> Password {
+      Password.keychainFind(machine: machine)
+    }
+  }
+  public var wrappedValue: Value {
+    return .init()
+  }
+  public init() { }
+}
+
+/// Password Controller for Password Management in a Table
+@MainActor
+@propertyWrapper
+public struct PasswordEditController: DynamicProperty {
   
   @MainActor
   public class Value: ObservableObject {
     
     internal var cache: [Machine.Identifier: Password] = [:]
-    internal var ignoreCache: Bool
     
     public subscript(machine: Machine) -> Password {
       set {
         self.objectWillChange.send()
-        guard !self.ignoreCache else { return }
         self.cache[machine.id] = newValue
       }
       get {
-        if !self.ignoreCache, let password = self.cache[machine.id] { return password }
+        if let password = self.cache[machine.id] { return password }
         let password = Password.keychainFind(machine: machine)
         self.cache[machine.id] = password
         return password
       }
     }
     
-    internal init(ignoreCache: Bool) {
-      self.ignoreCache = ignoreCache
-    }
-    
     public func bind(_ machine: Machine) -> Binding<Password> {
-      assert(!self.ignoreCache, "Binding to a password is not possible without the cache")
       return Binding {
         return self[machine]
       } set: {
@@ -90,15 +98,13 @@ public struct PasswordController: DynamicProperty {
     }
   }
     
-  @StateObject private var storage: Value
+  @StateObject private var storage = Value()
   
   public var wrappedValue: Value {
     self.storage
   }
   
-  public init(ignoreCache: Bool = false) {
-    _storage = .init(wrappedValue: .init(ignoreCache: ignoreCache))
-  }
+  public init() { }
 }
 
 extension Password {

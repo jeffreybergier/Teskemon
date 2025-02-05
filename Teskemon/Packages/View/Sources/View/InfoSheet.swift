@@ -26,9 +26,9 @@ internal struct InfoSheet: View {
   
   @Environment(\.dismiss) private var dismiss
   
-  @MachineController  private var machines
-  @SettingsController private var settings
-  @PasswordController private var passwords
+  @MachineController       private var machines
+  @SettingsController      private var settings
+  @PasswordEditController private var passwords
 
   @State private var currentTab: Int
   private let selection: [Machine.Identifier]
