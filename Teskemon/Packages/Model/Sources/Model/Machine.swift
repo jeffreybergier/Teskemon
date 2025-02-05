@@ -83,22 +83,23 @@ extension Machine {
         return [(machine.id, machine)] + (machine.subnetRoutes?.map { ($0.id, $0) } ?? [])
       })
     }
-    
-    public func url(for service: Service,
-                    on id: Machine.Identifier,
-                    username: String?,
-                    password:String?) -> URL
-    {
-      
-      let machine = self[id]
-      var components = URLComponents()
-      components.host = machine.host
-      components.port = service.port
-      components.scheme = service.scheme
-      components.user = username
-      components.password = password
-      return components.url!
+  }
+  
+  public func url(for service: Service,
+                  username: String?,
+                  password: String?) -> URL?
+  {
+    var components      = URLComponents()
+    components.host     = self.host
+    components.user     = username
+    components.password = password
+    if service.port > 0 {
+      components.port   = service.port
     }
+    if !service.scheme.isEmpty {
+      components.scheme = service.scheme
+    }
+    return components.url
   }
 }
 
