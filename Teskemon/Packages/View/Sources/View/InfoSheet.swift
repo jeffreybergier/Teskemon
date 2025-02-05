@@ -97,7 +97,7 @@ internal struct InfoSheet: View {
       TableColumn(.password) { id in
         let machine = self.machines[id]
         let password = self.passwords[machine]
-        TextField("", text: self.passwords.bind(machine).user_password)
+        SecureField("", text: self.passwords.bind(machine).user_password)
           .textFieldStyle(.roundedBorder)
           .disabled(password.status != .isEditing)
       }
