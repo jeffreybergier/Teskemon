@@ -117,7 +117,8 @@ internal struct InfoSheet: View {
                 }
               }
               Button {
-                self.passwords.deletePassword(for: machine)
+                // TODO: Show an error if this fails
+                try! self.passwords.deletePassword(for: machine)
               } label: {
                 Label(.delete, systemImage: .imageDeleteX)
               }

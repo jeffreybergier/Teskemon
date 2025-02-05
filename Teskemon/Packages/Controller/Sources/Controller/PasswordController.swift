@@ -67,8 +67,10 @@ public struct PasswordEditController: DynamicProperty {
       }
     }
     
-    public func deletePassword(for machine: Machine) {
-      fatalError("Unimplemented")
+    public func deletePassword(for machine: Machine) throws(Password.Error) {
+      try Password.keychainDelete(machine: machine)
+      self.objectWillChange.send()
+      self.cache.removeValue(forKey: machine.id)
     }
     
     public func resetPassword(for machine: Machine) {
@@ -164,6 +166,18 @@ extension Password {
         return output
       }
     }
+  }
+  
+  internal static func keychainDelete(machine: Machine) throws(Password.Error) {
+    let descriptor: Password.Descriptor = [
+      kSecClass:            Password.defaultClass,
+      kSecAttrCreator:      Password.defaultCreator,
+      kSecAttrServer:       machine.host,
+    ]
+    
+    let status = SecItemDelete(descriptor as CFDictionary)
+    guard status == errSecSuccess else { throw .keychain(status) }
+    return
   }
   
 }
