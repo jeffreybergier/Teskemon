@@ -30,21 +30,28 @@ public struct PasswordController: DynamicProperty {
   public class Value: ObservableObject {
     
     internal var cache: [Machine.Identifier: Password] = [:]
+    internal var ignoreCache: Bool
     
     public subscript(machine: Machine) -> Password {
       set {
         self.objectWillChange.send()
+        guard !self.ignoreCache else { return }
         self.cache[machine.id] = newValue
       }
       get {
-        if let password = self.cache[machine.id] { return password }
+        if !self.ignoreCache, let password = self.cache[machine.id] { return password }
         let password = Password.keychainFind(machine: machine)
         self.cache[machine.id] = password
         return password
       }
     }
     
+    internal init(ignoreCache: Bool) {
+      self.ignoreCache = ignoreCache
+    }
+    
     public func bind(_ machine: Machine) -> Binding<Password> {
+      assert(!self.ignoreCache, "Binding to a password is not possible without the cache")
       return Binding {
         return self[machine]
       } set: {
@@ -63,7 +70,6 @@ public struct PasswordController: DynamicProperty {
     
     public func savePassword(for machine: Machine) {
       let password = self.bind(machine)
-      
       do {
         switch password.wrappedValue.inKeychain {
         case false:
@@ -84,13 +90,15 @@ public struct PasswordController: DynamicProperty {
     }
   }
     
-  @StateObject private var storage = Value()
+  @StateObject private var storage: Value
   
   public var wrappedValue: Value {
     self.storage
   }
   
-  public init() { }
+  public init(ignoreCache: Bool = false) {
+    _storage = .init(wrappedValue: .init(ignoreCache: ignoreCache))
+  }
 }
 
 extension Password {

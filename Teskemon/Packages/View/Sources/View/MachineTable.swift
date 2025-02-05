@@ -259,7 +259,7 @@ internal struct TableRowPing: View {
 
 internal struct TableRowStatus: View {
   
-  @PasswordController private var passwords
+  @PasswordController(ignoreCache: true) private var passwords
   
   internal let machine: Machine
   internal let service: Service
