@@ -55,7 +55,7 @@ internal struct MachineTable: View {
       
       TableColumn(.machine) { machine in
         TableRowName(name: machine.name,
-                     url: machine.url,
+                     url: machine.host,
                      os: machine.os,
                      customName: self.settings.customNames[machine.id])
       }.width(ideal: 128)

@@ -92,7 +92,7 @@ extension Machine {
       
       let machine = self[id]
       var components = URLComponents()
-      components.host = machine.url
+      components.host = machine.host
       components.port = service.port
       components.scheme = service.scheme
       components.user = username
@@ -106,7 +106,7 @@ public struct Machine: Codable, Sendable, Identifiable {
   
   public let id: Identifier
   public let name: String
-  public let url: String
+  public let host: String
   public let os: String?
   public let kind: Kind
   public let relay: Relay
@@ -118,7 +118,7 @@ public struct Machine: Codable, Sendable, Identifiable {
   internal init(address: Address, hostName: String, hostID: Machine.Identifier, selfID: Machine.Identifier?) {
     self.id   = .init(rawValue: (selfID?.rawValue ?? "INVALID") + ":" + address.rawValue)
     self.name = address.rawValue
-    self.url  = address.rawValue
+    self.host = address.rawValue
     self.os   = nil
     self.kind = hostID == selfID ? .meSubnet : .remoteSubnet
     self.relay = .route(id: hostID, name: hostName)
@@ -131,7 +131,7 @@ public struct Machine: Codable, Sendable, Identifiable {
   internal init(_ model: MachineCLI, selfID: Machine.Identifier?) {
     self.id       = .init(rawValue: model.ID)
     self.name     = model.HostName
-    self.url      = model.DNSName
+    self.host     = model.DNSName
     self.os       = model.OS
     self.kind     = model.ID == (selfID?.rawValue ?? "INVALID") ? .meHost : .remoteHost
     self.relay    = .relay(model.Relay)
