@@ -21,56 +21,56 @@
 import Foundation
 
 internal struct TailscaleCLI: Codable, Sendable {
-  internal let Version: String
-  internal let TUN: Bool
-  internal let BackendState: String
-  internal let HaveNodeKey: Bool
-  internal let AuthURL: String?
-  internal let TailscaleIPs: [String]?
-  internal let `Self`: MachineCLI?
-  internal let Health: [String]
-  internal let MagicDNSSuffix: String
-  internal let CurrentTailnet: Tailnet?
-  internal let CertDomains: [String]?
-  internal let Peer: [String: MachineCLI]?
-  internal let User: [String: User]?
-  internal let ClientVersion: ClientVersion?
+  internal var Version:        String?
+  internal var TUN:            Bool?
+  internal var BackendState:   String?
+  internal var HaveNodeKey:    Bool?
+  internal var AuthURL:        String?
+  internal var TailscaleIPs:  [String]?
+  internal var Health:        [String]?
+  internal var MagicDNSSuffix: String?
+  internal var CertDomains:   [String]?
+  internal var Peer: [String:  MachineCLI]?
+  internal var User: [String:        User]?
+  internal var `Self`:         MachineCLI?
+  internal var CurrentTailnet: Tailnet?
+  internal var ClientVersion:  ClientVersion?
 }
 
 internal struct MachineCLI: Codable, Sendable {
-  internal let ID: String
-  internal let PublicKey: String
-  internal let HostName: String
-  internal let DNSName: String
-  internal let OS: String
-  internal let UserID: Int
-  internal let TailscaleIPs: [String]
-  internal let AllowedIPs: [String]
-  internal let PrimaryRoutes: [String]?
-  internal let Addrs: [String]?
-  internal let CurAddr: String
-  internal let Relay: String
-  internal let RxBytes: Int
-  internal let TxBytes: Int
-  internal let Created: String
-  internal let LastWrite: String?
-  internal let LastSeen: String?
-  internal let LastHandshake: String?
-  internal let Online: Bool
-  internal let ExitNode: Bool
-  internal let ExitNodeOption: Bool
-  internal let Active: Bool
-  internal let PeerAPIURL: [String]?
-  internal let Capabilities: [String]?
-  internal let CapMap: [String: String?]?
-  internal let InNetworkMap: Bool
-  internal let InMagicSock: Bool
-  internal let InEngine: Bool
-  internal let KeyExpiry: String?
+  internal var ID:             String
+  internal var UserID:         Int
+  internal var PublicKey:      String?
+  internal var HostName:       String?
+  internal var DNSName:        String?
+  internal var OS:             String?
+  internal var TailscaleIPs:  [String]?
+  internal var AllowedIPs:    [String]?
+  internal var PrimaryRoutes: [String]?
+  internal var Addrs:         [String]?
+  internal var CurAddr:        String?
+  internal var Relay:          String?
+  internal var RxBytes:        Int?
+  internal var TxBytes:        Int?
+  internal var Created:        String?
+  internal var LastWrite:      String?
+  internal var LastSeen:       String?
+  internal var LastHandshake:  String?
+  internal var Online:         Bool?
+  internal var ExitNode:       Bool?
+  internal var ExitNodeOption: Bool?
+  internal var Active:         Bool?
+  internal var PeerAPIURL:    [String]?
+  internal var Capabilities:  [String]?
+  internal var CapMap: [String:String?]?
+  internal var InNetworkMap:   Bool?
+  internal var InMagicSock:    Bool?
+  internal var InEngine:       Bool?
+  internal var KeyExpiry:      String?
 }
 
 internal struct ClientVersion: Codable, Sendable {
-  internal let runningLatest: Bool = false
+  internal let runningLatest: Bool?
   internal enum CodingKeys: String, CodingKey {
     case runningLatest = "RunningLatest"
   }

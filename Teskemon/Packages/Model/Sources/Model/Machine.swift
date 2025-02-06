@@ -34,7 +34,11 @@ extension Machine {
     }
     
     public subscript(id: Machine.Identifier) -> Machine {
-      self.lookUp[id]!
+      guard let machine = self.lookUp[id] else {
+        NSLog("[MISSED] MachineID: \(id.rawValue)")
+        return .init()
+      }
+      return machine
     }
     
     public func machines(for selection: Set<Machine.Identifier>) -> [Machine] {
@@ -59,16 +63,16 @@ extension Machine {
     
     public init(data: Data) throws {
       let rawModel = try JSONDecoder().decode(TailscaleCLI.self, from: data)
-      let tailscale = Tailscale(version: rawModel.Version,
-                                versionUpToDate: rawModel.ClientVersion?.runningLatest ?? false,
-                                tunnelingEnabled: rawModel.TUN,
-                                backendState: rawModel.BackendState,
-                                haveNodeKey: rawModel.HaveNodeKey,
-                                health: rawModel.Health.map { .init(rawValue: $0) },
-                                magicDNSSuffix: rawModel.MagicDNSSuffix,
-                                currentTailnet: rawModel.CurrentTailnet,
-                                selfNodeID: rawModel.Self.map { .init(rawValue: $0.ID) },
-                                selfUserID: rawModel.Self.map { .init(rawValue: $0.UserID) })
+      let tailscale = Tailscale(version:          rawModel.Version ?? "",
+                                versionUpToDate:  rawModel.ClientVersion?.runningLatest ?? false,
+                                tunnelingEnabled: rawModel.TUN ?? false,
+                                backendState:     rawModel.BackendState ?? "",
+                                haveNodeKey:      rawModel.HaveNodeKey ?? false,
+                                health:           rawModel.Health?.map { .init(rawValue: $0) } ?? [],
+                                magicDNSSuffix:   rawModel.MagicDNSSuffix ?? "",
+                                currentTailnet:   rawModel.CurrentTailnet,
+                                selfNodeID:       rawModel.Self.map { .init(rawValue: $0.ID) },
+                                selfUserID:       rawModel.Self.map { .init(rawValue: $0.UserID) })
       self.tailscale = tailscale
       self.machines = {
         return ((rawModel.Peer.map { Array($0.values) } ?? [])
@@ -105,65 +109,70 @@ extension Machine {
 
 public struct Machine: Codable, Sendable, Identifiable {
   
-  public let id: Identifier
-  public let name: String
-  public let host: String
-  public let os: String?
-  public let kind: Kind
-  public let relay: Relay
-  public let activity: Activity?
-  public let subnetRoutes: [Machine]?
-  public let nodeInfo: NodeInfo?
+  public var id: Identifier = .init(rawValue: "")
+  public var name: String   = ""
+  public var host: String   = ""
+  public var os: String     = ""
+  public var kind: Kind     = .remoteSubnet
+  public var relay: Relay   = .relay("")
+  public var activity: Activity  = .init()
+  public var nodeInfo: NodeInfo? = nil
+  public var subnetRoutes: [Machine]? = nil
+  
+  internal init() {}
   
   /// Init for advertised subnets
-  internal init(address: Address, hostName: String, hostID: Machine.Identifier, selfID: Machine.Identifier?) {
+  internal init(address: Address, name: String, hostID: Machine.Identifier, selfID: Machine.Identifier?) {
     self.id   = .init(rawValue: (selfID?.rawValue ?? "INVALID") + ":" + address.rawValue)
     self.name = address.rawValue
     self.host = address.rawValue
-    self.os   = nil
     self.kind = hostID == selfID ? .meSubnet : .remoteSubnet
-    self.relay = .route(id: hostID, name: hostName)
-    self.activity = nil
-    self.subnetRoutes = nil
-    self.nodeInfo = nil
+    self.relay = .route(id: hostID, name: name)
   }
   
   /// Init for JSON from the Tailscale CLI
   internal init(_ model: MachineCLI, selfID: Machine.Identifier?) {
     self.id       = .init(rawValue: model.ID)
-    self.name     = model.HostName
-    self.host     = model.DNSName
-    self.os       = model.OS
-    self.kind     = model.ID == (selfID?.rawValue ?? "INVALID") ? .meHost : .remoteHost
-    self.relay    = .relay(model.Relay)
-    self.activity = .init(isOnline: model.Online,
-                          isActive: model.Active,
-                          rxBytes: Int64(model.RxBytes),
-                          txBytes: Int64(model.TxBytes),
+    self.name     = model.HostName ?? ""
+    self.host     = model.DNSName  ?? ""
+    self.os       = model.OS       ?? ""
+    self.kind     = model.ID == selfID?.rawValue ? .meHost : .remoteHost
+    self.relay    = .relay(model.Relay ?? "")
+    self.activity = .init(isOnline: model.Online ?? false,
+                          isActive: model.Active ?? false,
+                          rxBytes:  Int64(model.RxBytes ?? 0),
+                          txBytes:  Int64(model.TxBytes ?? 0),
                           lastSeen: model.LastSeen.flatMap(df.date(from:)))
     
     let subnetRoutes: [Machine]? = model.PrimaryRoutes?.flatMap { subnet in
       Subnet(rawValue: subnet).explodeAddresses().map { address in
         Machine(address: address,
-                hostName: model.HostName,
+                name:    model.HostName ?? "",
                 hostID: .init(rawValue: model.ID),
-                selfID: selfID)
+                selfID:  selfID)
       }
     }
     self.subnetRoutes = (subnetRoutes?.isEmpty ?? true) ? nil : subnetRoutes
     
+    // Had to move these out of the init because the type checker was timing out
+    let keyExpiry     = model.KeyExpiry.flatMap(df.date(from:))
+    let tailscaleIPs  = model.TailscaleIPs?.map({ Address(rawValue: $0) }) ?? []
+    let created       = model.Created.flatMap(df.date(from:))
+    let lastWrite     = model.LastWrite.flatMap(df.date(from:))
+    let lastHandshake = model.LastWrite.flatMap(df.date(from:))
+    
     self.nodeInfo = .init(
-      publicKey: model.PublicKey,
-      keyExpiry: model.KeyExpiry.flatMap(df.date(from:)),
-      isExitNode: model.ExitNode,
-      userID: model.UserID,
-      tailscaleIPs: model.TailscaleIPs.map { Address(rawValue: $0) },
-      created: df.date(from: model.Created)!,
-      lastWrite: model.LastWrite.flatMap(df.date(from:)),
-      lastHandshake: model.LastWrite.flatMap(df.date(from:)),
-      inNetworkMap: model.InNetworkMap,
-      inMagicSock: model.InMagicSock,
-      inEngine: model.InEngine
+      publicKey:     model.PublicKey ?? "",
+      keyExpiry:     keyExpiry,
+      isExitNode:    model.ExitNode ?? false,
+      userID:        model.UserID,
+      tailscaleIPs:  tailscaleIPs,
+      created:       created,
+      lastWrite:     lastWrite,
+      lastHandshake: lastHandshake,
+      inNetworkMap:  model.InNetworkMap ?? false,
+      inMagicSock:   model.InMagicSock  ?? false,
+      inEngine:      model.InEngine     ?? false
     )
   }
 }
@@ -178,11 +187,11 @@ extension Machine {
   }
   
   public struct Activity: Codable, Sendable, Equatable {
-    public let isOnline: Bool
-    public let isActive: Bool
-    public let rxBytes: Int64
-    public let txBytes: Int64
-    public let lastSeen: Date?
+    public var isOnline: Bool = false
+    public var isActive: Bool = false
+    public var rxBytes: Int64 = 0
+    public var txBytes: Int64 = 0
+    public var lastSeen: Date? = nil
   }
   
   public enum Kind: Codable, Sendable {
@@ -202,22 +211,22 @@ extension Machine {
   
   public struct NodeInfo: Codable, Sendable {
     // Information
-    public let publicKey: String
-    public let keyExpiry: Date?
-    public let isExitNode: Bool
-    public let userID: Int
+    public var publicKey:  String = ""
+    public var keyExpiry:  Date?  = nil
+    public var isExitNode: Bool   = false
+    public var userID:     Int    = -1
     
     // Network
-    public let tailscaleIPs: [Address]
+    public var tailscaleIPs: [Address] = []
     
     // Timestamps
-    public let created: Date
-    public let lastWrite: Date?
-    public let lastHandshake: Date?
+    public var created:       Date? = nil
+    public var lastWrite:     Date? = nil
+    public var lastHandshake: Date? = nil
     // Status
-    public let inNetworkMap: Bool
-    public let inMagicSock: Bool
-    public let inEngine: Bool
+    public var inNetworkMap: Bool = false
+    public var inMagicSock:  Bool = false
+    public var inEngine:     Bool = false
   }
 }
 

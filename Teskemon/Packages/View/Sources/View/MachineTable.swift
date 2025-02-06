@@ -41,7 +41,7 @@ internal struct MachineTable: View {
     {
       
       TableColumn(.online) { machine in
-        TableRowOnline(isOnline: machine.activity?.isOnline)
+        TableRowOnline(isOnline: machine.activity.isOnline)
       }.width(24)
       
       TableColumn(.kind) { machine in

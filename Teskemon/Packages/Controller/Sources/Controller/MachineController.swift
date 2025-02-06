@@ -42,10 +42,7 @@ public struct MachineController: DynamicProperty {
   }
   
   public func resetData() {
-    self.storage.tailscale = nil
-    self.storage.machines = []
-    self.storage.users = [:]
-    // TODO: Figure out why clearing the cache here crashes it
+    self.storage = .init()
   }
   
   public func updateMachines(with executable: SettingsExecutable) async throws {
