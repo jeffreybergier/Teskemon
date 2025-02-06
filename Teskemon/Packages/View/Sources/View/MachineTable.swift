@@ -24,7 +24,12 @@ import Controller
 
 internal struct MachineTable: View {
   
+  @Environment(\.appearsActive) private var sceneAppearsActive
+  
   @SettingsController private var settings
+  @TimerProperty(identifier: "MachineTable",
+                 interval: 1.0)
+                 private var activityTimer
   
   // TODO: Not sure why these need to be manually passed in
   // I should be able to use the property wrappers directly,
@@ -76,6 +81,9 @@ internal struct MachineTable: View {
                          spinnerValue: self.spinnerValue)
         }.width(36)
       }
+    }
+    .onChange(of: self.sceneAppearsActive, initial: true) { _, appearsActive in
+      self.activityTimer.forceStop = !appearsActive
     }
   }
 }
@@ -164,8 +172,6 @@ internal struct TableRowActivity: View {
   
   private static let byteF = ByteCountFormatter()
   
-  // TODO: Move this to MachineTable
-  @Environment(\.appearsActive) private var sceneAppearsActive
   @TimerProperty(identifier: "MachineTable",
                  interval: 1.0)
                  private var activityTimer
@@ -186,15 +192,9 @@ internal struct TableRowActivity: View {
         }
       }
     }
-    .onChange(of: self.sceneAppearsActive, initial: true, self.manageTimer)
-    .onChange(of: self.activity?.isActive, initial: true, self.manageTimer)
-  }
-  
-  private func manageTimer<T>(_ oldValue: T, newValue: T) {
-    if self.sceneAppearsActive, (self.activity?.isActive ?? false) {
-      self.activityTimer.retain()
-    } else {
-      self.activityTimer.release()
+    .onChange(of: self.activity?.isActive, initial: true) { _, newValue in
+      (newValue ?? false) == true ? self.activityTimer.retain()
+                                  : self.activityTimer.release()
     }
   }
   

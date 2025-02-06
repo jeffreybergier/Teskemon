@@ -31,9 +31,10 @@ public struct TimerProperty: DynamicProperty {
   
   public struct Value: Equatable {
     
-    public internal(set) var fireCount: Int = 0
-    public               var interval: TimeInterval
-    public               let identifier: String
+    public internal(set) var fireCount:   Int = 0
+    public               var forceStop:   Bool = false
+    public               let interval:    TimeInterval
+    public               let identifier:  String
     private              var retainCount: UInt = 0
     
     public mutating func retain() {
@@ -46,7 +47,7 @@ public struct TimerProperty: DynamicProperty {
     }
     
     public var isRunning: Bool {
-      self.retainCount > 0
+      self.forceStop == false && self.retainCount > 0
     }
     
     internal init(identifier: String, interval: TimeInterval) {
