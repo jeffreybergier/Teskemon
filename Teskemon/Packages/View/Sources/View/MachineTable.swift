@@ -25,7 +25,6 @@ import Controller
 internal struct MachineTable: View {
   
   @SettingsController private var settings
-  // @PasswordController private var passwords
   
   // TODO: Not sure why these need to be manually passed in
   // I should be able to use the property wrappers directly,
@@ -71,12 +70,9 @@ internal struct MachineTable: View {
       
       TableColumnForEach(self.settings.services) { service in
         TableColumn(String(format: "%@ (%d)", service.name, service.port)) { machine in
-          TableRowStatus(status: self.services[machine.id, service],
-                         url:    self.machines.url(for: service,
-                                                on: machine.id,
-                                                   // TODO: Put passwords back but make them lazy
-                                                username: nil, //self.passwords[.username, machine.id],
-                                                password: nil)!, // self.passwords[.password, machine.id]),
+          TableRowStatus(machine: machine,
+                         service: service,
+                         status: self.services[machine.id, service],
                          spinnerValue: self.spinnerValue)
         }.width(36)
       }
@@ -263,13 +259,21 @@ internal struct TableRowPing: View {
 
 internal struct TableRowStatus: View {
   
+  @PasswordController private var passwords
+  
+  internal let machine: Machine
+  internal let service: Service
   internal let status: Service.Status
-  internal let url: URL
   internal let spinnerValue: Double
   
   internal var body: some View {
     Button {
-      NSWorkspace.shared.open(self.url)
+      let password = self.passwords[self.machine]
+      guard let url = self.machine.url(for: self.service,
+                                       username: password.user_account,
+                                       password: password.user_password)
+      else { assertionFailure("URL was NIL"); return }
+      NSWorkspace.shared.open(url)
     } label: {
       Label {
         Text(.open)

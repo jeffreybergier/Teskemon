@@ -22,6 +22,7 @@ import Foundation
 
 public struct Service: Codable, Sendable, Hashable, Identifiable {
   
+  // TODO: Consider separating Timeout and Error here
   public enum Status: Codable, Sendable {
     case unknown
     case error

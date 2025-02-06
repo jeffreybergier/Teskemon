@@ -26,9 +26,9 @@ internal struct InfoSheet: View {
   
   @Environment(\.dismiss) private var dismiss
   
-  @MachineController  private var machines
-  @SettingsController private var settings
-  @PasswordController private var passwords
+  @MachineController       private var machines
+  @SettingsController      private var settings
+  @PasswordEditController private var passwords
 
   @State private var currentTab: Int
   private let selection: [Machine.Identifier]
@@ -97,7 +97,7 @@ internal struct InfoSheet: View {
       TableColumn(.password) { id in
         let machine = self.machines[id]
         let password = self.passwords[machine]
-        TextField("", text: self.passwords.bind(machine).user_password)
+        SecureField("", text: self.passwords.bind(machine).user_password)
           .textFieldStyle(.roundedBorder)
           .disabled(password.status != .isEditing)
       }
@@ -117,7 +117,8 @@ internal struct InfoSheet: View {
                 }
               }
               Button {
-                self.passwords.deletePassword(for: machine)
+                // TODO: Show an error if this fails
+                try! self.passwords.deletePassword(for: machine)
               } label: {
                 Label(.delete, systemImage: .imageDeleteX)
               }

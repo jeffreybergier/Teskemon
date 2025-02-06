@@ -22,9 +22,24 @@ import SwiftUI
 import Umbrella
 import Model
 
-@MainActor
+/// Basic Password Controller for Read Only
 @propertyWrapper
 public struct PasswordController: DynamicProperty {
+  public struct Value {
+    public subscript(machine: Machine) -> Password {
+      Password.keychainFind(machine: machine)
+    }
+  }
+  public var wrappedValue: Value {
+    return .init()
+  }
+  public init() { }
+}
+
+/// Password Controller for Password Management in a Table
+@MainActor
+@propertyWrapper
+public struct PasswordEditController: DynamicProperty {
   
   @MainActor
   public class Value: ObservableObject {
@@ -52,8 +67,10 @@ public struct PasswordController: DynamicProperty {
       }
     }
     
-    public func deletePassword(for machine: Machine) {
-      fatalError("Unimplemented")
+    public func deletePassword(for machine: Machine) throws(Password.Error) {
+      try Password.keychainDelete(machine: machine)
+      self.objectWillChange.send()
+      self.cache.removeValue(forKey: machine.id)
     }
     
     public func resetPassword(for machine: Machine) {
@@ -63,7 +80,6 @@ public struct PasswordController: DynamicProperty {
     
     public func savePassword(for machine: Machine) {
       let password = self.bind(machine)
-      
       do {
         switch password.wrappedValue.inKeychain {
         case false:
@@ -150,6 +166,18 @@ extension Password {
         return output
       }
     }
+  }
+  
+  internal static func keychainDelete(machine: Machine) throws(Password.Error) {
+    let descriptor: Password.Descriptor = [
+      kSecClass:            Password.defaultClass,
+      kSecAttrCreator:      Password.defaultCreator,
+      kSecAttrServer:       machine.host,
+    ]
+    
+    let status = SecItemDelete(descriptor as CFDictionary)
+    guard status == errSecSuccess else { throw .keychain(status) }
+    return
   }
   
 }
