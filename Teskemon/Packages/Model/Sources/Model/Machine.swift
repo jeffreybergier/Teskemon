@@ -113,9 +113,9 @@ public struct Machine: Codable, Sendable, Identifiable {
   public var name: String   = ""
   public var host: String   = ""
   public var os: String     = ""
-  public var kind: Kind     = .remoteSubnet
-  public var relay: Relay   = .relay("")
-  public var activity: Activity  = .init()
+  public var kind: Kind     = .unknown
+  public var relay: Relay   = .unknown
+  public var activity: Activity? = nil
   public var nodeInfo: NodeInfo? = nil
   public var subnetRoutes: [Machine]? = nil
   
@@ -195,15 +195,17 @@ extension Machine {
   }
   
   public enum Kind: Codable, Sendable {
-    case meHost, remoteHost, meSubnet, remoteSubnet
+    case unknown, meHost, remoteHost, meSubnet, remoteSubnet
   }
   
   public enum Relay: Codable, Sendable {
+    case unknown
     case relay(String)
     case route(id: Machine.Identifier, name: String)
     public var displayName: String {
       switch self {
-      case .relay(let name): return name
+      case .unknown:            return "–"
+      case .relay(let name):    return name
       case .route(_, let name): return name
       }
     }

@@ -46,7 +46,7 @@ internal struct MachineTable: View {
     {
       
       TableColumn(.online) { machine in
-        TableRowOnline(isOnline: machine.activity.isOnline)
+        TableRowOnline(isOnline: machine.activity?.isOnline)
       }.width(24)
       
       TableColumn(.kind) { machine in
@@ -116,6 +116,7 @@ internal struct TableRowKind: View {
   
   private var help: LocalizedStringKey {
     switch self.kind {
+    case .unknown:      return .noValue
     case .meHost:       return .helpNodeMe
     case .remoteHost:   return .helpNodeRemote
     case .meSubnet:     return .helpNodeSubnetMe
@@ -125,6 +126,8 @@ internal struct TableRowKind: View {
   
   private var systemImage: String {
     switch self.kind {
+    case .unknown:
+      return .imageStatusUnknown
     case .meHost:
       return .imageNodeMe
     case .remoteHost:
