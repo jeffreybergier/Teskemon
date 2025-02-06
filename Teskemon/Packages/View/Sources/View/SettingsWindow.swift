@@ -84,6 +84,7 @@ public struct SettingsWindow: View {
   
   private var services: some View {
     ZStack(alignment: .bottomTrailing) {
+      // TODO: Make this table sortable
       Table(self.$settings.services) {
         TableColumn(.name) { service in
           TextField("", text: service.name)

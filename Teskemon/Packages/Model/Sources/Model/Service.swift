@@ -33,11 +33,11 @@ public struct Service: Codable, Sendable, Hashable, Identifiable {
   
   public static let `default`: [Service] = {
     return [
-      Service(name: "AFP", scheme: "afp", port: 548),
       Service(name: "SSH", scheme: "ssh", port: 22),
+      Service(name: "AFP", scheme: "afp", port: 548),
       Service(name: "SMB", scheme: "smb", port: 445),
-      Service(name: "RDP", scheme: "rdp", port: 3389),
       Service(name: "VNC", scheme: "vnc", port: 5900),
+      Service(name: "RDP", scheme: "rdp", port: 3389),
     ]
   }()
   
