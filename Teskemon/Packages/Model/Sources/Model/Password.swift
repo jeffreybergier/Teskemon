@@ -41,7 +41,6 @@ public struct Password: Sendable, Equatable, Hashable {
   public enum Status: Sendable, Equatable, Hashable {
     case isEditing
     case isViewing
-    case keychainError(OSStatus)
     case error(Error)
   }
   

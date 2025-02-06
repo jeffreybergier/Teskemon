@@ -38,12 +38,13 @@ public struct MachineWindow: View {
                  interval: 0.5)
                  private var spinnerTimer
   
-  
   private var selectionForMenus: Set<Machine.Identifier> {
     return self.presentation.selection.isEmpty
            ? self.machines.allIdentifiers()
            : self.presentation.selection
   }
+  
+  @State private var processError: Error?
   
   public init() { }
   
@@ -102,6 +103,10 @@ public struct MachineWindow: View {
         ToolbarItem { self.refreshMenu }
         ToolbarItem { self.statusMenu  }
       }
+      .alert(item: self.$processError,
+             title: String.error,
+             actions: { _ in Button(.dismiss) {} },
+             message: { Text($0.localizedDescription) })
     }
   }
   
@@ -303,9 +308,9 @@ public struct MachineWindow: View {
         try await function()
         self.spinnerTimer.release()
       } catch {
-        // TODO: Show error in UI
-        NSLog(String(describing:error))
         self.spinnerTimer.release()
+        NSLog(String(describing:error))
+        self.processError = error
       }
     }
   }

@@ -29,6 +29,8 @@ internal struct InfoSheet: View {
   @MachineController       private var machines
   @SettingsController      private var settings
   @PasswordEditController private var passwords
+  
+  @State private var passwordError: Password.Error?
 
   @State private var currentTab: Int
   private let selection: [Machine.Identifier]
@@ -57,6 +59,21 @@ internal struct InfoSheet: View {
       .toolbar {
         ToolbarItem(placement: .confirmationAction) {
           Button(.done, action: self.dismiss.callAsFunction)
+        }
+      }
+      .alert(item: self.$passwordError,
+             title: String.error) { _ in
+        Button(.dismiss) {}
+      } message: { error in
+        switch error {
+        case .missingUsernameOrPassword:
+          Text(.errorPasswordEmpty)
+        case .machineDataIncorrect:
+          Text(.errorPasswordData)
+        case .criticalDataIncorrect:
+          Text(.errorPasswordDamaged)
+        case .keychain(let status):
+          Text(status.localizedDescription)
         }
       }
     }
@@ -136,20 +153,20 @@ internal struct InfoSheet: View {
                 Label(.save, systemImage: .imageSave)
               }
             }
-          case .keychainError(let error):
-            Button {
-              // TODO: Make this show an error
-              NSLog(error.localizedDescription)
-            } label: {
-              Label(.error, systemImage: .imageError)
-            }
           case .error(let error):
             Button {
-              // TODO: Make this show an error
               NSLog(error.localizedDescription)
+              self.passwordError = error
+              self.passwords.resetPassword(for: machine)
             } label: {
               Label(.error, systemImage: .imageError)
             }
+            Button {
+              self.passwords.deletePassword(for: machine)
+            } label: {
+              Label(.delete, systemImage: .imageDeleteX)
+            }
+            .disabled(!password.inKeychain)
           }
         }
         .labelStyle(.iconOnly)
