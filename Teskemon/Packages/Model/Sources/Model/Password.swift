@@ -21,7 +21,6 @@
 import SwiftUI
 import Umbrella
 
-// TODO: See if this is needed
 extension CFString: @unchecked @retroactive Sendable {}
 
 public struct Password: Sendable, Equatable, Hashable {

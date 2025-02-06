@@ -67,10 +67,15 @@ public struct PasswordEditController: DynamicProperty {
       }
     }
     
-    public func deletePassword(for machine: Machine) throws(Password.Error) {
-      try Password.keychainDelete(machine: machine)
-      self.objectWillChange.send()
-      self.cache.removeValue(forKey: machine.id)
+    public func deletePassword(for machine: Machine) {
+      do {
+        try Password.keychainDelete(machine: machine)
+        self.objectWillChange.send()
+        self.cache.removeValue(forKey: machine.id)
+      } catch {
+        let password = self.bind(machine)
+        password.wrappedValue.status = .error(error)
+      }
     }
     
     public func resetPassword(for machine: Machine) {

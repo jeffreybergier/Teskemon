@@ -164,7 +164,7 @@ internal struct TableRowActivity: View {
   
   private static let byteF = ByteCountFormatter()
   
-  // TODO: Move this to MachineWindow
+  // TODO: Move this to MachineTable
   @Environment(\.appearsActive) private var sceneAppearsActive
   @TimerProperty(identifier: "MachineTable",
                  interval: 1.0)

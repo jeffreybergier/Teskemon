@@ -117,8 +117,7 @@ internal struct InfoSheet: View {
                 }
               }
               Button {
-                // TODO: Show an error if this fails
-                try! self.passwords.deletePassword(for: machine)
+                self.passwords.deletePassword(for: machine)
               } label: {
                 Label(.delete, systemImage: .imageDeleteX)
               }
@@ -164,31 +163,4 @@ internal struct InfoSheet: View {
           set: { self.settings.customNames[id] = $0.trimmed })
   }
   
-}
-
-// TODO: This looks nice but just isn't a button
-// TODO: Figure out how to do this with an enum
-internal struct SegmentButton: View {
-  
-  internal struct Option {
-    internal var titleKey: LocalizedStringKey
-    internal var systemImage: String
-  }
-  
-  @State private var selectedIndex: Int = -1
-  internal let options: [Option]
-  internal let action: (Int) -> Void
-  
-  internal var body: some View {
-    Picker("", selection: self.$selectedIndex) {
-      ForEach(Array(self.options.enumerated()), id: \.offset) { index, option in
-        Label(option.titleKey, systemImage: option.systemImage)
-          .labelStyle(.iconOnly)
-      }
-    }
-    .pickerStyle(.segmented)
-    .onChange(of: self.selectedIndex, initial: false) { _, index in
-      self.action(index)
-    }
-  }
 }

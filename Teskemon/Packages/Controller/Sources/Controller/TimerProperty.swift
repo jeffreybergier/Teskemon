@@ -20,11 +20,6 @@
 
 import SwiftUI
 
-
-// TODO: Improve the performance of timer
-// Make a slow one for updating the services
-// Make a fast one that disables when the app is not foreground
-
 @MainActor
 @propertyWrapper
 public struct TimerProperty: DynamicProperty {
