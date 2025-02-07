@@ -32,10 +32,10 @@ public struct TimerProperty: DynamicProperty {
   public struct Value: Equatable {
     
     public internal(set) var fireCount:   Int = 0
+    public internal(set) var retainCount: UInt = 0
     public               var forceStop:   Bool = false
-    public               let interval:    TimeInterval
+    public               var interval:    TimeInterval
     public               let identifier:  String
-    private              var retainCount: UInt = 0
     
     public mutating func retain() {
       self.retainCount += 1
@@ -47,7 +47,9 @@ public struct TimerProperty: DynamicProperty {
     }
     
     public var isRunning: Bool {
-      self.forceStop == false && self.retainCount > 0
+      return self.forceStop == false
+          && self.retainCount > 0
+          && self.interval >= 0.1
     }
     
     internal init(identifier: String, interval: TimeInterval) {
@@ -68,10 +70,13 @@ public struct TimerProperty: DynamicProperty {
   
   @ObservedObject private var timer: TimerBox
   
-  public init(identifier: String, interval: TimeInterval) {
+  /// If interval is set to less than 0.1 (default), then the timer does not fire
+  public init(identifier: String, interval: TimeInterval = 0) {
     let key = Key(identifier: identifier, interval: interval)
-    var timer: TimerBox! = TimerProperty.timers[key]
-    if timer == nil {
+    let timer: TimerBox
+    if let existingTimer = TimerProperty.timers[key] {
+      timer = existingTimer
+    } else {
       timer = TimerBox(key: key)
       TimerProperty.timers[key] = timer
     }
@@ -90,22 +95,42 @@ public struct TimerProperty: DynamicProperty {
 
 fileprivate class TimerBox: ObservableObject {
   
+  private var configurationChanged = false
   @Published internal var value: TimerProperty.Value {
+    willSet {
+      self.configurationChanged = self.value.forceStop   != newValue.forceStop
+                               || self.value.interval    != newValue.interval
+                               || self.value.retainCount != newValue.retainCount
+    }
     didSet {
+      // Check if the configuration changed
+      guard self.configurationChanged else { return }
+      // Ensure the timer is supposed to run or else cancel it
       guard self.value.isRunning else {
         self.timer?.invalidate()
         self.timer = nil
         return
       }
+      
+      // Create a closure to configure the timer if needed
       let configureTimer = { [self] in
+        self.timer?.invalidate()
         self.timer = Timer.scheduledTimer(timeInterval: self.value.interval,
                                           target: self,
                                           selector: #selector(timerFired(_:)),
                                           userInfo: nil,
                                           repeats: true)
       }
-      guard let timer else { configureTimer(); return }
-      guard timer.timeInterval == self.value.interval else { configureTimer(); return }
+      // If the timer is not set, create it
+      guard let timer else {
+        configureTimer()
+        return
+      }
+      // If the time interval doesn't match, recreate the timer
+      guard timer.timeInterval == self.value.interval else {
+        configureTimer()
+        return
+      }
     }
   }
   

@@ -59,14 +59,14 @@ public struct SettingsWindow: View {
         Toggle(.automatic, isOn: self.$settings.machineTimer.automatic)
         TextField(.interval,
                   text: self.$settings.machineTimer.interval.map(get: { $0.description },
-                                                                 set: { TimeInterval($0) ?? -1 }))
+                                                                 set: { TimeInterval($0) ?? 0 }))
       }
       Divider().padding([.bottom], 6)
       Section(header: Text(.serviceRefresh).font(.headline)) {
         Toggle(.automatic, isOn: self.$settings.statusTimer.automatic)
         TextField(.interval,
                   text: self.$settings.statusTimer.interval.map(get: { $0.description },
-                                                                set: { TimeInterval($0) ?? -1 }))
+                                                                set: { TimeInterval($0) ?? 0 }))
       }
       Divider().padding([.bottom], 6)
       Section(header: Text(.netcat).font(.headline)) {

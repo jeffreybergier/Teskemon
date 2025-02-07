@@ -28,11 +28,9 @@ public struct MachineWindow: View {
   @ServiceController  private var services
   @SettingsController private var settings
   @PresentationController private var presentation
-  @TimerProperty(identifier: "MachineWindow:Machine",
-                 interval: SettingsController.rawValue.machineTimer.interval)
+  @TimerProperty(identifier: "MachineWindow:Machine")
                  private var machineTimer
-  @TimerProperty(identifier: "MachineWindow:Status",
-                 interval: SettingsController.rawValue.statusTimer.interval)
+  @TimerProperty(identifier: "MachineWindow:Status")
                  private var statusTimer
   @TimerProperty(identifier: "MachineWindow:Spinner",
                  interval: 0.5)
@@ -92,11 +90,17 @@ public struct MachineWindow: View {
                                                 batchSize: self.settings.batchSize)
         }
       }
-      .onChange(of: self.settings.statusTimer.automatic, initial: true) { _, newValue in
-        newValue ? self.statusTimer.retain() : self.statusTimer.release()
+      .onChange(of: self.settings.machineTimer.interval, initial: true) { _, interval in
+        self.machineTimer.interval = interval
       }
-      .onChange(of: self.settings.machineTimer.automatic, initial: true) { _, newValue in
-        newValue ? self.machineTimer.retain() : self.machineTimer.release()
+      .onChange(of: self.settings.machineTimer.automatic, initial: true) { _, automatic in
+        automatic ? self.machineTimer.retain() : self.machineTimer.release()
+      }
+      .onChange(of: self.settings.statusTimer.interval, initial: true) { _, interval in
+        self.statusTimer.interval = interval
+      }
+      .onChange(of: self.settings.statusTimer.automatic, initial: true) { _, automatic in
+        automatic ? self.statusTimer.retain() : self.statusTimer.release()
       }
       .toolbar {
         ToolbarItem { self.editMenu    }

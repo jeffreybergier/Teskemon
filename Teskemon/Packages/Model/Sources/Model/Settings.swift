@@ -21,6 +21,7 @@
 import Foundation
 
 public struct SettingsControllerValue: Codable {
+  
   public var currentTab   = SettingsTab.general
   public var services     = Service.default
   public var timeout      = 10
@@ -28,7 +29,7 @@ public struct SettingsControllerValue: Codable {
   public var executable   = SettingsExecutable()
   public var customNames  = [Machine.Identifier: String]()
   public var statusTimer  = SettingsTimer(automatic: false, interval: 300)
-  public var machineTimer = SettingsTimer(automatic: true, interval: 10)
+  public var machineTimer = SettingsTimer(automatic: true, interval: 60)
   
   public mutating func delete(service: Service) {
     guard let index = self.services.firstIndex(where: { $0.id == service.id }) else { return }
@@ -43,7 +44,7 @@ public enum SettingsTab: Codable {
   case services
 }
 
-public struct SettingsTimer: Codable {
+public struct SettingsTimer: Codable, Equatable {
   public var automatic: Bool
   public var interval: TimeInterval
 }
