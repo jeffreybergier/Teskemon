@@ -87,9 +87,9 @@ public struct MachineWindow: View {
         guard self.settings.statusTimer.automatic else { return }
         self.performAsync {
           try await self._services.updateStatus(for: self.settings.services,
-                                              on: self.machines.allMachines(),
-                                              timeout: self.settings.timeout,
-                                              batchSize: self.settings.batchSize)
+                                                on: self.machines.allMachines(),
+                                                timeout: self.settings.timeout,
+                                                batchSize: self.settings.batchSize)
         }
       }
       .onChange(of: self.settings.statusTimer.automatic, initial: true) { _, newValue in
@@ -150,9 +150,9 @@ public struct MachineWindow: View {
         Button(.services, systemImage: .imageRefreshServices) {
           self.performAsync {
             try await self._services.updateStatus(for: self.settings.services,
-                                                on: self.machines.machines(for: self.selectionForMenus),
-                                                timeout: self.settings.timeout,
-                                                batchSize: self.settings.batchSize)
+                                                  on: self.machines.machines(for: self.selectionForMenus),
+                                                  timeout: self.settings.timeout,
+                                                  batchSize: self.settings.batchSize)
           }
         }
         .disabled(self.isAwaitingRefresh)

@@ -34,17 +34,19 @@ public struct Service: Codable, Sendable, Hashable, Identifiable {
   public static let `default`: [Service] = {
     return [
       Service(name: "SSH", scheme: "ssh", port: 22),
-      Service(name: "AFP", scheme: "afp", port: 548),
+      Service(name: "HTTP", scheme: "http", port: 80),
+      Service(name: "HTTPS", scheme: "https", port: 443),
       Service(name: "SMB", scheme: "smb", port: 445),
-      Service(name: "VNC", scheme: "vnc", port: 5900),
+      Service(name: "AFP", scheme: "afp", port: 548),
       Service(name: "RDP", scheme: "rdp", port: 3389),
+      Service(name: "VNC", scheme: "vnc", port: 5900),
     ]
   }()
   
   public var name: String
   public var scheme: String
   public var port: Int
-  public var id: Int = Int.random(in: 0...10_000)
+  public var id: Int = Int.random(in: 10_000...100_000_000)
   
   public init(name: String = "", scheme: String = "", port: Int = 0) {
     self.name = name

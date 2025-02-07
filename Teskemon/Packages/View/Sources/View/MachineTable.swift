@@ -74,7 +74,8 @@ internal struct MachineTable: View {
       }.width(24)
       
       TableColumnForEach(self.settings.services) { service in
-        TableColumn(String(format: "%@ (%d)", service.name, service.port)) { machine in
+        // TODO: Add custom Table Column Header View
+        TableColumn(String(format: "%@", service.name, service.port)) { machine in
           TableRowStatus(machine: machine,
                          service: service,
                          status: self.services[machine.id, service],
