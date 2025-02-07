@@ -43,6 +43,8 @@ public struct Service: Codable, Sendable, Hashable, Identifiable {
     ]
   }()
   
+  // TODO: Add bools for include username and include password
+  // This might be useful for certain URL types
   public var name: String
   public var scheme: String
   public var port: Int
