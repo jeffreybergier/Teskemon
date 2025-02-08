@@ -48,10 +48,7 @@ public struct MachineWindow: View {
   
   public var body: some View {
     NavigationStack {
-      MachineTable(machines: self.machines,
-                   services: self.services,
-                   spinnerValue: self.spinnerTimer.percentage(of: 10),
-                   selection: self.$presentation.selection)
+      MachineTable(spinnerValue: self.spinnerTimer.percentage(of: 10))
       .overlay(alignment: .topTrailing) {
           ProgressView(value: Double(self.services.progress.completedUnitCount),
                        total: Double(self.services.progress.totalUnitCount))

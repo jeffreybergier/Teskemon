@@ -26,23 +26,19 @@ internal struct MachineTable: View {
   
   @Environment(\.appearsActive) private var sceneAppearsActive
   
+  @MachineController  private var machines
+  @ServiceController  private var services
   @SettingsController private var settings
+  @PresentationController private var presentation
   @TimerProperty(identifier: "MachineTable",
                  interval: 1.0)
                  private var activityTimer
-  
-  // TODO: Not sure why these need to be manually passed in
-  // I should be able to use the property wrappers directly,
-  // but data was not updating
-  internal let machines: MachineController.Value
-  internal let services: ServiceController.Value
   internal let spinnerValue: Double
-  @Binding internal var selection: Set<Machine.Identifier>
   
   internal var body: some View {
     Table(self.machines.machines,
           children: \.subnetRoutes,
-          selection: self.$selection)
+          selection: self.$presentation.selection)
     {
       
       TableColumn(.online) { machine in
