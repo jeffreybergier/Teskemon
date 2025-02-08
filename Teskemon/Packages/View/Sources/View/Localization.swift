@@ -24,7 +24,7 @@ import SwiftUI
 extension LocalizedStringKey {
   static let appName:        LocalizedStringKey = "テスケモン"
   static let tailscale:      LocalizedStringKey = "Tailscale"
-  static let netcat:         LocalizedStringKey = "Netcat"
+  static let netcat:         LocalizedStringKey = "Netcat (Port Scanning)"
   static let magicDNS:       LocalizedStringKey = "MagicDNS"
   static let tunneling:      LocalizedStringKey = "Tunneling"
   static let nodeKey:        LocalizedStringKey = "Node Key"
@@ -83,7 +83,7 @@ extension LocalizedStringKey {
   static let automatic:      LocalizedStringKey = "Automatic"
   static let interval:       LocalizedStringKey = "Interval"
   static let location:       LocalizedStringKey = "Location"
-  static let path:           LocalizedStringKey = "Path"
+  static let customPath:     LocalizedStringKey = "Custom Path"
   static let commandLine:    LocalizedStringKey = "Command Line"
   static let appStore:       LocalizedStringKey = "App Store"
   static let custom:         LocalizedStringKey = "Custom"

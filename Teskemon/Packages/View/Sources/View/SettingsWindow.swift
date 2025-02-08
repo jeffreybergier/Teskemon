@@ -25,7 +25,7 @@ import Controller
 public struct SettingsWindow: View {
   
   static let width:  Double = 480
-  static let height: Double = 320
+  static let height: Double = 400
   
   @SettingsController private var settings
   
@@ -46,12 +46,14 @@ public struct SettingsWindow: View {
       }
       .tag(SettingsTab.scanning)
     }
+    .formStyle(.grouped)
+    .frame(width: SettingsWindow.width, height: SettingsWindow.height)
   }
   
   private var tailscale: some View {
     Form {
       Section(header: Text(.tailscale).font(.headline),
-              footer: Text(self.settings.executable.stringValue).font(.caption))
+              footer: self.tailscaleSectionFooter)
       {
         Picker(.location, selection: self.$settings.executable.option) {
           Text(.commandLine).tag(SettingsExecutable.Options.cli)
@@ -59,17 +61,15 @@ public struct SettingsWindow: View {
           Text(.custom).tag(SettingsExecutable.Options.custom)
         }
         if self.settings.executable.option == .custom {
-          TextField(.path, text: self.$settings.executable.rawValue)
+          TextField(.customPath, text: self.$settings.executable.rawValue)
         }
       }
-      Divider().padding([.bottom], 6)
       Section(header: Text(.machineRefresh).font(.headline)) {
         Toggle(.automatic, isOn: self.$settings.machineTimer.automatic)
         TextField(.interval,
                   text: self.$settings.machineTimer.interval.map(get: { $0.description },
                                                                  set: { TimeInterval($0) ?? 0 }))
       }
-      Divider().padding([.bottom], 6)
       Section(header: Text(.serviceRefresh).font(.headline)) {
         Toggle(.automatic, isOn: self.$settings.statusTimer.automatic)
         TextField(.interval,
@@ -77,8 +77,12 @@ public struct SettingsWindow: View {
                                                                 set: { TimeInterval($0) ?? 0 }))
       }
     }
-    .padding()
-    .frame(width: SettingsWindow.width)
+  }
+  
+  private var tailscaleSectionFooter: Text {
+    Text(self.settings.executable.stringValue)
+      .font(.caption)
+      .foregroundStyle(Color(nsColor: .secondaryLabelColor))
   }
   
   private var services: some View {
@@ -124,7 +128,6 @@ public struct SettingsWindow: View {
         }
       }.padding([.bottom, .trailing])
     }
-    .frame(width: SettingsWindow.width, height: SettingsWindow.height)
   }
   
   private func moveServiceUp(_ service: Service) {
@@ -150,20 +153,33 @@ public struct SettingsWindow: View {
   private var scanning: some View {
     Form {
       Section(header: Text(.netcat).font(.headline)) {
-        TextField(.timeout,
-                  text: self.$settings.scanning.netcatTimeout.map(get: { $0.description },
-                                                                  set: { Int($0) ?? -1 }))
+        VStack(alignment: .leading) {
+          TextField(.timeout,
+                    text: self.$settings.scanning.netcatTimeout.map(get: { $0.description },
+                                                                    set: { Int($0) ?? 0 }))
+          Text("Increasing the timeout will increase the accuracy of the port scanning, but it could slow down the process.")
+            .font(.caption)
+            .foregroundStyle(Color(nsColor: .secondaryLabelColor))
+        }
       }
       Section(header: Text(.ping).font(.headline)) {
-        TextField(.count,
-                  text: self.$settings.scanning.pingCount.map(get: { $0.description },
-                                                              set: { Int($0) ?? -1 }))
-        TextField(.lossThreshold,
-                  text: self.$settings.scanning.pingLoss.map(get: { $0.description },
-                                                             set: { Double($0) ?? -1 }))
+        VStack(alignment: .leading) {
+          TextField(.count,
+                    text: self.$settings.scanning.pingCount.map(get: { $0.description },
+                                                                set: { Int($0) ?? 0 }))
+          Text("Increasing the count will increase the accuracy of the ping, but it will slow down the process.")
+            .font(.caption)
+            .foregroundStyle(Color(nsColor: .secondaryLabelColor))
+        }
+        VStack(alignment: .leading) {
+          TextField(.lossThreshold,
+                    text: self.$settings.scanning.pingLoss.map(get: { $0.description },
+                                                               set: { Double($0) ?? 0 }))
+          Text("The higher the loss threshold, the more likely it is that the ping will detect a machine is online.")
+            .font(.caption)
+            .foregroundStyle(Color(nsColor: .secondaryLabelColor))
+        }
       }
     }
-    .padding()
-    .frame(width: SettingsWindow.width)
   }
 }
