@@ -24,16 +24,16 @@ import Controller
 
 internal struct MachineTable: View {
   
-  @Environment(\.appearsActive) private var sceneAppearsActive
-  
   @MachineController  private var machines
   @ServiceController  private var services
   @SettingsController private var settings
   @PresentationController private var presentation
-  @TimerProperty(identifier: "MachineTable",
-                 interval: 1.0)
-                 private var activityTimer
-  internal let spinnerValue: Double
+  @TimerProperty(identifier: "SpinnerTimer")
+                 private var spinnerTimer
+  
+  private var spinnerValue: Double {
+    self.spinnerTimer.percentage(of: 10)
+  }
   
   internal var body: some View {
     Table(self.machines.machines,
@@ -78,9 +78,6 @@ internal struct MachineTable: View {
                          spinnerValue: self.spinnerValue)
         }.width(36)
       }
-    }
-    .onChange(of: self.sceneAppearsActive, initial: true) { _, appearsActive in
-      self.activityTimer.forceStop = !appearsActive
     }
   }
 }
@@ -172,9 +169,8 @@ internal struct TableRowActivity: View {
   
   private static let byteF = ByteCountFormatter()
   
-  @TimerProperty(identifier: "MachineTable",
-                 interval: 1.0)
-                 private var activityTimer
+  @TimerProperty(identifier: "SpinnerTimer")
+                 private var spinnerTimer
 
   internal let activity: Machine.Activity?
   
@@ -192,17 +188,13 @@ internal struct TableRowActivity: View {
         }
       }
     }
-    .onChange(of: self.activity?.isActive, initial: true) { _, newValue in
-      (newValue ?? false) == true ? self.activityTimer.retain()
-                                  : self.activityTimer.release()
-    }
   }
   
   @ViewBuilder private var indicator: some View {
     switch activity?.isActive {
     case .some(true):
       Image(systemName: .imageActivityActive,
-            variableValue: self.activityTimer.percentage(of: 10))
+            variableValue: self.spinnerTimer.percentage(of: 10))
         .font(.headline)
     case .some(false):
       Image(systemName: .imageActivityInactive)

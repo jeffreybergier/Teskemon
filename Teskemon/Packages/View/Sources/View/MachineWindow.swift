@@ -29,17 +29,17 @@ public struct MachineWindow: View {
   @SettingsController private var settings
   @PresentationController private var presentation
   @TimerProperty(identifier: "MachineWindow:Machine")
-                 private var machineTimer
+  private var machineTimer
   @TimerProperty(identifier: "MachineWindow:Status")
-                 private var statusTimer
-  @TimerProperty(identifier: "MachineWindow:Spinner",
-                 interval: 0.5)
-                 private var spinnerTimer
+  private var statusTimer
+  @TimerProperty(identifier: "SpinnerTimer")
+  private var spinnerTimer
+  @Environment(\.appearsActive) private var appearsActive
   
   private var selectionForMenus: Set<Machine.Identifier> {
     return self.presentation.selection.isEmpty
-           ? self.machines.allIdentifiers()
-           : self.presentation.selection
+         ? self.machines.allIdentifiers()
+         : self.presentation.selection
   }
   
   @State private var processError: Error?
@@ -48,8 +48,8 @@ public struct MachineWindow: View {
   
   public var body: some View {
     NavigationStack {
-      MachineTable(spinnerValue: self.spinnerTimer.percentage(of: 10))
-      .overlay(alignment: .topTrailing) {
+      MachineTable()
+        .overlay(alignment: .topTrailing) {
           ProgressView(value: Double(self.services.progress.completedUnitCount),
                        total: Double(self.services.progress.totalUnitCount))
           .progressViewStyle(.linear)
@@ -60,60 +60,57 @@ public struct MachineWindow: View {
           .background {
             UnevenRoundedRectangle(bottomLeadingRadius: 4,
                                    style: .continuous)
-              .fill(.ultraThinMaterial)
+            .fill(.ultraThinMaterial)
           }
           .frame(width: 280)
           .opacity(self.services.isLoading ? 1 : 0)
           .offset(y: self.services.isLoading ? 0 : -20)
-      }
-      .animation(.default, value: self.services.isLoading)
-      .animation(.default, value: self.settings.statusTimer.automatic)
-      .navigationTitle(.appName)
-      .navigationSubtitle(self.navigationTitleAppendString)
-      .sheet(item: self.$presentation.showInfoPanel,
-             content: { InfoSheet($0) })
-      .onChange(of: self.machineTimer.fireCount, initial: true) { _, _ in
-        guard self.settings.machineTimer.automatic else { return }
-        self.performAsync {
-          try await self._machines.updateMachines(with: self.settings.executable)
         }
-      }
-      .onChange(of: self.statusTimer.fireCount, initial: true) { _, _ in
-        guard self.settings.statusTimer.automatic else { return }
-        self.performAsync {
-          try await self._services.updateStatus(for: self.settings.services,
-                                                on: self.machines.allMachines(),
-                                                timeout: self.settings.timeout,
-                                                batchSize: self.settings.batchSize)
+        .animation(.default, value: self.services.isLoading)
+        .animation(.default, value: self.settings.statusTimer.automatic)
+        .navigationTitle(.appName)
+        .navigationSubtitle(self.navigationTitleAppendString)
+        .sheet(item: self.$presentation.showInfoPanel,
+               content: { InfoSheet($0) })
+        .onChange(of: self.machineTimer.fireCount, initial: true) { _, _ in
+          guard self.settings.machineTimer.automatic else { return }
+          self.performAsync {
+            try await self._machines.updateMachines(with: self.settings.executable)
+          }
         }
-      }
-      .onChange(of: self.settings.machineTimer.interval, initial: true) { _, interval in
-        self.machineTimer.interval = interval
-      }
-      .onChange(of: self.settings.machineTimer.automatic, initial: true) { _, automatic in
-        automatic ? self.machineTimer.retain() : self.machineTimer.release()
-      }
-      .onChange(of: self.settings.statusTimer.interval, initial: true) { _, interval in
-        self.statusTimer.interval = interval
-      }
-      .onChange(of: self.settings.statusTimer.automatic, initial: true) { _, automatic in
-        automatic ? self.statusTimer.retain() : self.statusTimer.release()
-      }
-      .toolbar {
-        ToolbarItem { self.editMenu    }
-        ToolbarItem { self.refreshMenu }
-        ToolbarItem { self.statusMenu  }
-      }
-      .alert(item: self.$processError,
-             title: String.error,
-             actions: { _ in Button(.dismiss) {} },
-             message: { Text($0.localizedDescription) })
+        .onChange(of: self.statusTimer.fireCount, initial: true) { _, _ in
+          guard self.settings.statusTimer.automatic else { return }
+          self.performAsync {
+            try await self._services.updateStatus(for: self.settings.services,
+                                                  on: self.machines.allMachines(),
+                                                  timeout: self.settings.timeout,
+                                                  batchSize: self.settings.batchSize)
+          }
+        }
+        .onChange(of: self.settings.machineTimer, initial: true) { _, newValue in
+          self.machineTimer.interval = newValue.automatic ? newValue.interval : 0
+        }
+        .onChange(of: self.settings.statusTimer, initial: true) { _, newValue in
+          self.statusTimer.interval  = newValue.automatic ? newValue.interval : 0
+        }
+        .onChange(of: self.appearsActive, initial: true) { _, appearsActive in
+          self.spinnerTimer.interval = appearsActive ? 1.0 : 0
+        }
+        .toolbar {
+          ToolbarItem { self.editMenu    }
+          ToolbarItem { self.refreshMenu }
+          ToolbarItem { self.statusMenu  }
+        }
+        .alert(item: self.$processError,
+               title: String.error,
+               actions: { _ in Button(.dismiss) {} },
+               message: { Text($0.localizedDescription) })
     }
   }
   
   private var navigationTitleAppendString: String {
     guard let tailscale = self.machines.tailscale, let name = tailscale.currentTailnet?.name else { return "" }
-    return name + "・" + tailscale.magicDNSSuffix 
+    return name + "・" + tailscale.magicDNSSuffix
   }
   
   private var editMenu: some View {
@@ -193,8 +190,6 @@ public struct MachineWindow: View {
           Image(systemName: .imageRefreshAutoOn)
         }
       }
-
-
     }
     .labelStyle(.titleAndIcon)
   }
@@ -305,11 +300,8 @@ public struct MachineWindow: View {
   private func performAsync(function: @escaping (() async throws -> Void)) {
     Task {
       do {
-        self.spinnerTimer.retain()
         try await function()
-        self.spinnerTimer.release()
       } catch {
-        self.spinnerTimer.release()
         NSLog(String(describing:error))
         self.processError = error
       }

@@ -31,25 +31,13 @@ public struct TimerProperty: DynamicProperty {
   
   public struct Value: Equatable {
     
-    public internal(set) var fireCount:   Int = 0
-    public internal(set) var retainCount: UInt = 0
-    public               var forceStop:   Bool = false
-    public               var interval:    TimeInterval
-    public               let identifier:  String
-    
-    public mutating func retain() {
-      self.retainCount += 1
-    }
-    
-    public mutating func release() {
-      guard self.retainCount > 0 else { return }
-      self.retainCount -= 1
-    }
+    /// Set to less than 0.1 to pause timer
+    public var interval:    TimeInterval
+    public let identifier:  String
+    public var fireCount:   Int = 0
     
     public var isRunning: Bool {
-      return self.forceStop == false
-          && self.retainCount > 0
-          && self.interval >= 0.1
+      return self.interval >= 0.1
     }
     
     internal init(identifier: String, interval: TimeInterval) {
@@ -70,7 +58,7 @@ public struct TimerProperty: DynamicProperty {
   
   @ObservedObject private var timer: TimerBox
   
-  /// If interval is set to less than 0.1 (default), then the timer does not fire
+  /// Set interval to less than 0.1 to pause timer
   public init(identifier: String, interval: TimeInterval = 0) {
     let key = Key(identifier: identifier, interval: interval)
     let timer: TimerBox
@@ -98,9 +86,7 @@ fileprivate class TimerBox: ObservableObject {
   private var configurationChanged = false
   @Published internal var value: TimerProperty.Value {
     willSet {
-      self.configurationChanged = self.value.forceStop   != newValue.forceStop
-                               || self.value.interval    != newValue.interval
-                               || self.value.retainCount != newValue.retainCount
+      self.configurationChanged = self.value.interval != newValue.interval
     }
     didSet {
       // Check if the configuration changed
