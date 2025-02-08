@@ -56,7 +56,7 @@ internal struct MachineInfo: View {
       .navigationTitle(.machineInfo)
       .navigationSubtitle(.selected(self.selection.count))
       .padding([.top], 8)
-      .frame(width: SettingsWindow.width, height: SettingsWindow.height)
+      .frame(width: SettingsWindow.widthLarge, height: SettingsWindow.height)
       .toolbar {
         ToolbarItem(placement: .confirmationAction) {
           Button(.done, action: self.dismiss.callAsFunction)

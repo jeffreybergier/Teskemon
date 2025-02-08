@@ -24,8 +24,9 @@ import Controller
 
 public struct SettingsWindow: View {
   
-  static let width:  Double = 480
-  static let height: Double = 400
+  static let widthSmall:  Double = 480
+  static let widthLarge:  Double = 640
+  static let height: Double = 480
   
   @SettingsController private var settings
   
@@ -47,7 +48,6 @@ public struct SettingsWindow: View {
       .tag(SettingsTab.scanning)
     }
     .formStyle(.grouped)
-    .frame(width: SettingsWindow.width, height: SettingsWindow.height)
   }
   
   private var tailscale: some View {
@@ -77,12 +77,7 @@ public struct SettingsWindow: View {
                                                                 set: { TimeInterval($0) ?? 0 }))
       }
     }
-  }
-  
-  private var tailscaleSectionFooter: Text {
-    Text(self.settings.executable.stringValue)
-      .font(.caption)
-      .foregroundStyle(Color(nsColor: .secondaryLabelColor))
+    .frame(width: SettingsWindow.widthSmall, height: SettingsWindow.height)
   }
   
   private var services: some View {
@@ -99,13 +94,21 @@ public struct SettingsWindow: View {
                                              set: { Int($0) ?? -1 }))
       }
       .width(64)
+      TableColumn(.username) { service in
+        Toggle("", isOn: service.usesUsername)
+      }
+      .width(40)
+      TableColumn(.password) { service in
+        Toggle("", isOn: service.usesPassword)
+      }
+      .width(40)
       TableColumn(.actions) { service in
         HStack(spacing: 4) {
           Button(.moveUp, systemImage: .imageArrowUp) {
-            self.moveServiceUp(service.wrappedValue)
+            self.servicesMoveUp(service.wrappedValue)
           }
           Button(.moveDown, systemImage: .imageArrowDown) {
-            self.moveServiceDown(service.wrappedValue)
+            self.servicesMoveDown(service.wrappedValue)
           }
           Button(.delete, systemImage: .imageDeleteXCircle) {
             self.settings.delete(service: service.wrappedValue)
@@ -128,26 +131,7 @@ public struct SettingsWindow: View {
         }
       }.padding([.bottom, .trailing])
     }
-  }
-  
-  private func moveServiceUp(_ service: Service) {
-    guard
-      let index = self.settings.services.firstIndex(of: service),
-      index > 0
-    else { return }
-    withAnimation {
-      self.settings.services.swapAt(index - 1, index)
-    }
-  }
-  
-  private func moveServiceDown(_ service: Service) {
-    guard
-      let index = self.settings.services.firstIndex(of: service),
-      index < self.settings.services.count - 1
-    else { return }
-    withAnimation {
-      self.settings.services.swapAt(index, index + 1)
-    }
+    .frame(width: SettingsWindow.widthLarge, height: SettingsWindow.height)
   }
   
   private var scanning: some View {
@@ -180,6 +164,33 @@ public struct SettingsWindow: View {
             .foregroundStyle(Color(nsColor: .secondaryLabelColor))
         }
       }
+    }
+    .frame(width: SettingsWindow.widthSmall, height: SettingsWindow.height)
+  }
+  
+  private var tailscaleSectionFooter: Text {
+    Text(self.settings.executable.stringValue)
+      .font(.caption)
+      .foregroundStyle(Color(nsColor: .secondaryLabelColor))
+  }
+  
+  private func servicesMoveUp(_ service: Service) {
+    guard
+      let index = self.settings.services.firstIndex(of: service),
+      index > 0
+    else { return }
+    withAnimation {
+      self.settings.services.swapAt(index - 1, index)
+    }
+  }
+  
+  private func servicesMoveDown(_ service: Service) {
+    guard
+      let index = self.settings.services.firstIndex(of: service),
+      index < self.settings.services.count - 1
+    else { return }
+    withAnimation {
+      self.settings.services.swapAt(index, index + 1)
     }
   }
 }

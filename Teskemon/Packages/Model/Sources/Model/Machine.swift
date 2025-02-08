@@ -93,12 +93,16 @@ extension Machine {
                   username: String?,
                   password: String?) -> URL?
   {
-    var components      = URLComponents()
-    components.host     = self.host
-    components.user     = username
-    components.password = password
+    var components  = URLComponents()
+    components.host = self.host
+    if service.usesUsername {
+      components.user = username
+    }
+    if service.usesPassword {
+      components.password = password
+    }
     if service.port > 0 {
-      components.port   = service.port
+      components.port = service.port
     }
     if !service.scheme.isEmpty {
       components.scheme = service.scheme
