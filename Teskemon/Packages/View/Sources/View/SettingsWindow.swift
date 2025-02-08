@@ -24,23 +24,31 @@ import Controller
 
 public struct SettingsWindow: View {
   
+  static let width:  Double = 480
+  static let height: Double = 320
+  
   @SettingsController private var settings
   
   public init() { }
   
   public var body: some View {
     TabView(selection: self.$settings.currentTab) {
-      self.general.tabItem {
-        Label(.general, systemImage: .imageSettings)
-      }.tag(SettingsTab.general)
+      self.tailscale.tabItem {
+        Label(.tailscale, systemImage: .imageSettings)
+      }
+      .tag(SettingsTab.tailscale)
       self.services.tabItem {
         Label(.services, systemImage: .imageServices)
-      }.tag(SettingsTab.services)
+      }
+      .tag(SettingsTab.services)
+      self.scanning.tabItem {
+        Label(.scanning, systemImage: .imageScanning)
+      }
+      .tag(SettingsTab.scanning)
     }
   }
   
-  // TODO: Add settings for Ping
-  private var general: some View {
+  private var tailscale: some View {
     Form {
       Section(header: Text(.tailscale).font(.headline),
               footer: Text(self.settings.executable.stringValue).font(.caption))
@@ -68,18 +76,9 @@ public struct SettingsWindow: View {
                   text: self.$settings.statusTimer.interval.map(get: { $0.description },
                                                                 set: { TimeInterval($0) ?? 0 }))
       }
-      Divider().padding([.bottom], 6)
-      Section(header: Text(.netcat).font(.headline)) {
-        TextField(.timeout,
-                  text: self.$settings.timeout.map(get: { $0.description },
-                                                   set: { Int($0) ?? -1 }))
-        TextField(.batchSize,
-                  text: self.$settings.batchSize.map(get: { $0.description },
-                                                     set: { Int($0) ?? -1 }))
-      }
     }
     .padding()
-    .frame(width: 320)
+    .frame(width: SettingsWindow.width)
   }
   
   private var services: some View {
@@ -116,6 +115,29 @@ public struct SettingsWindow: View {
         }.padding([.bottom, .trailing])
       }
     }
-    .frame(width: 480, height: 320)
+    .frame(width: SettingsWindow.width, height: SettingsWindow.height)
+  }
+  
+  private var scanning: some View {
+    Form {
+      Section(header: Text(.netcat).font(.headline)) {
+        TextField(.timeout,
+                  text: self.$settings.scanning.netcatTimeout.map(get: { $0.description },
+                                                                  set: { Int($0) ?? -1 }))
+        TextField(.batchSize,
+                  text: self.$settings.scanning.batchSize.map(get: { $0.description },
+                                                              set: { Int($0) ?? -1 }))
+      }
+      Section(header: Text(.ping).font(.headline)) {
+        TextField(.count,
+                  text: self.$settings.scanning.pingCount.map(get: { $0.description },
+                                                              set: { Int($0) ?? -1 }))
+        TextField(.lossThreshold,
+                  text: self.$settings.scanning.pingLoss.map(get: { $0.description },
+                                                             set: { Double($0) ?? -1 }))
+      }
+    }
+    .padding()
+    .frame(width: SettingsWindow.width)
   }
 }

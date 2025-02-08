@@ -26,10 +26,7 @@ extension Process {
   @MainActor
   internal static func allStatus(services: [Service],
                                  machines: [Machine],
-                                 netcatTimeout: Int,
-                                 pingCount: Int,
-                                 pingLossThreshold: Double,
-                                 batchSize: Int,
+                                 config: Scanning,
                                  bind: Binding<ServiceController.Value>)
                                  async throws
   {
@@ -38,17 +35,14 @@ extension Process {
     try await withThrowingTaskGroup(of: Void.self) { group in
       group.addTask {
         try await self.pingStatus(for: machines,
-                                  bind: bind,
-                                  pingCount: pingCount,
-                                  lossThreshold: pingLossThreshold,
-                                  batchSize: batchSize/2)
+                                  config: config,
+                                  bind: bind)
       }
       group.addTask {
         try await self.serviceStatus(for: services,
                                      on: machines,
-                                     bind: bind,
-                                     timeout: netcatTimeout,
-                                     batchSize: batchSize/2)
+                                     config: config,
+                                     bind: bind)
       }
       for try await _ in group {
         progress.completedUnitCount += 1
@@ -60,9 +54,8 @@ extension Process {
   @MainActor
   internal static func serviceStatus(for services: [Service],
                                      on  machines: [Machine],
-                                     bind: Binding<ServiceController.Value>,
-                                     timeout: Int,
-                                     batchSize: Int) async throws
+                                     config: Scanning,
+                                     bind: Binding<ServiceController.Value>) async throws
   {
     
     // Create a single list of input so that we can batch this
@@ -76,7 +69,7 @@ extension Process {
     progress.totalUnitCount += Int64(toProcess.count)
     
     // Schedule Tasks
-    for batch in toProcess.batch(into: batchSize) {
+    for batch in toProcess.batch(into: config.batchSize) {
       try await withThrowingTaskGroup(of: (Machine.Identifier, Service, Service.Status).self)
       { group in
         for (machine, service) in batch {
@@ -86,7 +79,7 @@ extension Process {
           group.addTask {
             let status = try await serviceStatus(for: service,
                                                  on: machine,
-                                                 with: timeout)
+                                                 config: config)
             return (machine.id, service, status)
           }
         }
@@ -101,14 +94,14 @@ extension Process {
   
   private static func serviceStatus(for service: Service,
                                     on machine: Machine,
-                                    with timeout: Int)
+                                    config: Scanning)
                                     async throws -> Service.Status
   {
     let arguments: [String] = [
       "/usr/bin/nc",
       "-zv",
-      "-G \(timeout)",
-      "-w \(timeout)",
+      "-G \(config.netcatTimeout)",
+      "-w \(config.netcatTimeout)",
       machine.host,
       "\(service.port)"
     ]
@@ -131,15 +124,14 @@ extension Process {
   
   @MainActor
   internal static func pingStatus(for  machines: [Machine],
-                                  bind: Binding<ServiceController.Value>,
-                                  pingCount: Int,
-                                  lossThreshold: Double,
-                                  batchSize: Int) async throws
+                                  config: Scanning,
+                                  bind: Binding<ServiceController.Value>)
+                                  async throws
   {
     let progress = bind.wrappedValue.progress
     progress.totalUnitCount += Int64(machines.count)
     
-    for batch in machines.batch(into: batchSize) {
+    for batch in machines.batch(into: config.batchSize) {
       try await withThrowingTaskGroup(of: (Machine.Identifier, Service.Status).self)
       { group in
         for machine in batch {
@@ -147,9 +139,7 @@ extension Process {
           bind.wrappedValue[machine.id] = .processing
           // Schedule new tasks
           group.addTask {
-            let status = try await pingStatus(for: machine,
-                                              pingCount: pingCount,
-                                              lossThreshold: lossThreshold)
+            let status = try await pingStatus(for: machine, config: config)
             return (machine.id, status)
           }
         }
@@ -164,8 +154,7 @@ extension Process {
   }
   
   private static func pingStatus(for machine: Machine,
-                                 pingCount: Int,
-                                 lossThreshold: Double)
+                                 config: Scanning)
                                  async throws -> Service.Status
   {
     
@@ -188,7 +177,7 @@ extension Process {
      */
     let arguments: [String] = [
       "/sbin/ping",
-      "-c \(pingCount)",
+      "-c \(config.pingCount)",
       machine.host,
     ]
     let output = try await Process.execute(arguments: arguments)
@@ -197,7 +186,7 @@ extension Process {
     let regex = try Regex(#", (\d+\.\d+)% packet loss"#)
     let matchString = outputString.firstMatch(of: regex)?.output.last?.substring ?? ""
     let matchNumber = Double(matchString) ?? 100
-    return matchNumber > lossThreshold ? .offline : .online
+    return matchNumber > config.pingLoss ? .offline : .online
   }
 }
 

@@ -22,12 +22,11 @@ import Foundation
 
 public struct SettingsControllerValue: Codable {
   
-  public var currentTab   = SettingsTab.general
+  public var currentTab   = SettingsTab.tailscale
   public var services     = Service.default
-  public var timeout      = 10
-  public var batchSize    = 10
-  public var executable   = SettingsExecutable()
+  public var scanning     = Scanning()
   public var customNames  = [Machine.Identifier: String]()
+  public var executable   = SettingsExecutable()
   public var statusTimer  = SettingsTimer(automatic: false, interval: 300)
   public var machineTimer = SettingsTimer(automatic: true, interval: 60)
   
@@ -40,8 +39,9 @@ public struct SettingsControllerValue: Codable {
 }
 
 public enum SettingsTab: Codable {
-  case general
+  case tailscale
   case services
+  case scanning
 }
 
 public struct SettingsTimer: Codable, Equatable {
@@ -66,4 +66,11 @@ public struct SettingsExecutable: Codable {
     case .custom: return self.rawValue
     }
   }
+}
+
+public struct Scanning: Codable, Sendable {
+  public var batchSize:     Int    = 10
+  public var pingCount:     Int    = 10
+  public var netcatTimeout: Int    = 10
+  public var pingLoss:      Double = 30
 }

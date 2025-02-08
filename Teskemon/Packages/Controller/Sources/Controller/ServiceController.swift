@@ -43,8 +43,7 @@ public struct ServiceController: DynamicProperty {
   
   public func updateStatus(for services: [Service],
                            on machines: [Machine],
-                           timeout: Int,
-                           batchSize: Int) async throws
+                           config: Scanning) async throws
   {
     guard self.storage.isLoading == false else { return }
     let onCompletion: () -> Void = {
@@ -57,10 +56,7 @@ public struct ServiceController: DynamicProperty {
     do {
       try await Process.allStatus(services: services,
                                   machines: machines,
-                                  netcatTimeout: timeout,
-                                  pingCount: 12,
-                                  pingLossThreshold: 30,
-                                  batchSize: batchSize,
+                                  config: config,
                                   bind: self.$storage)
       onCompletion()
       NSLog("[END  ] StatusController.updateStatus()")
