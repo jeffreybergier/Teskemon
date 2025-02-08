@@ -43,40 +43,46 @@ internal struct MachineTable: View {
       
       TableColumn(.online) { machine in
         TableRowOnline(isOnline: machine.activity?.isOnline)
-      }.width(24)
+      }
+      .width(24)
       
       TableColumn(.kind) { machine in
         TableRowKind(kind: machine.kind)
-      }.width(24)
+      }
+      .width(24)
       
       TableColumn(.relay) { machine in
         TableRowRelay(relay: machine.relay)
-      }.width(ideal: 48)
+      }
+      .width(ideal: 48)
       
       TableColumn(.machine) { machine in
         TableRowName(name: machine.name,
                      host: machine.host,
                      os: machine.os,
                      customName: self.settings.customNames[machine.id])
-      }.width(ideal: 128)
+      }
+      .width(ideal: 128)
       
       TableColumn(.activity) { machine in
         TableRowActivity(activity: machine.activity)
-      }.width(ideal: 96)
+      }
+      .width(ideal: 96)
       
       TableColumn(.ping) { machine in
         TableRowPing(status: self.services[machine.id],
                      spinnerValue: self.spinnerValue)
-      }.width(24)
+      }
+      .width(36)
       
       TableColumnForEach(self.settings.services) { service in
-        // TODO: Add custom Table Column Header View
         TableColumn(String(format: "%@", service.name, service.port)) { machine in
           TableRowStatus(machine: machine,
                          service: service,
                          status: self.services[machine.id, service],
                          spinnerValue: self.spinnerValue)
-        }.width(36)
+        }
+        .width(44)
       }
     }
   }
