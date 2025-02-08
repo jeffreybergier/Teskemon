@@ -39,10 +39,9 @@ extension LocalizedStringKey {
   static let reset:          LocalizedStringKey = "Reset"
   static let error:          LocalizedStringKey = "Error"
   static let dismiss:        LocalizedStringKey = "Dismiss"
-  static let machineInfo:    LocalizedStringKey = "Machine Info"
+  static let machineInfo:    LocalizedStringKey = "Machine Information"
   static let machineRefresh: LocalizedStringKey = "Machine Refresh"
   static let serviceRefresh: LocalizedStringKey = "Service Refresh"
-  static let info:           LocalizedStringKey = "Info"
   static let information:    LocalizedStringKey = "Information"
   static let name:           LocalizedStringKey = "Name"
   static let names:          LocalizedStringKey = "Names"
@@ -64,7 +63,7 @@ extension LocalizedStringKey {
   static let clearCache:     LocalizedStringKey = "Clear Cache"
   static let refresh:        LocalizedStringKey = "Refresh"
   static let refreshAuto:    LocalizedStringKey = "Automatic Refresh"
-  static let selected:       LocalizedStringKey = "Selected Machines: All"
+  static let selectedAll:    LocalizedStringKey = "All Selected"
   static let account:        LocalizedStringKey = "Account"
   static let domain:         LocalizedStringKey = "Domain"
   static let enabled:        LocalizedStringKey = "Enabled"
@@ -85,8 +84,8 @@ extension LocalizedStringKey {
   static let custom:         LocalizedStringKey = "Custom"
   static let noValue:        LocalizedStringKey = "—"
   static func selected(_ count: Int) -> LocalizedStringKey {
-    guard count > 0 else { return self.selected }
-    return "Selected Machines: \(count)"
+    guard count > 0 else { return self.selectedAll }
+    return "\(count) Selected"
   }
   
   // MARK: Verbs

@@ -44,7 +44,7 @@ internal struct InfoSheet: View {
     NavigationStack {
       TabView(selection: self.$currentTab) {
         self.machineInfo.tabItem {
-          Label(.info, systemImage: .imageInfo)
+          Label(.information, systemImage: .imageInfo)
         }.tag(0)
         self.namesTable.tabItem {
           Label(.names, systemImage: .imagePerson)
@@ -55,6 +55,7 @@ internal struct InfoSheet: View {
       }
       .frame(width: 480, height: 320)
       .navigationTitle(.machineInfo)
+      .navigationSubtitle(.selected(self.selection.count))
       .padding([.top])
       .toolbar {
         ToolbarItem(placement: .confirmationAction) {
