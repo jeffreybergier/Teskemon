@@ -71,7 +71,7 @@ public struct MachineWindow: View {
         .navigationTitle(.appName)
         .navigationSubtitle(self.navigationTitleAppendString)
         .sheet(item: self.$presentation.showInfoPanel,
-               content: { InfoSheet($0) })
+               content: { MachineInfo($0) })
         .onChange(of: self.machineTimer.fireCount, initial: true) { _, _ in
           guard self.settings.machineTimer.automatic else { return }
           self.performAsync {

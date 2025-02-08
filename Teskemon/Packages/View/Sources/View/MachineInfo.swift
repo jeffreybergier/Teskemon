@@ -22,7 +22,7 @@ import SwiftUI
 import Model
 import Controller
 
-internal struct InfoSheet: View {
+internal struct MachineInfo: View {
   
   @Environment(\.dismiss) private var dismiss
   
