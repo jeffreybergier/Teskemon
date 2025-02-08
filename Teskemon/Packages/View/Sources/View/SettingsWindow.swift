@@ -82,40 +82,69 @@ public struct SettingsWindow: View {
   }
   
   private var services: some View {
-    ZStack(alignment: .bottomTrailing) {
-      // TODO: Make this table sortable
-      Table(self.$settings.services) {
-        TableColumn(.name) { service in
-          TextField("", text: service.name)
-        }
-        TableColumn(.scheme) { service in
-          TextField("", text: service.scheme)
-        }.width(64)
-        TableColumn(.port) { service in
-          TextField("", text: service.port.map(get: { $0.description },
-                                               set: { Int($0) ?? -1 }))
-        }.width(64)
-        TableColumn("") { service in
+    Table(self.$settings.services) {
+      TableColumn(.name) { service in
+        TextField("", text: service.name)
+      }
+      TableColumn(.scheme) { service in
+        TextField("", text: service.scheme)
+      }
+      .width(64)
+      TableColumn(.port) { service in
+        TextField("", text: service.port.map(get: { $0.description },
+                                             set: { Int($0) ?? -1 }))
+      }
+      .width(64)
+      TableColumn(.actions) { service in
+        HStack(spacing: 4) {
+          Button(.moveUp, systemImage: .imageArrowUp) {
+            self.moveServiceUp(service.wrappedValue)
+          }
+          Button(.moveDown, systemImage: .imageArrowDown) {
+            self.moveServiceDown(service.wrappedValue)
+          }
           Button(.delete, systemImage: .imageDeleteXCircle) {
             self.settings.delete(service: service.wrappedValue)
           }
-          .labelStyle(.iconOnly)
-        }.width(16)
+        }
+        .buttonStyle(.bordered)
+        .labelStyle(.iconOnly)
       }
-      .textFieldStyle(.roundedBorder)
-      .safeAreaInset(edge: .bottom) {
-        HStack {
-          Spacer()
-          Button(.reset, systemImage: .imageReset) {
-            self.settings.services = Service.default
-          }
-          Button(.add, systemImage: .imageAdd) {
-            self.settings.services.append(.init())
-          }
-        }.padding([.bottom, .trailing])
-      }
+      .width(100)
+    }
+    .textFieldStyle(.roundedBorder)
+    .safeAreaInset(edge: .bottom) {
+      HStack {
+        Spacer()
+        Button(.reset, systemImage: .imageReset) {
+          self.settings.services = Service.default
+        }
+        Button(.add, systemImage: .imageAdd) {
+          self.settings.services.append(.init())
+        }
+      }.padding([.bottom, .trailing])
     }
     .frame(width: SettingsWindow.width, height: SettingsWindow.height)
+  }
+  
+  private func moveServiceUp(_ service: Service) {
+    guard
+      let index = self.settings.services.firstIndex(of: service),
+      index > 0
+    else { return }
+    withAnimation {
+      self.settings.services.swapAt(index - 1, index)
+    }
+  }
+  
+  private func moveServiceDown(_ service: Service) {
+    guard
+      let index = self.settings.services.firstIndex(of: service),
+      index < self.settings.services.count - 1
+    else { return }
+    withAnimation {
+      self.settings.services.swapAt(index, index + 1)
+    }
   }
   
   private var scanning: some View {
