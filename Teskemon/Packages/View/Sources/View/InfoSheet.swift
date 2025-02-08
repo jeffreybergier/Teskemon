@@ -53,10 +53,10 @@ internal struct InfoSheet: View {
           Label(.passwords, systemImage: .imagePasswords)
         }.tag(2)
       }
-      .frame(width: 480, height: 320)
       .navigationTitle(.machineInfo)
       .navigationSubtitle(.selected(self.selection.count))
-      .padding([.top])
+      .padding([.top], 8)
+      .frame(width: SettingsWindow.width, height: SettingsWindow.height)
       .toolbar {
         ToolbarItem(placement: .confirmationAction) {
           Button(.done, action: self.dismiss.callAsFunction)
@@ -97,6 +97,7 @@ internal struct InfoSheet: View {
         .textFieldStyle(.roundedBorder)
       }
     }
+    .padding([.top], 4)
   }
   
   private var passwordsTable: some View {
@@ -119,7 +120,7 @@ internal struct InfoSheet: View {
           .textFieldStyle(.roundedBorder)
           .disabled(password.status != .isEditing)
       }
-      TableColumn("Action") { id in
+      TableColumn(.actions) { id in
         HStack {
           let machine = self.machines[id]
           let password = self.passwords[machine]
@@ -173,7 +174,9 @@ internal struct InfoSheet: View {
         .labelStyle(.iconOnly)
         .buttonStyle(.bordered)
       }
+      .width(64)
     }
+    .padding([.top], 4)
   }
   
   private func customNameBinding(for id: Machine.Identifier) -> Binding<String> {
