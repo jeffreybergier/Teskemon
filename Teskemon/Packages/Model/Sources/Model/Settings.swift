@@ -69,8 +69,7 @@ public struct SettingsExecutable: Codable {
 }
 
 public struct Scanning: Codable, Sendable {
-  public var batchSize:     Int    = 10
-  public var pingCount:     Int    = 10
-  public var netcatTimeout: Int    = 10
-  public var pingLoss:      Double = 30
+  public var pingLoss:      Double  = 30
+  public var pingCount:     Int     = 10
+  public var netcatTimeout: Int     = 5
 }

@@ -124,9 +124,6 @@ public struct SettingsWindow: View {
         TextField(.timeout,
                   text: self.$settings.scanning.netcatTimeout.map(get: { $0.description },
                                                                   set: { Int($0) ?? -1 }))
-        TextField(.batchSize,
-                  text: self.$settings.scanning.batchSize.map(get: { $0.description },
-                                                              set: { Int($0) ?? -1 }))
       }
       Section(header: Text(.ping).font(.headline)) {
         TextField(.count,

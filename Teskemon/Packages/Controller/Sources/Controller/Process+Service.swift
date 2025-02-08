@@ -69,25 +69,23 @@ extension Process {
     progress.totalUnitCount += Int64(toProcess.count)
     
     // Schedule Tasks
-    for batch in toProcess.batch(into: config.batchSize) {
-      try await withThrowingTaskGroup(of: (Machine.Identifier, Service, Service.Status).self)
-      { group in
-        for (machine, service) in batch {
-          // Mark service as processing
-          bind.wrappedValue[machine.id, service] = .processing
-          // Schedule new tasks
-          group.addTask {
-            let status = try await serviceStatus(for: service,
-                                                 on: machine,
-                                                 config: config)
-            return (machine.id, service, status)
-          }
+    try await withThrowingTaskGroup(of: (Machine.Identifier, Service, Service.Status).self)
+    { group in
+      for (machine, service) in toProcess {
+        // Mark service as processing
+        bind.wrappedValue[machine.id, service] = .processing
+        // Schedule new tasks
+        group.addTask {
+          let status = try await serviceStatus(for: service,
+                                               on: machine,
+                                               config: config)
+          return (machine.id, service, status)
         }
-        // Update UI to show Result
-        for try await (id, service, status) in group {
-          progress.completedUnitCount += 1
-          bind.wrappedValue[id, service] = status
-        }
+      }
+      // Update UI to show Result
+      for try await (id, service, status) in group {
+        progress.completedUnitCount += 1
+        bind.wrappedValue[id, service] = status
       }
     }
   }
@@ -131,24 +129,22 @@ extension Process {
     let progress = bind.wrappedValue.progress
     progress.totalUnitCount += Int64(machines.count)
     
-    for batch in machines.batch(into: config.batchSize) {
-      try await withThrowingTaskGroup(of: (Machine.Identifier, Service.Status).self)
-      { group in
-        for machine in batch {
-          // Mark service as processing
-          bind.wrappedValue[machine.id] = .processing
-          // Schedule new tasks
-          group.addTask {
-            let status = try await pingStatus(for: machine, config: config)
-            return (machine.id, status)
-          }
+    try await withThrowingTaskGroup(of: (Machine.Identifier, Service.Status).self)
+    { group in
+      for machine in machines {
+        // Mark service as processing
+        bind.wrappedValue[machine.id] = .processing
+        // Schedule new tasks
+        group.addTask {
+          let status = try await pingStatus(for: machine, config: config)
+          return (machine.id, status)
         }
-        
-        // Update UI to show Result
-        for try await (id, status) in group {
-          progress.completedUnitCount += 1
-          bind.wrappedValue[id] = status
-        }
+      }
+      
+      // Update UI to show Result
+      for try await (id, status) in group {
+        progress.completedUnitCount += 1
+        bind.wrappedValue[id] = status
       }
     }
   }
@@ -187,13 +183,5 @@ extension Process {
     let matchString = outputString.firstMatch(of: regex)?.output.last?.substring ?? ""
     let matchNumber = Double(matchString) ?? 100
     return matchNumber > config.pingLoss ? .offline : .online
-  }
-}
-
-extension Array {
-  func batch(into size: Int) -> [[Element]] {
-    stride(from: 0, to: count, by: size).map {
-      Array(self[$0..<Swift.min($0 + size, count)])
-    }
   }
 }
