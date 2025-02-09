@@ -32,6 +32,14 @@ public struct Password: Sendable, Equatable, Hashable {
   public typealias Descriptor = [CFString: any Sendable]
   
   public enum Error: Swift.Error, Sendable, Equatable, Hashable {
+    public var errorCode: Int {
+      switch self {
+      case .missingUsernameOrPassword: return -1
+      case .machineDataIncorrect:      return -2
+      case .criticalDataIncorrect:     return -3
+      case .keychain(let status):      return Int(status)
+      }
+    }
     case missingUsernameOrPassword
     case machineDataIncorrect
     case criticalDataIncorrect
@@ -159,7 +167,7 @@ extension Password {
 }
 
 extension OSStatus {
-  public var localizedDescription: String {
+  public var secErrorMessage: String {
     String(SecCopyErrorMessageString(self, nil)!)
   }
 }

@@ -30,7 +30,7 @@ internal struct MachineInfo: View {
   @SettingsController      private var settings
   @PasswordEditController private var passwords
   
-  @State private var passwordError: Password.Error?
+  @State private var passwordError: CustomNSError?
 
   @State private var currentTab: Int
   private let selection: [Machine.Identifier]
@@ -62,21 +62,7 @@ internal struct MachineInfo: View {
           Button(.done, action: self.dismiss.callAsFunction)
         }
       }
-      .alert(item: self.$passwordError,
-             title: String.errorUnknown) { _ in
-        Button(.dismiss) {}
-      } message: { error in
-        switch error {
-        case .missingUsernameOrPassword:
-          Text(.errorPasswordEmpty)
-        case .machineDataIncorrect:
-          Text(.errorPasswordData)
-        case .criticalDataIncorrect:
-          Text(.errorPasswordDamaged)
-        case .keychain(let status):
-          Text(status.localizedDescription)
-        }
-      }
+      .alert(error: self.$passwordError)
     }
   }
   

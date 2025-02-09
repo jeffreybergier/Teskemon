@@ -112,11 +112,6 @@ extension LocalizedStringKey {
   static let helpNetcatOnline:     LocalizedStringKey = "Netcat: Port listening"
   static let helpNetcatOffline:    LocalizedStringKey = "Netcat: Port not listening"
   static let helpNetcatProcessing: LocalizedStringKey = "Netcat: Scanning"
- 
-  // MARK: Error
-  static let errorPasswordEmpty:   LocalizedStringKey = "Username or password is missing"
-  static let errorPasswordData:    LocalizedStringKey = "This password does not belong to this machine and should be deleted"
-  static let errorPasswordDamaged: LocalizedStringKey = "This password is damaged and should be deleted"
 
   // MARK: Settings Explanation
   static let settingsNetcatTimeout: LocalizedStringKey = "Increasing the timeout will increase the accuracy of the port scanning, but it could slow down the process."
@@ -126,8 +121,20 @@ extension LocalizedStringKey {
 }
 
 extension String {
+  // MARK: Text
   static let noValue               = "—"
+  
+  // MARK: Errors
   static let errorUnknown          = "Unknown Error"
+  static let errorKeychain         = "Keychain Error"
+  static let errorPasswordEmpty    = "Username or password is missing"
+  static let errorPasswordData     = "This password does not belong to this machine and should be deleted"
+  static let errorPasswordDamaged  = "This password is damaged and should be deleted"
+  static func errorMessage(_ error: CustomNSError) -> String {
+    "→Error Code: \(error.errorCode)←\n" + error.localizedDescription
+  }
+  
+  // MARK: Images
   static let imageInfo             = "info"
   static let imagePerson           = "person"
   static let imageNetwork          = "network"
@@ -167,9 +174,6 @@ extension String {
   static let imageNodeRemote       = "rectangle"
   static let imageNodeMeSubnet     = "person.crop.rectangle.stack"
   static let imageNodeRemoteSubnet = "rectangle.stack"
-  static func errorMessage(_ error: CustomNSError) -> String {
-    "→Error:\(error.errorCode)←\n" + error.localizedDescription
-  }
 }
 
 extension Color {
@@ -188,17 +192,18 @@ import Model
 import Controller
 
 extension Password.Error: @retroactive CustomNSError {
-  /// Default domain of the error.
-  public static var errorDomain: String {
-    fatalError()
-  }
-  /// The error code within the given domain.
-  public var errorCode: Int {
-    fatalError()
-  }
-  /// The default user-info dictionary.
+  public static var errorDomain: String { .errorKeychain }
   public var errorUserInfo: [String : Any] {
-    fatalError()
+    let message: String
+    switch self {
+    case .missingUsernameOrPassword: message = .errorPasswordEmpty
+    case .machineDataIncorrect:      message = .errorPasswordData
+    case .criticalDataIncorrect:     message = .errorPasswordDamaged
+    case .keychain(let status):      message = status.secErrorMessage
+    }
+    return [
+      NSLocalizedDescriptionKey: message
+    ]
   }
 }
 
