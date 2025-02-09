@@ -25,41 +25,55 @@ import Controller
 // TODO: Refactor this into 4 views and use Picker instead of TabView
 internal struct MachineInfo: View {
   
-  @Environment(\.dismiss) private var dismiss
-  
-  @MachineController      private var machines
-  @SettingsController     private var settings
-  @PasswordEditController private var passwords
   @PresentationController private var presentation
   
-  @State private var passwordError: CustomNSError?
+  private let selection: [Machine.Identifier]
+  
+  internal init(selection: Set<Machine.Identifier>) {
+    self.selection = selection.sorted { $0.rawValue < $1.rawValue }
+  }
   
   internal var body: some View {
     NavigationStack {
       TabView(selection: self.$presentation.infoPanel.currentTab) {
-        self.machineInfo.tabItem {
-          Label(.information, systemImage: .imageInfo)
-        }.tag(0)
-        self.namesTable.tabItem {
-          Label(.names, systemImage: .imagePerson)
-        }.tag(1)
-        self.passwordsTable.tabItem {
-          Label(.passwords, systemImage: .imagePasswords)
-        }.tag(2)
+        MachineInfoOverview(selection: self.selection)
+          .tabItem {
+            Label(.information, systemImage: .imageInfo)
+          }
+          .tag(0)
+        MachineInfoNames(selection: self.selection)
+          .tabItem {
+            Label(.names, systemImage: .imagePerson)
+          }
+          .tag(1)
+        MachineInfoPasswords(selection: self.selection)
+          .tabItem {
+            Label(.passwords, systemImage: .imagePasswords)
+          }
+          .tag(2)
       }
       .navigationTitle(.machineInfo)
-      .navigationSubtitle(.selected(self.presentation.tableSelection.count))
+      .navigationSubtitle(.selected(self.selection.count))
       .padding([.top], 8)
       .frame(width: SettingsWindow.widthLarge, height: SettingsWindow.height)
       .toolbar {
         ToolbarItem(placement: .confirmationAction) {
-          Button(.done, action: self.dismiss.callAsFunction)
+          Button(.done) {
+            self.presentation.infoPanel.isPresented = false
+          }
         }
       }
-      .alert(error: self.$passwordError)
     }
   }
+}
+
+internal struct MachineInfoOverview: View {
   
+  @MachineController      private var machines
+  @PresentationController private var presentation
+  
+  internal let selection: [Machine.Identifier]
+    
   /*
    public var id: Identifier = .init(rawValue: "")
    public var name: String   = ""
@@ -89,7 +103,7 @@ internal struct MachineInfo: View {
    */
   
   private func infoSectionExpanded(for id: Machine.Identifier) -> Binding<Bool> {
-    let shouldShowByDefault = self.presentation.infoPanel.selection.count <= 7
+    let shouldShowByDefault = self.selection.count <= 7
     return Binding {
       self.presentation.infoPanel.isExpanded[id] ?? shouldShowByDefault
     } set: {
@@ -97,9 +111,9 @@ internal struct MachineInfo: View {
     }
   }
   
-  private var machineInfo: some View {
+  internal var body: some View {
     Form {
-      ForEach(self.presentation.infoPanel.selection) { id in
+      ForEach(self.selection) { id in
         let machine = self.machines[id]
         Section(machine.name, isExpanded: self.infoSectionExpanded(for: id)) {
           LabeledContent("ID",    value: machine.id.rawValue.trimmed ?? .noValue)
@@ -115,9 +129,18 @@ internal struct MachineInfo: View {
     }
     .formStyle(.grouped)
   }
+}
+
+internal struct MachineInfoNames: View {
   
-  private var namesTable: some View {
-    Table(self.presentation.infoPanel.selection) {
+  @MachineController      private var machines
+  @SettingsController     private var settings
+  @PresentationController private var presentation
+  
+  internal let selection: [Machine.Identifier]
+  
+  internal var body: some View {
+    Table(self.selection) {
       TableColumn(.nameOriginal) { id in
         Text(self.machines[id].name)
           .font(.body)
@@ -131,8 +154,26 @@ internal struct MachineInfo: View {
     .padding([.top], 4)
   }
   
-  private var passwordsTable: some View {
-    Table(self.presentation.infoPanel.selection) {
+  private func customNameBinding(for id: Machine.Identifier) -> Binding<String> {
+    .init(get: { self.settings.customNames[id] ?? "" },
+          set: { self.settings.customNames[id] = $0.trimmed })
+  }
+  
+}
+
+internal struct MachineInfoPasswords: View {
+  
+  @MachineController      private var machines
+  @SettingsController     private var settings
+  @PasswordEditController private var passwords
+  @PresentationController private var presentation
+  
+  @State private var passwordError: CustomNSError?
+  
+  internal let selection: [Machine.Identifier]
+  
+  internal var body: some View {
+    Table(self.selection) {
       TableColumn(.name) { id in
         Text(self.settings.customNames[id] ?? self.machines[id].name)
           .font(.body)
@@ -208,11 +249,8 @@ internal struct MachineInfo: View {
       .width(64)
     }
     .padding([.top], 4)
+    .alert(error: self.$passwordError)
   }
-  
-  private func customNameBinding(for id: Machine.Identifier) -> Binding<String> {
-    .init(get: { self.settings.customNames[id] ?? "" },
-          set: { self.settings.customNames[id] = $0.trimmed })
-  }
-  
 }
+
+

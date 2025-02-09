@@ -70,8 +70,9 @@ public struct MachineWindow: View {
         .animation(.default, value: self.settings.statusTimer.automatic)
         .navigationTitle(.appName)
         .navigationSubtitle(self.navigationTitleAppendString)
-        .sheet(isPresented: self.$presentation.infoPanel.isPresented,
-               content: { MachineInfo() })
+        .sheet(isPresented: self.$presentation.infoPanel.isPresented) {
+          MachineInfo(selection: self.selectionForMenus)
+        }
         .onChange(of: self.machineTimer.fireCount, initial: true) { _, _ in
           guard self.settings.machineTimer.automatic else { return }
           self.performAsync {
