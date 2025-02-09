@@ -213,8 +213,9 @@ extension Process.Output: @retroactive CustomNSError {
   public var errorUserInfo: [String : Any] {
     let description = String(data: self.errOut, encoding: .utf8)
                    ?? String(data: self.stdOut, encoding: .utf8)
+                   ?? .errorUnknown
     return [
-      NSLocalizedDescriptionKey: description ?? .errorUnknown,
+      NSLocalizedDescriptionKey: description.trimmed!
     ]
   }
 }

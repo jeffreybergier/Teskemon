@@ -297,7 +297,9 @@ public struct MachineWindow: View {
       do {
         try await function()
       } catch let error as CustomNSError {
-        NSLog(String(describing:error))
+        NSLog("Error: Disabling Auto Refresh: '\(error.localizedDescription)'")
+        self.settings.statusTimer.automatic = false
+        self.settings.machineTimer.automatic = false
         self.processError = error
       }
     }
