@@ -104,6 +104,7 @@ extension Process {
       "\(service.port)"
     ]
     let output = try await Process.execute(arguments: arguments)
+    // Netcat uses standard error for its output
     let outputString = String(data: output.errOut, encoding: .utf8)!
     if outputString.hasSuffix("succeeded!\n") {
       NSLog("[ONLINE ] \(machine.host):\(service.port)")
@@ -177,11 +178,13 @@ extension Process {
       machine.host,
     ]
     let output = try await Process.execute(arguments: arguments)
-    let outputString = String(data: output.stdOut, encoding: .utf8) ?? ""
+    guard let outputString = String(data: output.stdOut, encoding: .utf8) else { throw output }
     // "12 packets transmitted, 5 packets received, 58.3% packet loss"
     let regex = try Regex(#", (\d+\.\d+)% packet loss"#)
-    let matchString = outputString.firstMatch(of: regex)?.output.last?.substring ?? ""
-    let matchNumber = Double(matchString) ?? 100
+    guard
+      let matchString = outputString.firstMatch(of: regex)?.output.last?.substring,
+      let matchNumber = Double(matchString)
+    else { throw output }
     return matchNumber > config.pingLoss ? .offline : .online
   }
 }

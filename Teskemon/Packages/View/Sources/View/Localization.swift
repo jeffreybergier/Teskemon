@@ -179,3 +179,34 @@ extension Color {
   static let HACK_showColorInMenus = Color.black
 }
 
+// MARK: CustomNSError
+
+import Model
+import Controller
+
+extension Password.Error: @retroactive CustomNSError {
+  /// Default domain of the error.
+  public static var errorDomain: String {
+    fatalError()
+  }
+  /// The error code within the given domain.
+  public var errorCode: Int {
+    fatalError()
+  }
+  /// The default user-info dictionary.
+  public var errorUserInfo: [String : Any] {
+    fatalError()
+  }
+}
+
+extension Process.Output: @retroactive CustomNSError {
+  public static var errorDomain: String { Bundle.main.bundleIdentifier! + "Process.Output" }
+  public var errorCode: Int { self.exitCode }
+  public var errorUserInfo: [String : Any] {
+    let description = String(data: self.errOut, encoding: .utf8)
+                   ?? String(data: self.stdOut, encoding: .utf8)
+    return [
+      NSLocalizedDescriptionKey: description ?? "Unknown Error"
+    ]
+  }
+}

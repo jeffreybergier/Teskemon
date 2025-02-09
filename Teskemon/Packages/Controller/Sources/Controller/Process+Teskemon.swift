@@ -22,10 +22,11 @@ import Foundation
 
 extension Process {
   
-  internal struct Output: Sendable, Codable {
-    internal let exitCode: Int
-    internal let stdOut: Data
-    internal let errOut: Data
+  public struct Output: Sendable, Codable, Error {
+    public let executable: URL
+    public let exitCode: Int
+    public let stdOut: Data
+    public let errOut: Data
   }
   
   internal static func execute(url: URL = URL(fileURLWithPath: "/usr/bin/env"),
@@ -71,7 +72,10 @@ extension Process {
       try FileManager.default.removeItem(at: stdOutURL)
       try FileManager.default.removeItem(at: stdErrURL)
       
-      return .init(exitCode: Int(task.terminationStatus), stdOut: stdOut, errOut: errOut)
+      return .init(executable: url,
+                   exitCode: Int(task.terminationStatus),
+                   stdOut: stdOut,
+                   errOut: errOut)
     } catch {
       throw error
     }
