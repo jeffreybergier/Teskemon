@@ -127,7 +127,7 @@ extension LocalizedStringKey {
 
 extension String {
   static let noValue               = "—"
-  static let error                 = "Error"
+  static let errorUnknown          = "Unknown Error"
   static let imageInfo             = "info"
   static let imagePerson           = "person"
   static let imageNetwork          = "network"
@@ -167,6 +167,9 @@ extension String {
   static let imageNodeRemote       = "rectangle"
   static let imageNodeMeSubnet     = "person.crop.rectangle.stack"
   static let imageNodeRemoteSubnet = "rectangle.stack"
+  static func errorMessage(_ error: CustomNSError) -> String {
+    "→Error:\(error.errorCode)←\n" + error.localizedDescription
+  }
 }
 
 extension Color {
@@ -200,13 +203,29 @@ extension Password.Error: @retroactive CustomNSError {
 }
 
 extension Process.Output: @retroactive CustomNSError {
-  public static var errorDomain: String { Bundle.main.bundleIdentifier! + "Process.Output" }
+  public static var errorDomain: String { "Command Line Error" }
   public var errorCode: Int { self.exitCode }
   public var errorUserInfo: [String : Any] {
     let description = String(data: self.errOut, encoding: .utf8)
                    ?? String(data: self.stdOut, encoding: .utf8)
     return [
-      NSLocalizedDescriptionKey: description ?? "Unknown Error"
+      NSLocalizedDescriptionKey: description ?? .errorUnknown,
     ]
+  }
+}
+
+extension View {
+  internal func alert(error binding: Binding<CustomNSError?>,
+                      onDismiss: ((CustomNSError) -> Void)? = nil)
+                      -> some View
+  {
+    let title = binding.wrappedValue.map { type(of:$0).errorDomain } ?? .errorUnknown
+    return self.alert(item: binding, title: title) { error in
+      Button(.dismiss) {
+        onDismiss?(error)
+      }
+    } message: { error in
+      Text(String.errorMessage(error))
+    }
   }
 }

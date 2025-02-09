@@ -63,7 +63,7 @@ internal struct MachineInfo: View {
         }
       }
       .alert(item: self.$passwordError,
-             title: String.error) { _ in
+             title: String.errorUnknown) { _ in
         Button(.dismiss) {}
       } message: { error in
         switch error {

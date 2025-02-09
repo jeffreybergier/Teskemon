@@ -42,7 +42,7 @@ public struct MachineWindow: View {
          : self.presentation.selection
   }
   
-  @State private var processError: Error?
+  @State private var processError: CustomNSError?
   
   public init() { }
   
@@ -100,10 +100,7 @@ public struct MachineWindow: View {
           ToolbarItem { self.refreshMenu }
           ToolbarItem { self.statusMenu  }
         }
-        .alert(item: self.$processError,
-               title: String.error,
-               actions: { _ in Button(.dismiss) {} },
-               message: { Text($0.localizedDescription) })
+        .alert(error: self.$processError)
     }
   }
   
@@ -299,7 +296,7 @@ public struct MachineWindow: View {
     Task {
       do {
         try await function()
-      } catch {
+      } catch let error as CustomNSError {
         NSLog(String(describing:error))
         self.processError = error
       }
