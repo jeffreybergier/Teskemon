@@ -38,7 +38,7 @@ internal struct MachineTable: View {
   internal var body: some View {
     Table(self.machines.machines,
           children: \.children,
-          selection: self.$presentation.selection)
+          selection: self.$presentation.tableSelection)
     {
       
       TableColumn(.online) { machine in

@@ -37,9 +37,9 @@ public struct MachineWindow: View {
   @Environment(\.appearsActive) private var appearsActive
   
   private var selectionForMenus: Set<Machine.Identifier> {
-    return self.presentation.selection.isEmpty
+    return self.presentation.tableSelection.isEmpty
          ? self.machines.allIdentifiers()
-         : self.presentation.selection
+         : self.presentation.tableSelection
   }
   
   @State private var processError: CustomNSError?
@@ -111,7 +111,7 @@ public struct MachineWindow: View {
   
   private var editMenu: some View {
     Menu {
-      Section(.selected(self.presentation.selection.count)) {
+      Section(.selected(self.presentation.tableSelection.count)) {
         let action: (Int) -> Void = { selectedTab in
           self.presentation.infoPanel = .init(tab: selectedTab,
                                               self.selectionForMenus)
@@ -121,9 +121,9 @@ public struct MachineWindow: View {
         Button(.passwords,   systemImage: .imagePasswords) { action(2) }
       }
       Button(.verbDeselectAll, systemImage: .imageDeselect) {
-        self.presentation.selection = []
+        self.presentation.tableSelection = []
       }
-      .disabled(self.presentation.selection.isEmpty)
+      .disabled(self.presentation.tableSelection.isEmpty)
     } label: {
       Label(.edit, systemImage: .imageMachine)
     }
@@ -132,7 +132,7 @@ public struct MachineWindow: View {
   
   private var refreshMenu: some View {
     Menu {
-      Section(.selected(self.presentation.selection.count)) {
+      Section(.selected(self.presentation.tableSelection.count)) {
         Button(.machines, systemImage: .imageRefreshMachines) {
           self.performAsync {
             try await self._machines.updateMachines(with: self.settings.executable)
@@ -161,9 +161,9 @@ public struct MachineWindow: View {
         }
       }
       Button(.verbDeselectAll, systemImage: .imageDeselect) {
-        self.presentation.selection = []
+        self.presentation.tableSelection = []
       }
-      .disabled(self.presentation.selection.isEmpty)
+      .disabled(self.presentation.tableSelection.isEmpty)
       Button(.clearCache, systemImage: .imageTrash) {
         self._services.resetData()
         self._machines.resetData()
@@ -269,7 +269,7 @@ public struct MachineWindow: View {
         }
       }
       Button(.verbSelectThisMachine, systemImage: .imageSelect) {
-        self.presentation.selection = self.machines.tailscale?.selfNodeID.map { [$0] } ?? []
+        self.presentation.tableSelection = self.machines.tailscale?.selfNodeID.map { [$0] } ?? []
       }
       .disabled(self.machines.tailscale?.selfNodeID == nil)
     } label: {

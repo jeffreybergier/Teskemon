@@ -22,6 +22,7 @@ import SwiftUI
 import Model
 import Controller
 
+// TODO: Refactor this into 4 views and use Picker instead of TabView
 internal struct MachineInfo: View {
   
   @Environment(\.dismiss) private var dismiss
@@ -47,7 +48,7 @@ internal struct MachineInfo: View {
         }.tag(2)
       }
       .navigationTitle(.machineInfo)
-      .navigationSubtitle(.selected(self.presentation.selection.count))
+      .navigationSubtitle(.selected(self.presentation.tableSelection.count))
       .padding([.top], 8)
       .frame(width: SettingsWindow.widthLarge, height: SettingsWindow.height)
       .toolbar {
@@ -87,19 +88,28 @@ internal struct MachineInfo: View {
    public var inEngine:     Bool = false
    */
   
+  private func infoSectionExpanded(for id: Machine.Identifier) -> Binding<Bool> {
+    let shouldShowByDefault = self.presentation.infoPanel.selection.count <= 7
+    return Binding {
+      self.presentation.infoPanel.isExpanded[id] ?? shouldShowByDefault
+    } set: {
+      self.presentation.infoPanel.isExpanded[id] = $0 != shouldShowByDefault ? $0 : nil
+    }
+  }
+  
   private var machineInfo: some View {
     Form {
       ForEach(self.presentation.infoPanel.selection) { id in
         let machine = self.machines[id]
-        Section(machine.name) {
+        Section(machine.name, isExpanded: self.infoSectionExpanded(for: id)) {
           LabeledContent("ID",    value: machine.id.rawValue.trimmed ?? .noValue)
           LabeledContent("Name",  value: machine.name.trimmed ?? .noValue)
           LabeledContent("Host",  value: machine.host.trimmed ?? .noValue)
           LabeledContent("OS",    value: machine.os.trimmed ?? .noValue)
           LabeledContent("Kind",  value: String(describing:machine.kind))
-          LabeledContent("Relay", value: String(describing:machine.relay))
+          LabeledContent("Relationship", value: String(describing:machine.relay))
           LabeledContent("Public Key", value: machine.nodeInfo?.publicKey.trimmed ?? .noValue)
-          LabeledContent("Subnet Routes", value: machine.subnetRoutes.count.description)
+          LabeledContent("Subnet Routes", value: machine.subnetRoutes.reduce("", { $0 + $1.rawValue + ", " }))
         }
       }
     }
