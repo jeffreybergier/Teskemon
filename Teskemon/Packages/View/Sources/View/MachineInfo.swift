@@ -26,23 +26,16 @@ internal struct MachineInfo: View {
   
   @Environment(\.dismiss) private var dismiss
   
-  @MachineController       private var machines
-  @SettingsController      private var settings
+  @MachineController      private var machines
+  @SettingsController     private var settings
   @PasswordEditController private var passwords
+  @PresentationController private var presentation
   
   @State private var passwordError: CustomNSError?
-
-  @State private var currentTab: Int
-  private let selection: [Machine.Identifier]
-  
-  internal init(_ input: PresentationInfoPanelInput) {
-    _currentTab = .init(initialValue: input.currentTab)
-    selection = input.selection
-  }
   
   internal var body: some View {
     NavigationStack {
-      TabView(selection: self.$currentTab) {
+      TabView(selection: self.$presentation.infoPanel.currentTab) {
         self.machineInfo.tabItem {
           Label(.information, systemImage: .imageInfo)
         }.tag(0)
@@ -54,7 +47,7 @@ internal struct MachineInfo: View {
         }.tag(2)
       }
       .navigationTitle(.machineInfo)
-      .navigationSubtitle(.selected(self.selection.count))
+      .navigationSubtitle(.selected(self.presentation.selection.count))
       .padding([.top], 8)
       .frame(width: SettingsWindow.widthLarge, height: SettingsWindow.height)
       .toolbar {
@@ -66,13 +59,55 @@ internal struct MachineInfo: View {
     }
   }
   
+  /*
+   public var id: Identifier = .init(rawValue: "")
+   public var name: String   = ""
+   public var host: String   = ""
+   public var os: String     = ""
+   public var kind: Kind     = .unknown
+   public var relay: Relay   = .unknown
+   public var activity: Activity? = nil
+   public var nodeInfo: NodeInfo? = nil
+   public var subnetRoutes: [Machine]? = nil
+   
+   public var publicKey:  String = ""
+   public var keyExpiry:  Date?  = nil
+   public var isExitNode: Bool   = false
+   public var userID:     Int    = -1
+   // Network
+   public var tailscaleIPs: [Address] = []
+   
+   // Timestamps
+   public var created:       Date? = nil
+   public var lastWrite:     Date? = nil
+   public var lastHandshake: Date? = nil
+   // Status
+   public var inNetworkMap: Bool = false
+   public var inMagicSock:  Bool = false
+   public var inEngine:     Bool = false
+   */
+  
   private var machineInfo: some View {
-    // TODO: Add machine info view
-    Text(.machineInfo)
+    Form {
+      ForEach(self.presentation.infoPanel.selection) { id in
+        let machine = self.machines[id]
+        Section(machine.name) {
+          LabeledContent("ID",    value: machine.id.rawValue.trimmed ?? .noValue)
+          LabeledContent("Name",  value: machine.name.trimmed ?? .noValue)
+          LabeledContent("Host",  value: machine.host.trimmed ?? .noValue)
+          LabeledContent("OS",    value: machine.os.trimmed ?? .noValue)
+          LabeledContent("Kind",  value: String(describing:machine.kind))
+          LabeledContent("Relay", value: String(describing:machine.relay))
+          LabeledContent("Public Key", value: machine.nodeInfo?.publicKey.trimmed ?? .noValue)
+          LabeledContent("Subnet Routes", value: machine.subnetRoutes.count.description)
+        }
+      }
+    }
+    .formStyle(.grouped)
   }
   
   private var namesTable: some View {
-    Table(self.selection) {
+    Table(self.presentation.infoPanel.selection) {
       TableColumn(.nameOriginal) { id in
         Text(self.machines[id].name)
           .font(.body)
@@ -87,7 +122,7 @@ internal struct MachineInfo: View {
   }
   
   private var passwordsTable: some View {
-    Table(self.selection) {
+    Table(self.presentation.infoPanel.selection) {
       TableColumn(.name) { id in
         Text(self.settings.customNames[id] ?? self.machines[id].name)
           .font(.body)

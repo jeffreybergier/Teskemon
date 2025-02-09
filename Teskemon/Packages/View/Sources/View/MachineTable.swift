@@ -37,7 +37,7 @@ internal struct MachineTable: View {
   
   internal var body: some View {
     Table(self.machines.machines,
-          children: \.subnetRoutes,
+          children: \.children,
           selection: self.$presentation.selection)
     {
       

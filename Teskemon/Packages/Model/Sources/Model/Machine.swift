@@ -84,7 +84,7 @@ extension Machine {
         uniqueKeysWithValues: rawModel.User?.map { (.init(rawValue: $0), $1) } ?? []
       )
       self.lookUp = Dictionary(uniqueKeysWithValues: self.machines.flatMap { machine in
-        return [(machine.id, machine)] + (machine.subnetRoutes?.map { ($0.id, $0) } ?? [])
+        return [(machine.id, machine)] + (machine.children?.map { ($0.id, $0) } ?? [])
       })
     }
   }
@@ -121,7 +121,8 @@ public struct Machine: Codable, Sendable, Identifiable {
   public var relay: Relay   = .unknown
   public var activity: Activity? = nil
   public var nodeInfo: NodeInfo? = nil
-  public var subnetRoutes: [Machine]? = nil
+  public var children: [Machine]? = nil
+  public var subnetRoutes: [Subnet] = []
   
   internal init() {}
   
@@ -147,16 +148,16 @@ public struct Machine: Codable, Sendable, Identifiable {
                           rxBytes:  Int64(model.RxBytes ?? 0),
                           txBytes:  Int64(model.TxBytes ?? 0),
                           lastSeen: model.LastSeen.flatMap(df.date(from:)))
-    
-    let subnetRoutes: [Machine]? = model.PrimaryRoutes?.flatMap { subnet in
-      Subnet(rawValue: subnet).explodeAddresses().map { address in
+    self.subnetRoutes = model.PrimaryRoutes?.map { Subnet(rawValue: $0) } ?? []
+    let subnetRoutes: [Machine] = self.subnetRoutes.flatMap { subnet in
+      subnet.explodeAddresses().map { address in
         Machine(address: address,
                 name:    model.HostName ?? "",
                 hostID: .init(rawValue: model.ID),
                 selfID:  selfID)
       }
     }
-    self.subnetRoutes = (subnetRoutes?.isEmpty ?? true) ? nil : subnetRoutes
+    self.children = subnetRoutes.isEmpty ? nil : subnetRoutes
     
     // Had to move these out of the init because the type checker was timing out
     let keyExpiry     = model.KeyExpiry.flatMap(df.date(from:))

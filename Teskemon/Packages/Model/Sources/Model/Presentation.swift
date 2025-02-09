@@ -22,17 +22,23 @@ import Foundation
 
 public struct PresentationControllerValue: Codable {
   public var selection = Set<Machine.Identifier>()
-  public var showInfoPanel: PresentationInfoPanelInput?
+  public var infoPanel: PresentationInfoPanelInput = .init()
   public var showsPasswords = false
   public init() { }
 }
 
-public struct PresentationInfoPanelInput: Identifiable, Codable {
-  public var id: [Machine.Identifier] { self.selection }
+public struct PresentationInfoPanelInput: Codable {  
+  public var isPresented: Bool
   public var currentTab: Int
   public var selection: [Machine.Identifier]
   public init(tab: Int = 0, _ selection: Set<Machine.Identifier> = []) {
+    self.isPresented = true
     self.currentTab = tab
     self.selection = selection.sorted(by: { $0.rawValue < $1.rawValue })
+  }
+  public init() {
+    self.isPresented = false
+    self.currentTab = 0
+    self.selection = []
   }
 }

@@ -70,8 +70,8 @@ public struct MachineWindow: View {
         .animation(.default, value: self.settings.statusTimer.automatic)
         .navigationTitle(.appName)
         .navigationSubtitle(self.navigationTitleAppendString)
-        .sheet(item: self.$presentation.showInfoPanel,
-               content: { MachineInfo($0) })
+        .sheet(isPresented: self.$presentation.infoPanel.isPresented,
+               content: { MachineInfo() })
         .onChange(of: self.machineTimer.fireCount, initial: true) { _, _ in
           guard self.settings.machineTimer.automatic else { return }
           self.performAsync {
@@ -112,15 +112,13 @@ public struct MachineWindow: View {
   private var editMenu: some View {
     Menu {
       Section(.selected(self.presentation.selection.count)) {
-        Button(.information, systemImage: .imageInfo) {
-          self.presentation.showInfoPanel = .init(tab: 0, self.selectionForMenus)
+        let action: (Int) -> Void = { selectedTab in
+          self.presentation.infoPanel = .init(tab: selectedTab,
+                                              self.selectionForMenus)
         }
-        Button(.names, systemImage: .imagePerson) {
-          self.presentation.showInfoPanel = .init(tab: 1, self.selectionForMenus)
-        }
-        Button(.passwords, systemImage: .imagePasswords) {
-          self.presentation.showInfoPanel = .init(tab: 2, self.selectionForMenus)
-        }
+        Button(.information, systemImage: .imageInfo)      { action(0) }
+        Button(.names,       systemImage: .imagePerson)    { action(1) }
+        Button(.passwords,   systemImage: .imagePasswords) { action(2) }
       }
       Button(.verbDeselectAll, systemImage: .imageDeselect) {
         self.presentation.selection = []
