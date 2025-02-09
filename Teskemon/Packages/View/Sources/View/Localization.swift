@@ -112,11 +112,16 @@ extension LocalizedStringKey {
   static let helpNetcatOnline:     LocalizedStringKey = "Netcat: Port listening"
   static let helpNetcatOffline:    LocalizedStringKey = "Netcat: Port not listening"
   static let helpNetcatProcessing: LocalizedStringKey = "Netcat: Scanning"
-  
+ 
   // MARK: Error
   static let errorPasswordEmpty:   LocalizedStringKey = "Username or password is missing"
   static let errorPasswordData:    LocalizedStringKey = "This password does not belong to this machine and should be deleted"
   static let errorPasswordDamaged: LocalizedStringKey = "This password is damaged and should be deleted"
+
+  // MARK: Settings Explanation
+  static let settingsNetcatTimeout: LocalizedStringKey = "Increasing the timeout will increase the accuracy of the port scanning, but it could slow down the process."
+  static let settingsPingCount:     LocalizedStringKey = "Increasing the count will increase the accuracy of the ping, but it will slow down the process."
+  static let settingsPingLoss:      LocalizedStringKey = "The higher the loss threshold, the more likely it is that the ping will detect a machine is online."
 
 }
 

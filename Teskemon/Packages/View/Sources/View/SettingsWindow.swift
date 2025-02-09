@@ -141,7 +141,7 @@ public struct SettingsWindow: View {
           TextField(.timeout,
                     text: self.$settings.scanning.netcatTimeout.map(get: { $0.description },
                                                                     set: { Int($0) ?? 0 }))
-          Text("Increasing the timeout will increase the accuracy of the port scanning, but it could slow down the process.")
+          Text(.settingsNetcatTimeout)
             .font(.caption)
             .foregroundStyle(Color(nsColor: .secondaryLabelColor))
         }
@@ -151,7 +151,7 @@ public struct SettingsWindow: View {
           TextField(.count,
                     text: self.$settings.scanning.pingCount.map(get: { $0.description },
                                                                 set: { Int($0) ?? 0 }))
-          Text("Increasing the count will increase the accuracy of the ping, but it will slow down the process.")
+          Text(.settingsPingCount)
             .font(.caption)
             .foregroundStyle(Color(nsColor: .secondaryLabelColor))
         }
@@ -159,7 +159,7 @@ public struct SettingsWindow: View {
           TextField(.lossThreshold,
                     text: self.$settings.scanning.pingLoss.map(get: { $0.description },
                                                                set: { Double($0) ?? 0 }))
-          Text("The higher the loss threshold, the more likely it is that the ping will detect a machine is online.")
+          Text(.settingsPingLoss)
             .font(.caption)
             .foregroundStyle(Color(nsColor: .secondaryLabelColor))
         }

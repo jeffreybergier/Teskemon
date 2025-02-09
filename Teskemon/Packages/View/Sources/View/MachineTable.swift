@@ -76,7 +76,7 @@ internal struct MachineTable: View {
       .width(36)
       
       TableColumnForEach(self.settings.services) { service in
-        TableColumn(String(format: "%@", service.name, service.port)) { machine in
+        TableColumn(service.name) { machine in
           TableRowStatus(machine: machine,
                          service: service,
                          status: self.services[machine.id, service],
