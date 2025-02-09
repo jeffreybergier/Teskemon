@@ -35,26 +35,29 @@ internal struct MachineInfo: View {
   
   internal var body: some View {
     NavigationStack {
-      TabView(selection: self.$presentation.infoPanel.currentTab) {
-        MachineInfoOverview(selection: self.selection)
-          .tabItem {
-            Label(.information, systemImage: .imageInfo)
+      VStack {
+        // TODO: Consider moving this into .safeAreaInset(edge: .top)
+        Picker("", selection: self.$presentation.infoPanel.currentTab) {
+          Text(.information)
+            .tag(PresentationInfoPanelTab.info)
+          Text(.names)
+            .tag(PresentationInfoPanelTab.names)
+          Text(.passwords)
+            .tag(PresentationInfoPanelTab.passwords)
+        }
+        .frame(width: SettingsWindow.widthLarge/2)
+        .padding([.top], 8)
+        Group {
+          switch self.presentation.infoPanel.currentTab {
+          case .info:      MachineInfoOverview(selection: self.selection)
+          case .names:     MachineInfoNames(selection: self.selection)
+          case .passwords: MachineInfoPasswords(selection: self.selection)
           }
-          .tag(0)
-        MachineInfoNames(selection: self.selection)
-          .tabItem {
-            Label(.names, systemImage: .imagePerson)
-          }
-          .tag(1)
-        MachineInfoPasswords(selection: self.selection)
-          .tabItem {
-            Label(.passwords, systemImage: .imagePasswords)
-          }
-          .tag(2)
+        }
       }
+      .pickerStyle(.segmented)
       .navigationTitle(.machineInfo)
       .navigationSubtitle(.selected(self.selection.count))
-      .padding([.top], 8)
       .frame(width: SettingsWindow.widthLarge, height: SettingsWindow.height)
       .toolbar {
         ToolbarItem(placement: .confirmationAction) {

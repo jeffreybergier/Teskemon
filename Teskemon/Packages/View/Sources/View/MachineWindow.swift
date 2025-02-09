@@ -113,13 +113,15 @@ public struct MachineWindow: View {
   private var editMenu: some View {
     Menu {
       Section(.selected(self.presentation.tableSelection.count)) {
-        let action: (Int) -> Void = { selectedTab in
-          self.presentation.infoPanel = .init(tab: selectedTab,
-                                              self.selectionForMenus)
+        let action: (PresentationInfoPanelTab) -> Void = { selectedTab in
+          self.presentation.infoPanel = .init(
+            tab: selectedTab,
+            selection: self.selectionForMenus
+          )
         }
-        Button(.information, systemImage: .imageInfo)      { action(0) }
-        Button(.names,       systemImage: .imagePerson)    { action(1) }
-        Button(.passwords,   systemImage: .imagePasswords) { action(2) }
+        Button(.information, systemImage: .imageInfo)      { action(.info)      }
+        Button(.names,       systemImage: .imagePerson)    { action(.names)     }
+        Button(.passwords,   systemImage: .imagePasswords) { action(.passwords) }
       }
       Button(.verbDeselectAll, systemImage: .imageDeselect) {
         self.presentation.tableSelection = []

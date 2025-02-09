@@ -28,14 +28,18 @@ public struct PresentationControllerValue: Codable {
 
 public struct PresentationInfoPanelInput: Codable {  
   public var isPresented: Bool
-  public var currentTab:  Int
+  public var currentTab:  PresentationInfoPanelTab
   public var isExpanded:  [Machine.Identifier: Bool] = [:]
-  public init(tab: Int = 0, _ selection: Set<Machine.Identifier> = []) {
+  public init(tab: PresentationInfoPanelTab, selection: Set<Machine.Identifier> = []) {
     self.isPresented = true
     self.currentTab = tab
   }
   public init() {
     self.isPresented = false
-    self.currentTab = 0
+    self.currentTab = .info
   }
+}
+
+public enum PresentationInfoPanelTab: Int, Codable {
+  case info, names, passwords
 }
