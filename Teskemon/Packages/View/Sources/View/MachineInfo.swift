@@ -22,7 +22,6 @@ import SwiftUI
 import Model
 import Controller
 
-// TODO: Refactor this into 4 views and use Picker instead of TabView
 internal struct MachineInfo: View {
   
   @PresentationController private var presentation
@@ -35,27 +34,29 @@ internal struct MachineInfo: View {
   
   internal var body: some View {
     NavigationStack {
-      VStack {
-        // TODO: Consider moving this into .safeAreaInset(edge: .top)
-        Picker("", selection: self.$presentation.infoPanel.currentTab) {
-          Text(.information)
-            .tag(PresentationInfoPanelTab.info)
-          Text(.names)
-            .tag(PresentationInfoPanelTab.names)
-          Text(.passwords)
-            .tag(PresentationInfoPanelTab.passwords)
-        }
-        .frame(width: SettingsWindow.widthLarge/2)
-        .padding([.top], 8)
-        Group {
-          switch self.presentation.infoPanel.currentTab {
-          case .info:      MachineInfoOverview(selection: self.selection)
-          case .names:     MachineInfoNames(selection: self.selection)
-          case .passwords: MachineInfoPasswords(selection: self.selection)
-          }
+      Group {
+        switch self.presentation.infoPanel.currentTab {
+        case .info:      MachineInfoOverview(selection: self.selection)
+        case .names:     MachineInfoNames(selection: self.selection)
+        case .passwords: MachineInfoPasswords(selection: self.selection)
         }
       }
-      .pickerStyle(.segmented)
+      .safeAreaInset(edge: .top, alignment: .center, spacing: 0) {
+        HStack {
+          Spacer()
+          Picker("", selection: self.$presentation.infoPanel.currentTab) {
+            Text(.information).tag(Presentation.InfoPanel.Tab.info)
+            Text(.names      ).tag(Presentation.InfoPanel.Tab.names)
+            Text(.passwords  ).tag(Presentation.InfoPanel.Tab.passwords)
+          }
+          .padding(self.pickerPadding)
+          .frame(width: SettingsWindow.widthLarge/2)
+          .pickerStyle(.segmented)
+          Spacer()
+        }
+        .background(self.pickerBackground)
+      }
+      .animation(.default, value: self.presentation.infoPanel.currentTab)
       .navigationTitle(.machineInfo)
       .navigationSubtitle(.selected(self.selection.count))
       .frame(width: SettingsWindow.widthLarge, height: SettingsWindow.height)
@@ -66,6 +67,20 @@ internal struct MachineInfo: View {
           }
         }
       }
+    }
+  }
+  
+  @ViewBuilder private var pickerBackground: some View {
+    switch self.presentation.infoPanel.currentTab {
+    case .info:              EmptyView()
+    case .names, .passwords: Color.white.opacity(0.0).background(.bar)
+    }
+  }
+  
+  private var pickerPadding: EdgeInsets {
+    switch self.presentation.infoPanel.currentTab {
+    case .info:              return EdgeInsets(top: 8, leading: 0, bottom: 0, trailing: 0)
+    case .names, .passwords: return EdgeInsets(top: 8, leading: 0, bottom: 4, trailing: 0)
     }
   }
 }
@@ -154,7 +169,6 @@ internal struct MachineInfoNames: View {
         .textFieldStyle(.roundedBorder)
       }
     }
-    .padding([.top], 4)
   }
   
   private func customNameBinding(for id: Machine.Identifier) -> Binding<String> {
@@ -251,7 +265,6 @@ internal struct MachineInfoPasswords: View {
       }
       .width(64)
     }
-    .padding([.top], 4)
     .alert(error: self.$passwordError)
   }
 }

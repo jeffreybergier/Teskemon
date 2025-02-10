@@ -22,7 +22,6 @@ import Foundation
 
 public struct SettingsControllerValue: Codable {
   
-  public var currentTab   = SettingsTab.tailscale
   public var services     = Service.default
   public var scanning     = Scanning()
   public var customNames  = [Machine.Identifier: String]()
@@ -36,12 +35,6 @@ public struct SettingsControllerValue: Codable {
   }
   
   public init() {}
-}
-
-public enum SettingsTab: Codable {
-  case tailscale
-  case services
-  case scanning
 }
 
 public struct SettingsTimer: Codable, Equatable {

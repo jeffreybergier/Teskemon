@@ -20,26 +20,37 @@
 
 import Foundation
 
-public struct PresentationControllerValue: Codable {
+public struct Presentation: Codable {
+  
+  public enum SettingsTab: Codable {
+    case tailscale
+    case services
+    case scanning
+  }
+  
+  public struct InfoPanel: Codable {
+    
+    public enum Tab: Int, Codable {
+      case info, names, passwords
+    }
+    
+    public var isPresented: Bool
+    public var currentTab:  Tab
+    public var isExpanded:  [Machine.Identifier: Bool] = [:]
+    public init(tab: Presentation.InfoPanel.Tab, selection: Set<Machine.Identifier> = []) {
+      self.isPresented = true
+      self.currentTab = tab
+    }
+    public init() {
+      self.isPresented = false
+      self.currentTab = .info
+    }
+  }
+  
+  public var settingsTab = SettingsTab.tailscale
   public var tableSelection = Set<Machine.Identifier>()
-  public var infoPanel: PresentationInfoPanelInput = .init()
+  public var infoPanel: InfoPanel = .init()
   public init() { }
 }
 
-public struct PresentationInfoPanelInput: Codable {  
-  public var isPresented: Bool
-  public var currentTab:  PresentationInfoPanelTab
-  public var isExpanded:  [Machine.Identifier: Bool] = [:]
-  public init(tab: PresentationInfoPanelTab, selection: Set<Machine.Identifier> = []) {
-    self.isPresented = true
-    self.currentTab = tab
-  }
-  public init() {
-    self.isPresented = false
-    self.currentTab = .info
-  }
-}
 
-public enum PresentationInfoPanelTab: Int, Codable {
-  case info, names, passwords
-}

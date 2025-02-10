@@ -26,7 +26,7 @@ import Model
 @propertyWrapper
 public struct PresentationController: DynamicProperty {
   
-  public typealias Value = PresentationControllerValue
+  public typealias Value = Presentation
   
   @JSBSceneStorage("Presentation") private var storage = Value()
   

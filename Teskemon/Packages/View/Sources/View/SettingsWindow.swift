@@ -29,23 +29,21 @@ public struct SettingsWindow: View {
   static let height: Double = 480
   
   @SettingsController private var settings
+  @PresentationController private var presentation
   
   public init() { }
   
   public var body: some View {
-    TabView(selection: self.$settings.currentTab) {
-      self.tailscale.tabItem {
-        Label(.tailscale, systemImage: .imageSettings)
-      }
-      .tag(SettingsTab.tailscale)
-      self.services.tabItem {
-        Label(.services, systemImage: .imageServices)
-      }
-      .tag(SettingsTab.services)
-      self.scanning.tabItem {
-        Label(.scanning, systemImage: .imageScanning)
-      }
-      .tag(SettingsTab.scanning)
+    TabView(selection: self.$presentation.settingsTab) {
+      self.tailscale
+        .tabItem { Label(.tailscale, systemImage: .imageSettings) }
+        .tag(Presentation.SettingsTab.tailscale)
+      self.services
+        .tabItem { Label(.services, systemImage: .imageServices) }
+        .tag(Presentation.SettingsTab.services)
+      self.scanning
+        .tabItem { Label(.scanning, systemImage: .imageScanning) }
+        .tag(Presentation.SettingsTab.scanning)
     }
     .formStyle(.grouped)
   }
