@@ -26,7 +26,7 @@ import Umbrella
 @propertyWrapper
 public struct MachineController: DynamicProperty {
   
-  public typealias Value = Machine.ControllerValue
+  public typealias Value = MachineModel
   
   @JSBSceneStorage("Table") private var storage = Value()
 

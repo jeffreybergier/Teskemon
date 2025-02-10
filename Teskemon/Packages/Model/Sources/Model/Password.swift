@@ -179,14 +179,10 @@ extension OSType {
   public init(string: String) {
     self.init(UTGetOSTypeFromString(string as CFString))
   }
+  /*
   public var stringValue: String {
-    return .init(osType: self)
+    let str = UTCreateStringForOSType(self).takeRetainedValue() as NSString
+    return str as String
   }
-}
-
-extension String {
-  public init(osType: OSType) {
-    let str = UTCreateStringForOSType(osType).takeRetainedValue()
-    self.init(str as NSString)
-  }
+  */
 }
