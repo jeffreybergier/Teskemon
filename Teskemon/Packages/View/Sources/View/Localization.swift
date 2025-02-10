@@ -91,7 +91,7 @@ extension LocalizedStringKey {
   static let refreshAuto:    LocalizedStringKey = "Automatic Refresh"
   static let selectedAll:    LocalizedStringKey = "All Selected"
   static let account:        LocalizedStringKey = "Account"
-  static let domain:         LocalizedStringKey = "Domain"
+  static let tailnet:        LocalizedStringKey = "Tailnet"
   static let enabled:        LocalizedStringKey = "Enabled"
   static let disabled:       LocalizedStringKey = "Disabled"
   static let present:        LocalizedStringKey = "Present"
@@ -164,6 +164,7 @@ extension String {
   // MARK: Images
   static let imageInfo             = "info"
   static let imagePerson           = "person"
+  static let imageSafari           = "safari"
   static let imageNetwork          = "network"
   static let imageMachine          = "desktopcomputer"
   static let imagePasswords        = "ellipsis.rectangle"

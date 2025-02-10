@@ -140,7 +140,7 @@ internal struct MachineInfoOverview: View {
               LabeledContent(.displayName,   value: self.string(for: user?.displayName))
               LabeledContent(.roles,         value: self.string(for: user?.roles))
               LabeledContent(.profPic) {
-                self.image(for: user?.profilePicURL)
+                self.image(for: user?.profilePicURLValue)
               }
             }
           } else {
@@ -218,8 +218,8 @@ internal struct MachineInfoOverview: View {
     return number.map { $0.description } ?? .noValue
   }
   
-  @ViewBuilder private func image(for string: String?) -> some View {
-    if let string, let url = URL(string: string) {
+  @ViewBuilder private func image(for url: URL?) -> some View {
+    if let url {
       VStack(alignment: .trailing) {
         AsyncImage(url: url, scale: 1) { image in
           image

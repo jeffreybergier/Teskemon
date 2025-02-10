@@ -196,8 +196,10 @@ public struct MachineWindow: View {
   
   private var statusMenu: some View {
     Menu {
+      let tailscale = self.machines.tailscale
+      let user = tailscale?.selfUserID.map { self.machines.users[$0] } ?? nil
       Section(.tailscale) {
-        switch (self.machines.tailscale?.backendState) {
+        switch tailscale?.backendState {
         case .some(let value) where value == "Running":
           Label(value, systemImage: .imageStatusOnline)
             .foregroundStyle(Color.statusOnline, Color.HACK_showColorInMenus)
@@ -211,15 +213,7 @@ public struct MachineWindow: View {
           Label(.noValue, systemImage: .imageStatusUnknown)
         }
       }
-      Section(.account) {
-        Label(self.machines.tailscale?.currentTailnet?.name ?? .noValue,
-              systemImage: .imagePerson)
-      }
-      Section(.domain) {
-        Label(self.machines.tailscale?.magicDNSSuffix ?? .noValue,
-              systemImage: .imageNetwork)
-      }
-      switch (self.machines.tailscale) {
+      switch (tailscale) {
       case .some(let tailscale) where tailscale.versionUpToDate == true:
         Section(.versionNew) {
           Label(tailscale.version, systemImage: .imageStatusOnline)
@@ -235,8 +229,18 @@ public struct MachineWindow: View {
           Label(.noValue, systemImage: .imageStatusUnknown)
         }
       }
+      Section(.tailnet) {
+        Label(tailscale?.magicDNSSuffix ?? .noValue,
+              systemImage: .imageSafari)
+        Label(tailscale?.currentTailnet?.name ?? .noValue,
+              systemImage: .imageNetwork)
+      }
+      Section(.account) {
+        Label(user?.displayName ?? .noValue, systemImage: .imagePerson)
+        Label(user?.loginName ?? .noValue,   systemImage: .imagePasswords)
+      }
       Section(.magicDNS) {
-        switch (self.machines.tailscale?.currentTailnet?.magicDNSEnabled) {
+        switch (tailscale?.currentTailnet?.magicDNSEnabled) {
         case .some(let magicDNSEnabled) where magicDNSEnabled == true:
           Label(.enabled, systemImage: .imageStatusOnline)
             .foregroundStyle(Color.statusOnline, Color.HACK_showColorInMenus)
@@ -248,7 +252,7 @@ public struct MachineWindow: View {
         }
       }
       Section(.tunneling) {
-        switch (self.machines.tailscale?.tunnelingEnabled) {
+        switch (tailscale?.tunnelingEnabled) {
         case .some(let tunnelingEnabled) where tunnelingEnabled == true:
           Label(.enabled, systemImage: .imageStatusOnline)
             .foregroundStyle(Color.statusOnline, Color.HACK_showColorInMenus)
@@ -260,7 +264,7 @@ public struct MachineWindow: View {
         }
       }
       Section(.nodeKey) {
-        switch (self.machines.tailscale?.haveNodeKey) {
+        switch (tailscale?.haveNodeKey) {
         case .some(let haveNodeKey) where haveNodeKey == true:
           Label(.present, systemImage: .imageStatusOnline)
             .foregroundStyle(Color.statusOnline, Color.HACK_showColorInMenus)

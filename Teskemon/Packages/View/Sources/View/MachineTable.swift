@@ -35,6 +35,7 @@ internal struct MachineTable: View {
     self.spinnerTimer.percentage(of: 10)
   }
   
+  // TODO: Add column for exit node
   internal var body: some View {
     Table(self.machines.machines,
           children: \.children,

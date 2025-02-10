@@ -126,6 +126,11 @@ public struct User: Codable, Sendable {
   public let profilePicURL: String
   public let roles: [String]
   
+  // TODO: Consider fixing the Codable so ths string is automatically handled
+  public var profilePicURLValue: URL? {
+    URL(string: profilePicURL)
+  }
+  
   public enum CodingKeys: String, CodingKey {
     case id = "ID"
     case loginName = "LoginName"
