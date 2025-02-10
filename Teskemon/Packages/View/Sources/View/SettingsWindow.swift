@@ -54,9 +54,9 @@ public struct SettingsWindow: View {
               footer: self.tailscaleSectionFooter)
       {
         Picker(.location, selection: self.$settings.executable.option) {
-          Text(.commandLine).tag(SettingsExecutable.Options.cli)
-          Text(.appStore).tag(SettingsExecutable.Options.app)
-          Text(.custom).tag(SettingsExecutable.Options.custom)
+          Text(.commandLine).tag(SettingsModel.ExecutableOptions.cli)
+          Text(.appStore   ).tag(SettingsModel.ExecutableOptions.app)
+          Text(.custom     ).tag(SettingsModel.ExecutableOptions.custom)
         }
         if self.settings.executable.option == .custom {
           TextField(.customPath, text: self.$settings.executable.rawValue)

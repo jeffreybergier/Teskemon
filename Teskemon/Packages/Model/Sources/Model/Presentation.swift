@@ -22,35 +22,41 @@ import Foundation
 
 public struct Presentation: Codable {
   
+  public var settingsTab = SettingsTab.tailscale
+  public var tableSelection = Set<Machine.Identifier>()
+  public var infoPanel: InfoPanel = .init()
+  public init() { }
+}
+
+extension Presentation {
+  
   public enum SettingsTab: Codable {
     case tailscale
     case services
     case scanning
   }
   
+  public enum InfoPanelTab: Int, Codable {
+    case info, names, passwords
+  }
+  
   public struct InfoPanel: Codable {
     
-    public enum Tab: Int, Codable {
-      case info, names, passwords
-    }
-    
     public var isPresented: Bool
-    public var currentTab:  Tab
+    public var currentTab:  InfoPanelTab
     public var isExpanded:  [Machine.Identifier: Bool] = [:]
-    public init(tab: Presentation.InfoPanel.Tab, selection: Set<Machine.Identifier> = []) {
+    public init(tab: Presentation.InfoPanelTab,
+                selection: Set<Machine.Identifier>)
+    {
       self.isPresented = true
       self.currentTab = tab
     }
+    
     public init() {
       self.isPresented = false
       self.currentTab = .info
     }
   }
-  
-  public var settingsTab = SettingsTab.tailscale
-  public var tableSelection = Set<Machine.Identifier>()
-  public var infoPanel: InfoPanel = .init()
-  public init() { }
 }
 
 

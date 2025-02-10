@@ -153,7 +153,8 @@ extension Password {
   public func valueForSaving() throws(Password.Error) -> Descriptor {
     guard
       let accountString = self.user_account.trimmed,
-      let passwordData  = self.user_password.data(using: .utf8)
+      let passwordData  = self.user_password.trimmed?.data(using: .utf8),
+      passwordData.isEmpty == false
     else {
       throw .missingUsernameOrPassword
     }

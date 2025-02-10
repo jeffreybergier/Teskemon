@@ -31,7 +31,7 @@ internal struct TailscaleCLI: Codable, Sendable {
   internal var MagicDNSSuffix: String?
   internal var CertDomains:   [String]?
   internal var Peer: [String:  MachineCLI]?
-  internal var User: [String:        User]?
+  internal var User: [String:  User]?
   internal var `Self`:         MachineCLI?
   internal var CurrentTailnet: Tailnet?
   internal var ClientVersion:  ClientVersion?

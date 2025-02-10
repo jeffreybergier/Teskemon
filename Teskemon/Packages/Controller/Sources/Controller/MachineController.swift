@@ -45,7 +45,7 @@ public struct MachineController: DynamicProperty {
     self.storage = .init()
   }
   
-  public func updateMachines(with executable: SettingsExecutable) async throws {
+  public func updateMachines(with executable: SettingsModel.Executable) async throws {
     guard self.storage.isLoading == false else { return }
     NSLog("[START] TableController.updateMachines()")
     self.storage.isLoading = true

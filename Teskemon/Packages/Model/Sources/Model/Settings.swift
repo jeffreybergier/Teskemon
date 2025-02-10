@@ -20,14 +20,14 @@
 
 import Foundation
 
-public struct SettingsControllerValue: Codable {
+public struct SettingsModel: Codable {
   
   public var services     = Service.default
   public var scanning     = Scanning()
   public var customNames  = [Machine.Identifier: String]()
-  public var executable   = SettingsExecutable()
-  public var statusTimer  = SettingsTimer(automatic: false, interval: 300)
-  public var machineTimer = SettingsTimer(automatic: true, interval: 60)
+  public var executable   = SettingsModel.Executable()
+  public var statusTimer  = SettingsModel.Timer(automatic: false, interval: 300)
+  public var machineTimer = SettingsModel.Timer(automatic: true, interval: 60)
   
   public mutating func delete(service: Service) {
     guard let index = self.services.firstIndex(where: { $0.id == service.id }) else { return }
@@ -37,26 +37,28 @@ public struct SettingsControllerValue: Codable {
   public init() {}
 }
 
-public struct SettingsTimer: Codable, Equatable {
-  public var automatic: Bool
-  public var interval: TimeInterval
-}
-
-public struct SettingsExecutable: Codable {
+extension SettingsModel {
   
-  public enum Options: CaseIterable, Codable {
+  public struct Timer: Codable, Equatable {
+    public var automatic: Bool
+    public var interval: TimeInterval
+  }
+  
+  public enum ExecutableOptions: CaseIterable, Codable {
     case cli
     case app
     case custom
   }
   
-  public var option: Options = .cli
-  public var rawValue = ""
-  public var stringValue: String {
-    switch self.option {
-    case .cli:    return "/usr/local/bin/tailscale"
-    case .app:    return "/Applications/Tailscale.app/Contents/MacOS/Tailscale"
-    case .custom: return self.rawValue
+  public struct Executable: Codable {
+    public var option: ExecutableOptions = .cli
+    public var rawValue = ""
+    public var stringValue: String {
+      switch self.option {
+      case .cli:    return "/usr/local/bin/tailscale"
+      case .app:    return "/Applications/Tailscale.app/Contents/MacOS/Tailscale"
+      case .custom: return self.rawValue
+      }
     }
   }
 }

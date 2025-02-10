@@ -113,7 +113,7 @@ public struct MachineWindow: View {
   private var editMenu: some View {
     Menu {
       Section(.selected(self.presentation.tableSelection.count)) {
-        let action: (Presentation.InfoPanel.Tab) -> Void = { selectedTab in
+        let action: (Presentation.InfoPanelTab) -> Void = { selectedTab in
           self.presentation.infoPanel = .init(
             tab: selectedTab,
             selection: self.selectionForMenus

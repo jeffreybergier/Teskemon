@@ -45,9 +45,9 @@ internal struct MachineInfo: View {
         HStack {
           Spacer()
           Picker("", selection: self.$presentation.infoPanel.currentTab) {
-            Text(.information).tag(Presentation.InfoPanel.Tab.info)
-            Text(.names      ).tag(Presentation.InfoPanel.Tab.names)
-            Text(.passwords  ).tag(Presentation.InfoPanel.Tab.passwords)
+            Text(.information).tag(Presentation.InfoPanelTab.info)
+            Text(.names      ).tag(Presentation.InfoPanelTab.names)
+            Text(.passwords  ).tag(Presentation.InfoPanelTab.passwords)
           }
           .padding(self.pickerPadding)
           .frame(width: SettingsWindow.widthLarge/2)

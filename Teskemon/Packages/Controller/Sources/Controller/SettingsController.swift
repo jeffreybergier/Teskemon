@@ -26,7 +26,7 @@ import Model
 @propertyWrapper
 public struct SettingsController: DynamicProperty {
   
-  public typealias Value = SettingsControllerValue
+  public typealias Value = SettingsModel
   
   @JSBAppStorage("Settings") private var storage = Value()
   
