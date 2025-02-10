@@ -36,8 +36,8 @@ internal struct MachineInfo: View {
     NavigationStack {
       Group {
         switch self.presentation.infoPanel.currentTab {
-        case .info:      MachineInfoOverview(selection: self.selection)
-        case .names:     MachineInfoNames(selection: self.selection)
+        case .info:      MachineInfoOverview (selection: self.selection)
+        case .names:     MachineInfoNames    (selection: self.selection)
         case .passwords: MachineInfoPasswords(selection: self.selection)
         }
       }
@@ -56,10 +56,10 @@ internal struct MachineInfo: View {
         }
         .background(self.pickerBackground)
       }
-      .animation(.default, value: self.presentation.infoPanel.currentTab)
       .navigationTitle(.machineInfo)
       .navigationSubtitle(.selected(self.selection.count))
       .frame(width: SettingsWindow.widthLarge, height: SettingsWindow.height)
+      .animation(.default, value: self.presentation.infoPanel.currentTab)
       .toolbar {
         ToolbarItem(placement: .confirmationAction) {
           Button(.done) {
@@ -88,37 +88,10 @@ internal struct MachineInfo: View {
 internal struct MachineInfoOverview: View {
   
   @MachineController      private var machines
+  @SettingsController     private var settings
   @PresentationController private var presentation
   
   internal let selection: [Machine.Identifier]
-    
-  /*
-   public var id: Identifier = .init(rawValue: "")
-   public var name: String   = ""
-   public var host: String   = ""
-   public var os: String     = ""
-   public var kind: Kind     = .unknown
-   public var relay: Relay   = .unknown
-   public var activity: Activity? = nil
-   public var nodeInfo: NodeInfo? = nil
-   public var subnetRoutes: [Machine]? = nil
-   
-   public var publicKey:  String = ""
-   public var keyExpiry:  Date?  = nil
-   public var isExitNode: Bool   = false
-   public var userID:     Int    = -1
-   // Network
-   public var tailscaleIPs: [Address] = []
-   
-   // Timestamps
-   public var created:       Date? = nil
-   public var lastWrite:     Date? = nil
-   public var lastHandshake: Date? = nil
-   // Status
-   public var inNetworkMap: Bool = false
-   public var inMagicSock:  Bool = false
-   public var inEngine:     Bool = false
-   */
   
   private func infoSectionExpanded(for id: Machine.Identifier) -> Binding<Bool> {
     let shouldShowByDefault = self.selection.count <= 7
@@ -133,19 +106,140 @@ internal struct MachineInfoOverview: View {
     Form {
       ForEach(self.selection) { id in
         let machine = self.machines[id]
-        Section(machine.name, isExpanded: self.infoSectionExpanded(for: id)) {
-          LabeledContent("ID",    value: machine.id.rawValue.trimmed ?? .noValue)
-          LabeledContent("Name",  value: machine.name.trimmed ?? .noValue)
-          LabeledContent("Host",  value: machine.host.trimmed ?? .noValue)
-          LabeledContent("OS",    value: machine.os.trimmed ?? .noValue)
-          LabeledContent("Kind",  value: String(describing:machine.kind))
-          LabeledContent("Relationship", value: String(describing:machine.relay))
-          LabeledContent("Public Key", value: machine.nodeInfo?.publicKey.trimmed ?? .noValue)
-          LabeledContent("Subnet Routes", value: machine.subnetRoutes.reduce("", { $0 + $1.rawValue + ", " }))
+        let user = self.machines.users[machine.userID]
+        Section(self.computedName(for: id),
+                isExpanded: self.infoSectionExpanded(for: id))
+        {
+          if self.isReal(machine.kind) {
+            VStack {
+              LabeledContent(.id,            value: self.string(for: machine.id.rawValue))
+              LabeledContent(.name,          value: self.string(for: machine.name))
+              LabeledContent(.nameCustom,    value: self.string(for: self.settings.customNames[id]))
+              LabeledContent(.opSystem,      value: self.string(for: machine.os))
+              LabeledContent(.host,          value: self.string(for: machine.host))
+              LabeledContent(.ip,            value: self.string(for: machine.ips))
+              LabeledContent(.relay,         value: self.string(for: machine.relay))
+              LabeledContent(.relationship,  value: self.string(for: machine.kind))
+              LabeledContent(.subnetRoutes,  value: self.string(for: machine.subnetRoutes))
+            }
+            VStack {
+              LabeledContent(.publicKey,     value: self.string(for: machine.nodeInfo?.publicKey))
+              LabeledContent(.keyExpiry,     value: self.string(for: machine.nodeInfo?.keyExpiry))
+              LabeledContent(.created,       value: self.string(for: machine.nodeInfo?.created))
+              LabeledContent(.lastWrite,     value: self.string(for: machine.nodeInfo?.lastWrite))
+              LabeledContent(.lastHandshake, value: self.string(for: machine.nodeInfo?.lastHandshake))
+            }
+            VStack {
+              LabeledContent(.inNetworkMap,  value: self.string(for: machine.nodeInfo?.inNetworkMap))
+              LabeledContent(.inMagicSock,   value: self.string(for: machine.nodeInfo?.inMagicSock))
+              LabeledContent(.inEngine,      value: self.string(for: machine.nodeInfo?.inEngine))
+            }
+            VStack {
+              LabeledContent(.userID,        value: self.string(for: user?.id.rawValue))
+              LabeledContent(.username,      value: self.string(for: user?.loginName))
+              LabeledContent(.displayName,   value: self.string(for: user?.displayName))
+              LabeledContent(.roles,         value: self.string(for: user?.roles))
+              LabeledContent(.profPic) {
+                self.image(for: user?.profilePicURL)
+              }
+            }
+          } else {
+            VStack {
+              LabeledContent(.ip,            value: self.string(for: machine.ips))
+              LabeledContent(.nameCustom,    value: self.string(for: self.settings.customNames[id]))
+              LabeledContent(.relay,         value: self.string(for: machine.relay))
+              LabeledContent(.relationship,  value: self.string(for: machine.kind))
+            }
+          }
         }
       }
     }
     .formStyle(.grouped)
+  }
+  
+  private func computedName(for id: Machine.Identifier) -> String {
+    (self.settings.customNames[id] ?? self.machines[id].name).trimmed ?? .noValue
+  }
+  
+  private func isReal(_ kind: Machine.Kind) -> Bool {
+    switch kind {
+    case .meHost, .remoteHost:               return true
+    case .unknown, .meSubnet, .remoteSubnet: return false
+    }
+  }
+  
+  private func string(for kind: Machine.Kind) -> LocalizedStringKey {
+    switch kind {
+    case .unknown:      return .noValue
+    case .meHost:       return .helpNodeMe
+    case .remoteHost:   return .helpNodeRemote
+    case .meSubnet:     return .helpNodeSubnetMe
+    case .remoteSubnet: return .helpNodeSubnetRemote
+    }
+  }
+  
+  private func string(for relay: Machine.Relay) -> LocalizedStringKey {
+    switch relay {
+    case .unknown:                      return .noValue
+    case .relay(let name):              return .relayTailscale(name)
+    case .route(id: _, name: let name): return .relayRoute(name)
+    }
+  }
+  
+  private func string(for strings: [String]?) -> String {
+    return strings?.reduce("") {
+      $0.isEmpty ? $1 : $0 + ", " + $1
+    }
+    .trimmed ?? .noValue
+  }
+  
+  private func string<Raw: RawRepresentable>(for subnets: [Raw]?) -> String
+                where Raw.RawValue == String
+  {
+    return subnets?.reduce("") {
+      $0.isEmpty ? $1.rawValue : $0 + ", " + $1.rawValue
+    }
+    .trimmed ?? .noValue
+  }
+  
+  private func string(for date: Date?) -> String {
+    return date.map { df.string(from: $0) } ?? .noValue
+  }
+  
+  private func string(for string: String?) -> String {
+    return string?.trimmed ?? .noValue
+  }
+  
+  private func string(for bool: Bool?) -> LocalizedStringKey {
+    return bool.map { $0 ? .yes : .no } ?? .noValue
+  }
+  
+  private func string(for number: Int?) -> String {
+    return number.map { $0.description } ?? .noValue
+  }
+  
+  @ViewBuilder private func image(for string: String?) -> some View {
+    if let string, let url = URL(string: string) {
+      VStack(alignment: .trailing) {
+        AsyncImage(url: url, scale: 1) { image in
+          image
+            .resizable()
+            .scaledToFit()
+            .frame(width: 128)
+            .clipped()
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+        } placeholder: {
+          Image(systemName: .imageStatusError)
+            .foregroundStyle(Color.statusError)
+        }
+        Button(url.absoluteString) {
+          NSWorkspace.shared.open(url)
+        }
+        .buttonStyle(.link)
+      }
+    } else {
+      Text(.noValue)
+    }
   }
 }
 
@@ -269,4 +363,16 @@ internal struct MachineInfoPasswords: View {
   }
 }
 
+fileprivate func LabeledContent(_ title: LocalizedStringKey,
+                                value: LocalizedStringKey)
+                                -> LabeledContent<Text, Text>
+{
+  return LabeledContent(title) { Text(value) }
+}
 
+private let df: DateFormatter = {
+  let formatter = DateFormatter()
+  formatter.dateStyle = .medium
+  formatter.timeStyle = .medium
+  return formatter
+}()

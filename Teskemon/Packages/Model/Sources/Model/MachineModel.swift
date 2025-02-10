@@ -25,7 +25,7 @@ public struct MachineModel: Codable {
   public   var isLoading: Bool = false
   public   var tailscale: Tailscale?
   public   var machines:  [Machine]
-  public   var users:     [Machine.Identifier: User]
+  public   var users:     [User.Identifier: User]
   internal var lookUp:    [Machine.Identifier: Machine]
   
   public enum CodingKeys: String, CodingKey {
@@ -83,7 +83,7 @@ public struct MachineModel: Codable {
         .map { Machine($0, selfID: tailscale.selfNodeID) }
     }()
     
-    self.users = Dictionary<Machine.Identifier, User>(
+    self.users = Dictionary<User.Identifier, User>(
       uniqueKeysWithValues: rawModel.User?.map { (.init(rawValue: $0), $1) } ?? []
     )
     
@@ -100,6 +100,7 @@ extension Machine {
     self.id   = .init(rawValue: (selfID?.rawValue ?? "INVALID") + ":" + address.rawValue)
     self.name = address.rawValue
     self.host = address.rawValue
+    self.ips  = [address]
     self.kind = hostID == selfID ? .meSubnet : .remoteSubnet
     self.relay = .route(id: hostID, name: name)
   }
@@ -109,16 +110,20 @@ extension Machine {
     self.id       = .init(rawValue: model.ID)
     self.name     = model.HostName ?? ""
     self.host     = model.DNSName  ?? ""
+    self.ips      = model.TailscaleIPs?.map({ Address(rawValue: $0) }) ?? []
     self.os       = model.OS       ?? ""
     self.kind     = model.ID == selfID?.rawValue ? .meHost : .remoteHost
     self.relay    = .relay(model.Relay ?? "")
-    self.activity = .init(isOnline: model.Online ?? false,
-                          isActive: model.Active ?? false,
-                          rxBytes:  Int64(model.RxBytes ?? 0),
-                          txBytes:  Int64(model.TxBytes ?? 0),
-                          lastSeen: model.LastSeen.flatMap(df.date(from:)))
+    self.userID   = .init(rawValue:   model.UserID)
+    self.activity = .init(isExitNode: model.ExitNode ?? false,
+                          isOnline:   model.Online ?? false,
+                          isActive:   model.Active ?? false,
+                          rxBytes:    Int64(model.RxBytes ?? 0),
+                          txBytes:    Int64(model.TxBytes ?? 0),
+                          lastSeen:   model.LastSeen.flatMap(df.date(from:)))
+    
     self.subnetRoutes = model.PrimaryRoutes?.map { Subnet(rawValue: $0) } ?? []
-    let subnetRoutes: [Machine] = self.subnetRoutes.flatMap { subnet in
+    self.children     = self.subnetRoutes.flatMap { subnet in
       subnet.explodeAddresses().map { address in
         Machine(address: address,
                 name:    model.HostName ?? "",
@@ -126,21 +131,21 @@ extension Machine {
                 selfID:  selfID)
       }
     }
-    self.children = subnetRoutes.isEmpty ? nil : subnetRoutes
+    if self.children?.isEmpty ?? false {
+      // TODO: Remove when this bug is fixed in SwiftUI.Table
+      // Nil this out or the table will show an arrow but will open to nothing
+      self.children = nil
+    }
     
     // Had to move these out of the init because the type checker was timing out
-    let keyExpiry     = model.KeyExpiry.flatMap(df.date(from:))
-    let tailscaleIPs  = model.TailscaleIPs?.map({ Address(rawValue: $0) }) ?? []
-    let created       = model.Created.flatMap(df.date(from:))
-    let lastWrite     = model.LastWrite.flatMap(df.date(from:))
-    let lastHandshake = model.LastWrite.flatMap(df.date(from:))
+    let keyExpiry     = model.KeyExpiry    .flatMap(df.date(from:))
+    let created       = model.Created      .flatMap(df.date(from:))
+    let lastWrite     = model.LastWrite    .flatMap(df.date(from:))
+    let lastHandshake = model.LastHandshake.flatMap(df.date(from:))
     
     self.nodeInfo = .init(
       publicKey:     model.PublicKey ?? "",
       keyExpiry:     keyExpiry,
-      isExitNode:    model.ExitNode ?? false,
-      userID:        model.UserID,
-      tailscaleIPs:  tailscaleIPs,
       created:       created,
       lastWrite:     lastWrite,
       lastHandshake: lastHandshake,

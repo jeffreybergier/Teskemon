@@ -22,12 +22,14 @@ import Foundation
 
 public struct Machine: Codable, Sendable, Identifiable {
   
-  public var id: Identifier = .init(rawValue: "")
-  public var name: String   = ""
-  public var host: String   = ""
-  public var os: String     = ""
-  public var kind: Kind     = .unknown
-  public var relay: Relay   = .unknown
+  public var id:       Identifier = .init(rawValue: "")
+  public var name:     String     = ""
+  public var host:     String     = ""
+  public var ips:      [Address]  = []
+  public var os:       String     = ""
+  public var kind:     Kind       = .unknown
+  public var relay:    Relay      = .unknown
+  public var userID:   User.Identifier = .init(rawValue: -1)
   public var activity: Activity?    = nil
   public var nodeInfo: NodeInfo?    = nil
   public var children: [Machine]?   = nil
@@ -65,11 +67,12 @@ extension Machine {
   }
   
   public struct Activity: Codable, Sendable, Equatable {
-    public var isOnline: Bool  = false
-    public var isActive: Bool  = false
-    public var rxBytes: Int64  = 0
-    public var txBytes: Int64  = 0
-    public var lastSeen: Date? = nil
+    public var isExitNode: Bool = false
+    public var isOnline: Bool   = false
+    public var isActive: Bool   = false
+    public var rxBytes: Int64   = 0
+    public var txBytes: Int64   = 0
+    public var lastSeen: Date?  = nil
   }
   
   public enum Kind: Codable, Sendable {
@@ -93,11 +96,8 @@ extension Machine {
     // Information
     public var publicKey:  String = ""
     public var keyExpiry:  Date?  = nil
-    public var isExitNode: Bool   = false
-    public var userID:     Int    = -1
     
     // Network
-    public var tailscaleIPs: [Address] = []
     
     // Timestamps
     public var created:       Date? = nil
@@ -111,6 +111,7 @@ extension Machine {
 }
 
 public struct User: Codable, Sendable {
+  
   public struct Identifier: Codable, Sendable, Hashable, Identifiable, RawRepresentable {
     public var id: Int { return self.rawValue }
     public let rawValue: Int
@@ -118,6 +119,7 @@ public struct User: Codable, Sendable {
       self.rawValue = rawValue
     }
   }
+  
   public let id: Identifier
   public let loginName: String
   public let displayName: String

@@ -50,6 +50,7 @@ extension LocalizedStringKey {
   static let nameOriginal:   LocalizedStringKey = "Original Name"
   static let nameCustom:     LocalizedStringKey = "Custom Name"
   static let username:       LocalizedStringKey = "Username"
+  static let displayName:    LocalizedStringKey = "Display Name"
   static let password:       LocalizedStringKey = "Password"
   static let passwords:      LocalizedStringKey = "Passwords"
   static let online:         LocalizedStringKey = "Online"
@@ -64,7 +65,27 @@ extension LocalizedStringKey {
   static let port:           LocalizedStringKey = "Port"
   static let ping:           LocalizedStringKey = "Ping"
   static let count:          LocalizedStringKey = "Count"
+  static let id:             LocalizedStringKey = "ID"
+  static let host:           LocalizedStringKey = "Hostname"
+  static let ip:             LocalizedStringKey = "IP Address"
+  static let opSystem:       LocalizedStringKey = "Operating System"
+  static let created:        LocalizedStringKey = "Created"
+  static let lastWrite:      LocalizedStringKey = "Last Write"
+  static let lastHandshake:  LocalizedStringKey = "Last Handshake"
+  static let inNetworkMap:   LocalizedStringKey = "In Network Map"
+  static let inMagicSock:    LocalizedStringKey = "In Magic Sock"
+  static let inEngine:       LocalizedStringKey = "In Engine"
+  static let userID:         LocalizedStringKey = "User ID"
+  static let roles:          LocalizedStringKey = "Roles"
+  static let profPic:        LocalizedStringKey = "Profile Picture"
+  static let yes:            LocalizedStringKey = "Yes"
+  static let no:             LocalizedStringKey = "No"
   static let lossThreshold:  LocalizedStringKey = "Loss Threshold"
+  static let subnetRoutes:   LocalizedStringKey = "Subnet Routes"
+  static let relationship:   LocalizedStringKey = "Relationship"
+  static let publicKey:      LocalizedStringKey = "Public Key"
+  static let keyExpiry:      LocalizedStringKey = "Key Expiry"
+
   static let clearCache:     LocalizedStringKey = "Clear Cache"
   static let refresh:        LocalizedStringKey = "Refresh"
   static let refreshAuto:    LocalizedStringKey = "Automatic Refresh"
@@ -91,6 +112,12 @@ extension LocalizedStringKey {
   static func selected(_ count: Int) -> LocalizedStringKey {
     guard count > 0 else { return self.selectedAll }
     return "\(count) Selected"
+  }
+  static func relayTailscale(_ name: String) -> LocalizedStringKey {
+    return "Tailscale Relay: '\(name)'"
+  }
+  static func relayRoute(_ name: String) -> LocalizedStringKey {
+    return "Subnet Route of: '\(name)'"
   }
   
   // MARK: Verbs
