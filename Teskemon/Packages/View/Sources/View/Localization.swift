@@ -22,11 +22,13 @@ import SwiftUI
 
 @MainActor
 extension LocalizedStringKey {
+  
+  public static let aboutTeskemon:  LocalizedStringKey = "About Teskemon"
+
   static let appName:        LocalizedStringKey = "テスケモン"
   static let appNameEng:     LocalizedStringKey = "Teskemon"
   static let appTagLine:     LocalizedStringKey = "テールスケール専門"
   static let appTagLineEng:  LocalizedStringKey = "Tailscale Specialist"
-  static let separatorDot:   LocalizedStringKey = "・"
   static let tailscale:      LocalizedStringKey = "Tailscale"
   static let netcat:         LocalizedStringKey = "Netcat (Port Scanning)"
   static let magicDNS:       LocalizedStringKey = "MagicDNS"
@@ -155,6 +157,13 @@ extension LocalizedStringKey {
                                                          If this application is useful for you, please use as you wish and provide feedback. \
                                                          And yes, I do accept pull requests.
                                                          """
+  static var aboutCopyright: LocalizedStringKey {
+    let b = Bundle.main
+    let versionString = b.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+    let buildString   = b.object(forInfoDictionaryKey: "CFBundleVersion"           ) as? String
+    let year = Calendar.current.component(.year, from: Date())
+    return "Version \(versionString ?? .noValue) (\(buildString ?? .noValue))・Copyright © \(String(describing: year)) Jeffrey Bergier"
+  }
 }
 
 extension String {

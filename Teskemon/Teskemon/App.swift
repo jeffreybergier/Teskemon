@@ -32,18 +32,17 @@ struct TeskemonApp: App {
     }
     .commands {
       CommandGroup(replacing: .appInfo) {
-        Button("About Teskemon") {
-          self.window(id: "About")
+        Button(.aboutTeskemon) {
+          self.window(id: AboutWindow.id, value: AboutWindow.id)
         }
       }
     }
     Settings {
       SettingsWindow()
     }
-    WindowGroup(id: "About") {
+    WindowGroup(id: AboutWindow.id, for: String.self) { _ in
       AboutWindow()
     }
     .windowResizability(.contentSize)
-    .windowStyle(.hiddenTitleBar)
   }
 }
