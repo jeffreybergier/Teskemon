@@ -1,5 +1,5 @@
 //
-//  Created by Jeffrey Bergier on 15/1/18.
+//  Created by Jeffrey Bergier on 2025/02/11.
 //  Copyright © 2025 Saturday Apps.
 //
 //  This file is part of Teskemon, a macOS App.
@@ -19,29 +19,10 @@
 //
 
 import SwiftUI
-import View
 
-@main
-struct TeskemonApp: App {
-  
-  @Environment(\.openWindow) private var window
-  
-  var body: some Scene {
-    WindowGroup {
-      MachineWindow()
-    }
-    .commands {
-      CommandGroup(replacing: .appInfo) {
-        Button("About Teskemon") {
-          self.window(id: "About")
-        }
-      }
-    }
-    Settings {
-      SettingsWindow()
-    }
-    WindowGroup(id: "About") {
-      AboutWindow()
-    }
+public struct AboutWindow: View {
+  public init() {}
+  public var body: some View {
+    Text("Hello Custom About")
   }
 }
