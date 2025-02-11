@@ -150,7 +150,9 @@ extension LocalizedStringKey {
   static let settingsNetcatTimeout: LocalizedStringKey = "Increasing the timeout will increase the accuracy of the port scanning, but it could slow down the process."
   static let settingsPingCount:     LocalizedStringKey = "Increasing the count will increase the accuracy of the ping, but it will slow down the process."
   static let settingsPingLoss:      LocalizedStringKey = "The higher the loss threshold, the more likely it is that the ping will detect a machine is online."
-
+  static let settingsServiceUser:   LocalizedStringKey = "Check to include the username (if set) in the URL's generated for this service"
+  static let settingsServicePass:   LocalizedStringKey = "Check to include the password (if set) in the URL's generated for this service"
+  
   static let aboutDescription:      LocalizedStringKey = """
                                                          Teskemon is a SwiftUI application built to monitor Tailscale networks. \
                                                          It is provided under the GPLv3 Open Source license and without any warranty or liability. \

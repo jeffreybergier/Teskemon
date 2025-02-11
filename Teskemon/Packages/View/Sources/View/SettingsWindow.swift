@@ -94,10 +94,12 @@ public struct SettingsWindow: View {
       .width(64)
       TableColumn(.username) { service in
         Toggle("", isOn: service.usesUsername)
+          .help(.settingsServiceUser)
       }
       .width(40)
       TableColumn(.password) { service in
         Toggle("", isOn: service.usesPassword)
+          .help(.settingsServicePass)
       }
       .width(40)
       TableColumn(.actions) { service in
