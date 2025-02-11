@@ -43,5 +43,7 @@ struct TeskemonApp: App {
     WindowGroup(id: "About") {
       AboutWindow()
     }
+    .windowResizability(.contentSize)
+    .windowStyle(.hiddenTitleBar)
   }
 }

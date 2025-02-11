@@ -23,6 +23,10 @@ import SwiftUI
 @MainActor
 extension LocalizedStringKey {
   static let appName:        LocalizedStringKey = "テスケモン"
+  static let appNameEng:     LocalizedStringKey = "Teskemon"
+  static let appTagLine:     LocalizedStringKey = "テールスケール専門"
+  static let appTagLineEng:  LocalizedStringKey = "Tailscale Specialist"
+  static let separatorDot:   LocalizedStringKey = "・"
   static let tailscale:      LocalizedStringKey = "Tailscale"
   static let netcat:         LocalizedStringKey = "Netcat (Port Scanning)"
   static let magicDNS:       LocalizedStringKey = "MagicDNS"
@@ -145,6 +149,12 @@ extension LocalizedStringKey {
   static let settingsPingCount:     LocalizedStringKey = "Increasing the count will increase the accuracy of the ping, but it will slow down the process."
   static let settingsPingLoss:      LocalizedStringKey = "The higher the loss threshold, the more likely it is that the ping will detect a machine is online."
 
+  static let aboutDescription:      LocalizedStringKey = """
+                                                         Teskemon is a SwiftUI application built to monitor Tailscale networks. \
+                                                         It is provided under the GPLv3 Open Source license and without any warranty or liability. \
+                                                         If this application is useful for you, please use as you wish and provide feedback. \
+                                                         And yes, I do accept pull requests.
+                                                         """
 }
 
 extension String {
