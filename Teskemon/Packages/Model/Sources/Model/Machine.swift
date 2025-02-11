@@ -36,16 +36,16 @@ public struct Machine: Codable, Sendable, Identifiable {
   public var subnetRoutes: [Subnet] = []
   
   public func url(for service: Service,
-                  username: String?,
-                  password: String?) -> URL?
+                  username: String,
+                  password: String) -> URL?
   {
     var components  = URLComponents()
     components.host = self.host
     if service.usesUsername {
-      components.user = username
+      components.user = username.trimmed
     }
     if service.usesPassword {
-      components.password = password
+      components.password = password.trimmed
     }
     if service.port > 0 {
       components.port = service.port
