@@ -155,7 +155,7 @@ extension LocalizedStringKey {
   
   static let aboutDescription:      LocalizedStringKey = """
                                                          Teskemon is a SwiftUI application built to monitor Tailscale networks. \
-                                                         It is provided under the GPLv3 Open Source license and without any warranty or liability. \
+                                                         It is provided under the GPLv3 open source license and without any warranty or liability. \
                                                          If this application is useful for you, please use as you wish and provide feedback. \
                                                          And yes, I do accept pull requests.
                                                          """
