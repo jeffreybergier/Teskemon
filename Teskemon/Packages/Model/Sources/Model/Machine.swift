@@ -34,27 +34,6 @@ public struct Machine: Codable, Sendable, Identifiable {
   public var nodeInfo: NodeInfo?    = nil
   public var children: [Machine]?   = nil
   public var subnetRoutes: [Subnet] = []
-  
-  public func url(for service: Service,
-                  username: String,
-                  password: String) -> URL?
-  {
-    var components  = URLComponents()
-    components.host = self.host
-    if service.usesUsername {
-      components.user = username.trimmed
-    }
-    if service.usesPassword {
-      components.password = password.trimmed
-    }
-    if service.port > 0 {
-      components.port = service.port
-    }
-    if !service.scheme.isEmpty {
-      components.scheme = service.scheme
-    }
-    return components.url
-  }
 }
 
 extension Machine {
