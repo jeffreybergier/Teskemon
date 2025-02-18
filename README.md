@@ -29,11 +29,12 @@ This is how I show 1 column for each Service that is set in Settings.
 1. Customize the Names of Machines for Display in the Table (optional)
 
 ### Known Issues
-1. Links for RDP do not work - in classic Microsoft fashion, the URL scheme for `rdp://` and `ms-rd://` is not typical
-1. There are no keyboard shortcuts or menu commands yet
-1. Errors in Ping and Netcat scanning are not reported to the user
-1. Exit Node status for a Machine is not displayed yet
-1. The icon is crap - I made it in 15 minutes using [Icon Kitchen](https://icon.kitchen). It could definitely be improved.
+- [Issue #1](https://github.com/jeffreybergier/Teskemon/issues/1) Links for RDP do not work - in classic Microsoft fashion, the URL scheme for `rdp://` and `ms-rd://` is not typical
+- [Issue #2](https://github.com/jeffreybergier/Teskemon/issues/2) There are no keyboard shortcuts or menu commands yet
+- [Issue #3](https://github.com/jeffreybergier/Teskemon/issues/3) Errors in Ping and Netcat scanning are not reported to the user
+- [Issue #4](https://github.com/jeffreybergier/Teskemon/issues/4) Exit Node status for a Machine is not displayed yet
+- [Issue #5](https://github.com/jeffreybergier/Teskemon/issues/5) The icon is crap - I made it in 15 minutes using [Icon Kitchen](https://icon.kitchen). It could definitely be improved.
+- [Issue #6](https://github.com/jeffreybergier/Teskemon/issues/6) Add option to not scan services for Routed Subnets when doing automatic refresh
 
 ### Privacy
 Teskemon does not access the internet or use any analytics service. There is no 
