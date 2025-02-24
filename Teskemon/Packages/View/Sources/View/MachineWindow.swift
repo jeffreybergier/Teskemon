@@ -49,22 +49,12 @@ public struct MachineWindow: View {
   public var body: some View {
     NavigationStack {
       MachineTable()
-        .overlay(alignment: .topTrailing) {
+        .overlay(alignment: .top) {
           ProgressView(value: Double(self.services.progress.completedUnitCount),
                        total: Double(self.services.progress.totalUnitCount))
           .progressViewStyle(.linear)
-          .padding(EdgeInsets(top: 4,
-                              leading: 12,
-                              bottom: 5,
-                              trailing: 12))
-          .background {
-            UnevenRoundedRectangle(bottomLeadingRadius: 4,
-                                   style: .continuous)
-            .fill(.ultraThinMaterial)
-          }
-          .frame(width: 280)
+          .padding(EdgeInsets(top: -6, leading: 0, bottom: 0, trailing: 0))
           .opacity(self.services.isLoading ? 1 : 0)
-          .offset(y: self.services.isLoading ? 0 : -20)
         }
         .animation(.default, value: self.services.isLoading)
         .animation(.default, value: self.settings.statusTimer.automatic)
