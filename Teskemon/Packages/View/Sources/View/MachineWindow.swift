@@ -296,6 +296,8 @@ public struct MachineWindow: View {
         self.settings.statusTimer.automatic = false
         self.settings.machineTimer.automatic = false
         self.processError = error
+      } catch let error as NSError {
+        fatalError("// TODO: Change CustomNSError property to support Error")
       }
     }
   }

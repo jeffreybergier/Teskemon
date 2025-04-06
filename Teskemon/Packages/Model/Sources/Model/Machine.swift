@@ -100,14 +100,14 @@ public struct User: Codable, Sendable {
   }
   
   public let id: Identifier
-  public let loginName: String
-  public let displayName: String
-  public let profilePicURL: String
-  public let roles: [String]
+  public let loginName: String?
+  public let displayName: String?
+  public let profilePicURL: String?
+  public let roles: [String]?
   
   // TODO: Consider fixing the Codable so ths string is automatically handled
   public var profilePicURLValue: URL? {
-    URL(string: profilePicURL)
+    return self.profilePicURL.map { URL(string: $0) } ?? nil
   }
   
   public enum CodingKeys: String, CodingKey {
