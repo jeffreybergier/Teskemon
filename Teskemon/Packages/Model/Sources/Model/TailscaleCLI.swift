@@ -62,7 +62,6 @@ internal struct MachineCLI: Codable, Sendable {
   internal var Active:         Bool?
   internal var PeerAPIURL:    [String]?
   internal var Capabilities:  [String]?
-  internal var CapMap: [String:String?]?
   internal var InNetworkMap:   Bool?
   internal var InMagicSock:    Bool?
   internal var InEngine:       Bool?

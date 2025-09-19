@@ -20,6 +20,7 @@
 
 import Foundation
 
+// TODO: Refactor these models to no longer use Codable as its too fragile
 public struct MachineModel: Codable {
   
   public   var isLoading: Bool = false

@@ -56,6 +56,7 @@ public struct MachineController: DynamicProperty {
     } catch {
       self.storage.isLoading = false
       NSLog("[ERROR] TableController.updateMachines()")
+      NSLog(String(describing: error))
       throw error
     }
   }
